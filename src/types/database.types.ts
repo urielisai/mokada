@@ -2021,6 +2021,134 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_expense_attachments: {
+        Row: {
+          attachment_type: Database["public"]["Enums"]["expense_attachment_type"]
+          created_at: string
+          expense_id: string
+          file_name: string
+          id: string
+          mime_type: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          attachment_type: Database["public"]["Enums"]["expense_attachment_type"]
+          created_at?: string
+          expense_id: string
+          file_name: string
+          id?: string
+          mime_type: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          attachment_type?: Database["public"]["Enums"]["expense_attachment_type"]
+          created_at?: string
+          expense_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_expense_attachments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_expense_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_expenses: {
+        Row: {
+          agent_id: string
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expense_category_id: string
+          expense_date: string
+          id: string
+          invoice_available: boolean
+          merchant_name: string | null
+          notes: string | null
+          status: Database["public"]["Enums"]["travel_expense_status_type"]
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          agent_id: string
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_category_id: string
+          expense_date: string
+          id?: string
+          invoice_available?: boolean
+          merchant_name?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["travel_expense_status_type"]
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          agent_id?: string
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_category_id?: string
+          expense_date?: string
+          id?: string
+          invoice_available?: boolean
+          merchant_name?: string | null
+          notes?: string | null
+          status?: Database["public"]["Enums"]["travel_expense_status_type"]
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_expenses_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_expenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_expenses_expense_category_id_fkey"
+            columns: ["expense_category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_expenses_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_makes: {
         Row: {
           code: string | null
