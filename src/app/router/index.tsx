@@ -29,6 +29,8 @@ import { ConfigurationPage } from '../../modules/configuration/pages/Configurati
 import { UsersPage } from '../../modules/admin/users/pages/UsersPage';
 
 import { FleetVehiclesPage } from '../../modules/fleet/pages/FleetVehiclesPage';
+import { VehicleExpensesPage } from '../../modules/fleet/pages/VehicleExpensesPage';
+import { VehicleExpenseFormPage } from '../../modules/fleet/pages/VehicleExpenseFormPage';
 import { RouteOpsDashboardPage } from '../../modules/route-operations/pages/RouteOpsDashboardPage';
 import { RoutesPage } from '../../modules/route-operations/pages/RoutesPage';
 import { RouteFormPage } from '../../modules/route-operations/pages/RouteFormPage';
@@ -95,6 +97,9 @@ export const router = createBrowserRouter([
             path: 'fleet',
             children: [
               { path: 'vehicles', element: <FleetVehiclesPage /> },
+              { path: 'expenses', element: <VehicleExpensesPage /> },
+              { path: 'expenses/new', element: <VehicleExpenseFormPage /> },
+              { path: 'expenses/:id', element: <VehicleExpenseFormPage /> },
             ]
           },
           {

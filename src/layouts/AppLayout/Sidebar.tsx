@@ -11,6 +11,7 @@ import {
   ListTree,
   MapPin,
   PackageSearch,
+  Receipt,
   Route,
   Settings,
   ShoppingCart,
@@ -90,6 +91,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         items: [
           { path: '/route-operations/dashboard', label: 'Dashboard Rutas', icon: LayoutDashboard },
           { path: '/fleet/vehicles', label: 'Flotilla', icon: Truck },
+          { path: '/fleet/expenses', label: 'Gastos Vehiculares', icon: Receipt },
           { path: '/route-operations/routes', label: 'Rutas', icon: Route },
           { path: '/route-operations/trips', label: 'Viajes Semanales', icon: MapPin },
           { path: '/route-operations/settlements', label: 'Conciliacion', icon: ClipboardCheck },
@@ -115,7 +117,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     if (!isAdmin) {
       sections.push({
         label: 'Mi Ruta',
-        items: [{ path: '/my-route', label: 'Ruta Actual', icon: MapPin }],
+        items: [
+          { path: '/my-route', label: 'Ruta Actual', icon: MapPin },
+          { path: '/fleet/expenses', label: 'Gastos Vehiculares', icon: Receipt },
+        ],
       });
     }
 
