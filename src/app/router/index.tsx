@@ -6,6 +6,7 @@ import { ChangePasswordPage } from '../../modules/auth/pages/ChangePasswordPage'
 import { LoginPage } from '../../modules/auth/pages/LoginPage';
 import { ProfilePage } from '../../modules/auth/pages/ProfilePage';
 
+import { DashboardsHubPage } from '../../modules/dashboard/pages/DashboardsHubPage';
 import { DashboardPage } from '../../modules/dashboard/pages/DashboardPage';
 import { ProductsPage } from '../../modules/catalog/pages/ProductsPage';
 import { ProductFormPage } from '../../modules/catalog/pages/ProductFormPage';
@@ -39,6 +40,12 @@ import { TripDetailPage } from '../../modules/route-operations/pages/TripDetailP
 import { MyRoutePage } from '../../modules/route-operations/pages/MyRoutePage';
 import { SettlementsPage } from '../../modules/route-operations/pages/SettlementsPage';
 
+import { CheckoutPage } from '../../modules/orders/pages/CheckoutPage';
+import { MyOrdersPage } from '../../modules/orders/pages/MyOrdersPage';
+import { OrdersPage } from '../../modules/orders/pages/OrdersPage';
+import { OrdersDashboardPage } from '../../modules/orders/pages/OrdersDashboardPage';
+import { OrderDetailsAdminPage } from '../../modules/orders/pages/OrderDetailsAdminPage';
+
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -53,7 +60,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <DashboardPage />
+            element: <DashboardsHubPage />
           },
           {
             path: 'account',
@@ -105,7 +112,6 @@ export const router = createBrowserRouter([
           {
             path: 'route-operations',
             children: [
-              { path: 'dashboard', element: <RouteOpsDashboardPage /> },
               { path: 'routes', element: <RoutesPage /> },
               { path: 'routes/new', element: <RouteFormPage /> },
               { path: 'routes/:id', element: <RouteFormPage /> },
@@ -126,6 +132,18 @@ export const router = createBrowserRouter([
               { path: 'price-lists', element: <PriceListsPage /> },
               { path: 'attributes', element: <AttributesPage /> },
             ]
+          },
+          {
+            path: 'orders',
+            children: [
+              { index: true, element: <OrdersPage /> },
+              { path: 'checkout', element: <CheckoutPage /> },
+              { path: ':id', element: <OrderDetailsAdminPage /> },
+            ]
+          },
+          {
+            path: 'my-orders',
+            element: <MyOrdersPage />
           },
           {
             path: 'admin',

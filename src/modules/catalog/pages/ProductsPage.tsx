@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../hooks/useCatalog';
 import { catalogService } from '../services/catalog.service';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { Search, Plus, PackageSearch } from 'lucide-react';
+import { Search, Plus, PackageSearch, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../../auth/context/useAuth';
+import { useCartStore } from '../store/useCartStore';
+import { CartDrawer } from '../components/CartDrawer';
 
 export const ProductsPage = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [search, setSearch] = useState('');
   const { data, isLoading } = useProducts({ page: 1, pageSize: 25, search });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { addItem, getItemCount } = useCartStore();
 
   const products = data?.data || [];
 
@@ -40,6 +44,19 @@ export const ProductsPage = () => {
             >
               <Plus className="w-4 h-4" />
               Nuevo
+            </button>
+          )}
+          {!isAdmin && (
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {getItemCount() > 0 && (
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#F5F5F7]">
+                  {getItemCount()}
+                </span>
+              )}
             </button>
           )}
         </div>
@@ -139,12 +156,35 @@ export const ProductsPage = () => {
                       </div>
                     )}
                   </div>
+
+                  {!isAdmin && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addItem({
+                          product_id: item.id,
+                          name: item.name,
+                          code: item.code,
+                          price: item.public_price || 0,
+                          quantity: 1,
+                          image_url: imageUrl
+                        });
+                        setIsCartOpen(true);
+                      }}
+                      className="mt-4 w-full flex items-center justify-center gap-2 bg-[#0066CC]/10 text-[#0066CC] hover:bg-[#0066CC] hover:text-white px-4 py-2 rounded-xl text-[13px] font-medium transition-all"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Agregar al carrito
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
+      
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };

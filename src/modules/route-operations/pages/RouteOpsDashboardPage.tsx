@@ -58,20 +58,16 @@ export const RouteOpsDashboardPage = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Dashboard Rutas</h2>
-        <p className="text-[15px] text-[#86868B]">Vista general de la operación semanal</p>
-      </div>
 
       {/* Quick stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => (
-          <Link key={card.label} to={card.link} className="group bg-white border border-gray-200/60 rounded-2xl p-5 hover:shadow-md hover:border-[#0066CC]/30 transition-all duration-200">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${card.color}`}>
-              <card.icon className="w-5 h-5" />
+          <Link key={card.label} to={card.link} className="group bg-white border border-gray-200/60 rounded-[20px] p-5 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">{card.label}</h3>
+              <card.icon className="w-4 h-4 text-[#86868B]" />
             </div>
             <p className="text-[28px] font-bold text-[#1D1D1F] tracking-tight">{card.value}</p>
-            <p className="text-[13px] text-[#86868B] mt-0.5">{card.label}</p>
           </Link>
         ))}
       </div>
@@ -81,14 +77,9 @@ export const RouteOpsDashboardPage = () => {
         
         {/* Gráfico 1: Estado de los viajes */}
         <div className="bg-white border border-gray-200/60 rounded-[24px] p-6 shadow-sm flex flex-col">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-blue-50 rounded-xl">
-              <PieChartIcon className="w-5 h-5 text-blue-500" />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-semibold text-[#1D1D1F]">Estado de los Viajes</h3>
-              <p className="text-[13px] text-[#86868B]">Distribución de viajes de la semana</p>
-            </div>
+          <div className="flex items-center gap-2 mb-6">
+            <PieChartIcon className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Estado de los Viajes</h3>
           </div>
           
           <div className="flex-1 min-h-[300px]">
@@ -122,14 +113,9 @@ export const RouteOpsDashboardPage = () => {
 
         {/* Gráfico 2: Presupuesto vs Gastos */}
         <div className="bg-white border border-gray-200/60 rounded-[24px] p-6 shadow-sm flex flex-col">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-[#0066CC]/10 rounded-xl">
-              <BarChart2 className="w-5 h-5 text-[#0066CC]" />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-semibold text-[#1D1D1F]">Resumen Financiero</h3>
-              <p className="text-[13px] text-[#86868B]">Presupuesto vs Gastos registrados</p>
-            </div>
+          <div className="flex items-center gap-2 mb-6">
+            <BarChart2 className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Resumen Financiero</h3>
           </div>
 
           <div className="flex-1 min-h-[300px]">

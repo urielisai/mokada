@@ -66,23 +66,13 @@ export const DashboardPage = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Dashboard</h2>
-        <p className="text-[15px] text-[#86868B]">Resumen analítico del sistema</p>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Gráfico 1: Salud del Inventario */}
         <div className="bg-white border border-gray-200/60 rounded-[24px] p-6 shadow-sm flex flex-col">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-rose-50 rounded-xl">
-              <HeartPulse className="w-5 h-5 text-rose-500" />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-semibold text-[#1D1D1F]">Salud del Inventario</h3>
-              <p className="text-[13px] text-[#86868B]">Distribución de productos según stock</p>
-            </div>
+          <div className="flex items-center gap-2 mb-6">
+            <HeartPulse className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Salud del Inventario</h3>
           </div>
           
           <div className="flex-1 min-h-[300px]">
@@ -116,14 +106,9 @@ export const DashboardPage = () => {
 
         {/* Gráfico 2: Composición del Catálogo */}
         <div className="bg-white border border-gray-200/60 rounded-[24px] p-6 shadow-sm flex flex-col">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-[#0066CC]/10 rounded-xl">
-              <Boxes className="w-5 h-5 text-[#0066CC]" />
-            </div>
-            <div>
-              <h3 className="text-[16px] font-semibold text-[#1D1D1F]">Composición del Sistema</h3>
-              <p className="text-[13px] text-[#86868B]">Métricas generales del catálogo</p>
-            </div>
+          <div className="flex items-center gap-2 mb-6">
+            <Boxes className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Composición del Catálogo</h3>
           </div>
 
           <div className="flex-1 min-h-[300px]">

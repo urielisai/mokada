@@ -20,15 +20,19 @@ CREATE TABLE IF NOT EXISTS vehicle_expenses (
 ALTER TABLE vehicle_expenses ENABLE ROW LEVEL SECURITY;
 
 -- Policies for vehicle_expenses
+DROP POLICY IF EXISTS "Agents can view their own vehicle expenses" ON vehicle_expenses;
 CREATE POLICY "Agents can view their own vehicle expenses" ON vehicle_expenses
   FOR SELECT USING (agent_id IN (SELECT id FROM public.user_profiles WHERE auth_user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Agents can insert their own vehicle expenses" ON vehicle_expenses;
 CREATE POLICY "Agents can insert their own vehicle expenses" ON vehicle_expenses
   FOR INSERT WITH CHECK (agent_id IN (SELECT id FROM public.user_profiles WHERE auth_user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Agents can update their own SUBMITTED vehicle expenses" ON vehicle_expenses;
 CREATE POLICY "Agents can update their own SUBMITTED vehicle expenses" ON vehicle_expenses
   FOR UPDATE USING (agent_id IN (SELECT id FROM public.user_profiles WHERE auth_user_id = auth.uid()) AND status = 'SUBMITTED');
 
+DROP POLICY IF EXISTS "Admins have full access to vehicle expenses" ON vehicle_expenses;
 CREATE POLICY "Admins have full access to vehicle expenses" ON vehicle_expenses
   FOR ALL USING (
     (SELECT user_type FROM public.user_profiles WHERE auth_user_id = auth.uid()) = 'ADMIN'
@@ -50,6 +54,7 @@ CREATE TABLE IF NOT EXISTS vehicle_expense_attachments (
 ALTER TABLE vehicle_expense_attachments ENABLE ROW LEVEL SECURITY;
 
 -- Policies for vehicle_expense_attachments
+DROP POLICY IF EXISTS "Agents can view their own vehicle expense attachments" ON vehicle_expense_attachments;
 CREATE POLICY "Agents can view their own vehicle expense attachments" ON vehicle_expense_attachments
   FOR SELECT USING (
     EXISTS (
@@ -58,6 +63,7 @@ CREATE POLICY "Agents can view their own vehicle expense attachments" ON vehicle
     )
   );
 
+DROP POLICY IF EXISTS "Agents can insert attachments for their own expenses" ON vehicle_expense_attachments;
 CREATE POLICY "Agents can insert attachments for their own expenses" ON vehicle_expense_attachments
   FOR INSERT WITH CHECK (
     EXISTS (
@@ -66,6 +72,7 @@ CREATE POLICY "Agents can insert attachments for their own expenses" ON vehicle_
     )
   );
 
+DROP POLICY IF EXISTS "Agents can delete attachments for their own SUBMITTED expenses" ON vehicle_expense_attachments;
 CREATE POLICY "Agents can delete attachments for their own SUBMITTED expenses" ON vehicle_expense_attachments
   FOR DELETE USING (
     EXISTS (
@@ -74,6 +81,7 @@ CREATE POLICY "Agents can delete attachments for their own SUBMITTED expenses" O
     )
   );
 
+DROP POLICY IF EXISTS "Admins have full access to vehicle expense attachments" ON vehicle_expense_attachments;
 CREATE POLICY "Admins have full access to vehicle expense attachments" ON vehicle_expense_attachments
   FOR ALL USING (
     (SELECT user_type FROM public.user_profiles WHERE auth_user_id = auth.uid()) = 'ADMIN'
