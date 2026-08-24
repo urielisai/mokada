@@ -348,6 +348,223 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_branches: {
+        Row: {
+          created_at: string
+          customer_id: string
+          exterior_number: string | null
+          id: string
+          image_path: string | null
+          interior_number: string | null
+          is_active: boolean
+          is_main: boolean
+          latitude: number | null
+          location_references: string | null
+          longitude: number | null
+          manager_name: string | null
+          municipality: string | null
+          name: string
+          neighborhood: string | null
+          phone_primary: string
+          phone_secondary: string | null
+          postal_code: string | null
+          route_id: string | null
+          state: string | null
+          street: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          exterior_number?: string | null
+          id?: string
+          image_path?: string | null
+          interior_number?: string | null
+          is_active?: boolean
+          is_main?: boolean
+          latitude?: number | null
+          location_references?: string | null
+          longitude?: number | null
+          manager_name?: string | null
+          municipality?: string | null
+          name: string
+          neighborhood?: string | null
+          phone_primary: string
+          phone_secondary?: string | null
+          postal_code?: string | null
+          route_id?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          exterior_number?: string | null
+          id?: string
+          image_path?: string | null
+          interior_number?: string | null
+          is_active?: boolean
+          is_main?: boolean
+          latitude?: number | null
+          location_references?: string | null
+          longitude?: number | null
+          manager_name?: string | null
+          municipality?: string | null
+          name?: string
+          neighborhood?: string | null
+          phone_primary?: string
+          phone_secondary?: string | null
+          postal_code?: string | null
+          route_id?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_branches_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_branches_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_branches_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_fiscal_profiles: {
+        Row: {
+          billing_email: string
+          billing_exterior_number: string | null
+          billing_interior_number: string | null
+          billing_municipality: string | null
+          billing_neighborhood: string | null
+          billing_state: string | null
+          billing_street: string | null
+          cfdi_use: string
+          created_at: string
+          customer_id: string
+          fiscal_zip_code: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          legal_name: string
+          person_type: Database["public"]["Enums"]["fiscal_person_type"]
+          rfc: string
+          tax_regime: string
+          updated_at: string
+        }
+        Insert: {
+          billing_email: string
+          billing_exterior_number?: string | null
+          billing_interior_number?: string | null
+          billing_municipality?: string | null
+          billing_neighborhood?: string | null
+          billing_state?: string | null
+          billing_street?: string | null
+          cfdi_use?: string
+          created_at?: string
+          customer_id: string
+          fiscal_zip_code: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          legal_name: string
+          person_type?: Database["public"]["Enums"]["fiscal_person_type"]
+          rfc: string
+          tax_regime: string
+          updated_at?: string
+        }
+        Update: {
+          billing_email?: string
+          billing_exterior_number?: string | null
+          billing_interior_number?: string | null
+          billing_municipality?: string | null
+          billing_neighborhood?: string | null
+          billing_state?: string | null
+          billing_street?: string | null
+          cfdi_use?: string
+          created_at?: string
+          customer_id?: string
+          fiscal_zip_code?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          legal_name?: string
+          person_type?: Database["public"]["Enums"]["fiscal_person_type"]
+          rfc?: string
+          tax_regime?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_fiscal_profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_fiscal_profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          auth_user_id: string
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          requires_invoice: boolean
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone: string
+          requires_invoice?: boolean
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string
+          requires_invoice?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       expense_attachments: {
         Row: {
           attachment_type: Database["public"]["Enums"]["expense_attachment_type"]
@@ -1751,6 +1968,122 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          subtotal: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          product_id: string
+          quantity: number
+          subtotal: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          subtotal?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "sales_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_orders: {
+        Row: {
+          admin_comments: string | null
+          created_at: string
+          created_by: string
+          customer_id: string
+          estimated_delivery_date: string | null
+          id: string
+          shipping_address: string | null
+          shipping_cost: number | null
+          status: Database["public"]["Enums"]["sales_order_status"]
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          admin_comments?: string | null
+          created_at?: string
+          created_by: string
+          customer_id: string
+          estimated_delivery_date?: string | null
+          id?: string
+          shipping_address?: string | null
+          shipping_cost?: number | null
+          status?: Database["public"]["Enums"]["sales_order_status"]
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          admin_comments?: string | null
+          created_at?: string
+          created_by?: string
+          customer_id?: string
+          estimated_delivery_date?: string | null
+          id?: string
+          shipping_address?: string | null
+          shipping_cost?: number | null
+          status?: Database["public"]["Enums"]["sales_order_status"]
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settlement_transactions: {
         Row: {
           amount: number
@@ -2079,10 +2412,12 @@ export type Database = {
           expense_category_id: string
           expense_date: string
           id: string
-          invoice_available: boolean
+          invoice_available: boolean | null
           merchant_name: string | null
           notes: string | null
-          status: Database["public"]["Enums"]["travel_expense_status_type"]
+          status:
+            | Database["public"]["Enums"]["travel_expense_status_type"]
+            | null
           updated_at: string
           vehicle_id: string
         }
@@ -2095,10 +2430,12 @@ export type Database = {
           expense_category_id: string
           expense_date: string
           id?: string
-          invoice_available?: boolean
+          invoice_available?: boolean | null
           merchant_name?: string | null
           notes?: string | null
-          status?: Database["public"]["Enums"]["travel_expense_status_type"]
+          status?:
+            | Database["public"]["Enums"]["travel_expense_status_type"]
+            | null
           updated_at?: string
           vehicle_id: string
         }
@@ -2111,10 +2448,12 @@ export type Database = {
           expense_category_id?: string
           expense_date?: string
           id?: string
-          invoice_available?: boolean
+          invoice_available?: boolean | null
           merchant_name?: string | null
           notes?: string | null
-          status?: Database["public"]["Enums"]["travel_expense_status_type"]
+          status?:
+            | Database["public"]["Enums"]["travel_expense_status_type"]
+            | null
           updated_at?: string
           vehicle_id?: string
         }
@@ -2342,6 +2681,42 @@ export type Database = {
           },
         ]
       }
+      customer_summaries: {
+        Row: {
+          active_branch_count: number | null
+          active_fiscal_profile_count: number | null
+          auth_user_id: string | null
+          branch_count: number | null
+          created_at: string | null
+          created_by: string | null
+          default_fiscal_legal_name: string | null
+          default_fiscal_rfc: string | null
+          email: string | null
+          fiscal_profile_count: number | null
+          id: string | null
+          is_active: boolean | null
+          main_branch_image_path: string | null
+          main_branch_municipality: string | null
+          main_branch_name: string | null
+          main_branch_route_code: string | null
+          main_branch_route_id: string | null
+          main_branch_route_name: string | null
+          main_branch_state: string | null
+          name: string | null
+          phone: string | null
+          requires_invoice: boolean | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_branches_route_id_fkey"
+            columns: ["main_branch_route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_available: {
         Row: {
           availability_status: string | null
@@ -2356,6 +2731,7 @@ export type Database = {
           product_category: string | null
           product_code: string | null
           product_id: string | null
+          product_image: string | null
           product_name: string | null
           quantity: number | null
           reorder_point: number | null
@@ -2583,6 +2959,8 @@ export type Database = {
             }
             Returns: string
           }
+      current_user_can_manage_customers: { Args: never; Returns: boolean }
+      current_user_customer_id: { Args: never; Returns: string }
       current_user_is_active: { Args: never; Returns: boolean }
       current_user_is_admin: { Args: never; Returns: boolean }
       current_user_profile_id: { Args: never; Returns: string }
@@ -2670,6 +3048,7 @@ export type Database = {
         | "COMPLETED_WITH_ERRORS"
         | "FAILED"
       expense_attachment_type: "RECEIPT" | "INVOICE" | "PHOTO" | "OTHER"
+      fiscal_person_type: "INDIVIDUAL" | "LEGAL_ENTITY"
       inventory_movement_type:
         | "PURCHASE"
         | "SALE"
@@ -2695,6 +3074,13 @@ export type Database = {
         | "COMPLETED"
         | "UNDER_REVIEW"
         | "SETTLED"
+        | "CANCELLED"
+      sales_order_status:
+        | "PENDING"
+        | "VALIDATING"
+        | "CONFIRMED"
+        | "SHIPPED"
+        | "DELIVERED"
         | "CANCELLED"
       settlement_status_type: "PENDING" | "APPROVED" | "SETTLED" | "CANCELLED"
       settlement_transaction_type: "CASH_RETURN" | "REIMBURSEMENT"
@@ -2855,6 +3241,7 @@ export const Constants = {
         "FAILED",
       ],
       expense_attachment_type: ["RECEIPT", "INVOICE", "PHOTO", "OTHER"],
+      fiscal_person_type: ["INDIVIDUAL", "LEGAL_ENTITY"],
       inventory_movement_type: [
         "PURCHASE",
         "SALE",
@@ -2882,6 +3269,14 @@ export const Constants = {
         "COMPLETED",
         "UNDER_REVIEW",
         "SETTLED",
+        "CANCELLED",
+      ],
+      sales_order_status: [
+        "PENDING",
+        "VALIDATING",
+        "CONFIRMED",
+        "SHIPPED",
+        "DELIVERED",
         "CANCELLED",
       ],
       settlement_status_type: ["PENDING", "APPROVED", "SETTLED", "CANCELLED"],

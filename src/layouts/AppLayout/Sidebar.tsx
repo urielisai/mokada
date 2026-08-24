@@ -51,7 +51,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const sections: NavSection[] = [];
 
     if (isAdmin) {
-      sections.push({ path: '/', label: 'Dashboard Principal', icon: LayoutDashboard });
+      sections.push({ path: '/', label: 'Análisis y Métricas', icon: LayoutDashboard });
     }
 
     sections.push({
@@ -89,20 +89,11 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       sections.push({
         label: 'Operacion en Ruta',
         items: [
-          { path: '/route-operations/dashboard', label: 'Dashboard Rutas', icon: LayoutDashboard },
           { path: '/fleet/vehicles', label: 'Flotilla', icon: Truck },
           { path: '/fleet/expenses', label: 'Gastos Vehiculares', icon: Receipt },
           { path: '/route-operations/routes', label: 'Rutas', icon: Route },
           { path: '/route-operations/trips', label: 'Viajes Semanales', icon: MapPin },
           { path: '/route-operations/settlements', label: 'Conciliacion', icon: ClipboardCheck },
-        ],
-      });
-
-      sections.push({
-        label: 'Compras',
-        items: [
-          { path: '/purchases/suppliers', label: 'Proveedores', icon: Users, disabled: true },
-          { path: '/purchases/orders', label: 'Ordenes de compra', icon: ShoppingCart, disabled: true },
         ],
       });
 
@@ -114,12 +105,30 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
     }
 
-    if (!isAdmin) {
+    if (isAdmin || profile?.user_type === 'AGENT') {
+      sections.push({
+        label: 'Ventas',
+        items: [
+          { path: '/orders', label: 'Pedidos', icon: ShoppingCart },
+        ],
+      });
+    }
+
+    if (profile?.user_type === 'AGENT') {
       sections.push({
         label: 'Mi Ruta',
         items: [
           { path: '/my-route', label: 'Ruta Actual', icon: MapPin },
           { path: '/fleet/expenses', label: 'Gastos Vehiculares', icon: Receipt },
+        ],
+      });
+    }
+
+    if (profile?.user_type === 'CUSTOMER') {
+      sections.push({
+        label: 'Mis Compras',
+        items: [
+          { path: '/my-orders', label: 'Mis Pedidos', icon: ShoppingCart },
         ],
       });
     }
@@ -206,6 +215,7 @@ const NavItem = ({ item, onNavigate }: { item: NavItemConfig; onNavigate: () => 
   return (
     <NavLink
       to={item.path}
+      end={item.path === '/orders' || item.path === '/'}
       onClick={onNavigate}
       className={({ isActive }) =>
         `flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] transition-colors ${

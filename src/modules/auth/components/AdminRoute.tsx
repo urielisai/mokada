@@ -2,7 +2,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { LoadingState } from '../../../components/ui/LoadingState';
 import { useAuth } from '../context/useAuth';
 
-export const AdminRoute = () => {
+export const AdminRoute = ({ children }: { children?: React.ReactNode }) => {
   const { isAdmin, isLoading } = useAuth();
 
   if (isLoading) {
@@ -13,5 +13,5 @@ export const AdminRoute = () => {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return children ? <>{children}</> : <Outlet />;
 };
