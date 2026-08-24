@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -86,6 +86,7 @@ const emptyCustomerForm: CustomerFormValues = {
   phone: '',
   requires_invoice: false,
   is_active: true,
+  password: '',
 };
 
 export const CustomerFormPage = () => {
@@ -136,6 +137,7 @@ export const CustomerFormPage = () => {
       phone: customer.phone,
       requires_invoice: customer.requires_invoice,
       is_active: customer.is_active,
+      password: '',
     });
   }, [customer]);
 
@@ -378,9 +380,20 @@ export const CustomerFormPage = () => {
               type="email"
               value={form.email}
               maxLength={160}
+              disabled={isEditing}
               onChange={(value) => setForm((current) => ({ ...current, email: value }))}
               className="sm:col-span-2"
             />
+            {!isEditing && (
+              <TextInput
+                label="Contraseña *"
+                type="password"
+                value={form.password || ''}
+                maxLength={64}
+                onChange={(value) => setForm((current) => ({ ...current, password: value }))}
+                className="sm:col-span-2"
+              />
+            )}
           </div>
 
           <div className="mt-5 grid gap-2 sm:grid-cols-2">

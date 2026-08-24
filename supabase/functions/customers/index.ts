@@ -12,6 +12,7 @@ type CustomerPayload = {
   phone?: string;
   requires_invoice?: boolean;
   is_active?: boolean;
+  password?: string;
 };
 
 type CustomerRequest =
@@ -152,7 +153,7 @@ Deno.serve(async (req) => {
   try {
     if (body.action === 'create') {
       const normalized = normalizeCustomer(body.payload);
-      const password = makeTemporaryPassword();
+      const password = trimOrNull(body.payload.password) || makeTemporaryPassword();
       const metadata = customerMetadata(normalized.name);
 
       let authUserId: string | undefined;

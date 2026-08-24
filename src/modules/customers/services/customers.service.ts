@@ -96,6 +96,42 @@ export interface CustomerBranchOption extends CustomerBranch {
 }
 
 export interface CustomerRouteOption {
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerBranch {
+  id: string;
+  customer_id: string;
+  name: string;
+  manager_name: string | null;
+  phone_primary: string;
+  phone_secondary: string | null;
+  street: string | null;
+  exterior_number: string | null;
+  interior_number: string | null;
+  neighborhood: string | null;
+  postal_code: string | null;
+  municipality: string | null;
+  state: string | null;
+  location_references: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  route_id: string | null;
+  image_path: string | null;
+  is_main: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  routes?: CustomerRouteOption | null;
+  customers?: Pick<CustomerRecord, 'name'> | null;
+}
+
+export interface CustomerBranchOption extends CustomerBranch {
+  customers: Pick<CustomerRecord, 'id' | 'name'> | null;
+}
+
+export interface CustomerRouteOption {
   id: string;
   code: string;
   name: string;
@@ -108,6 +144,7 @@ export interface CustomerFormValues {
   phone: string;
   requires_invoice: boolean;
   is_active: boolean;
+  password?: string;
 }
 
 export interface FiscalFormValues {
@@ -216,19 +253,33 @@ const invokeCustomers = async <T>(body: Record<string, unknown>, fallbackMessage
   return data.data;
 };
 
-const normalizeCustomerPayload = (payload: CustomerFormValues) => ({
-  name: trimUpper(payload.name),
-  email: payload.email.trim().toLowerCase(),
-  phone: payload.phone.trim(),
-  requires_invoice: payload.requires_invoice,
-  is_active: payload.is_active,
-});
+const normalizeCustomerPayload = (payload: CustomerFormValues) => {
+  const normalized: any = {
+    name: trimUpper(payload.name),
+    email: payload.email.trim().toLowerCase(),
+    phone: payload.phone.trim(),
+    requires_invoice: payload.requires_invoice,
+    is_active: payload.is_active,
+  };
+  if (payload.password !== undefined) {
+    normalized.password = payload.password;
+  }
+  return normalized;
+};
 
 const validateCustomerPayload = (payload: CustomerFormValues) => {
   if (!payload.name.trim()) throw new Error('El nombre del cliente es obligatorio.');
   if (!payload.email.trim()) throw new Error('El correo del cliente es obligatorio.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email.trim())) {
     throw new Error('Escribe un correo válido para el cliente.');
+  }
+  if (payload.password !== undefined) {
+    if (!payload.password.trim()) {
+      throw new Error('La contraseña es obligatoria.');
+    }
+    if (payload.password.length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres.');
+    }
   }
 };
 

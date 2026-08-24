@@ -537,8 +537,7 @@ export const CustomerBranchFormModal = ({
               {zipCodeLookupError && <p className="mt-1 text-[12px] text-red-600">{zipCodeLookupError}</p>}
             </div>
           )}
-          <TextInput label="Latitud" type="number" value={String(form.latitude ?? '')} required={false} min="-90" max="90" step="any" readOnly onChange={() => undefined} />
-          <TextInput label="Longitud" type="number" value={String(form.longitude ?? '')} required={false} min="-180" max="180" step="any" readOnly onChange={() => undefined} />
+
           <label className="block min-w-0 sm:col-span-2">
             <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Referencias de ubicación</span>
             <textarea
