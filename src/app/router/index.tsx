@@ -42,9 +42,12 @@ import { SettlementsPage } from '../../modules/route-operations/pages/Settlement
 
 import { CheckoutPage } from '../../modules/orders/pages/CheckoutPage';
 import { MyOrdersPage } from '../../modules/orders/pages/MyOrdersPage';
+import { MyDebtsPage } from '../../modules/orders/pages/MyDebtsPage';
 import { OrdersPage } from '../../modules/orders/pages/OrdersPage';
 import { OrdersDashboardPage } from '../../modules/orders/pages/OrdersDashboardPage';
 import { OrderDetailsAdminPage } from '../../modules/orders/pages/OrderDetailsAdminPage';
+import { AdminDebtsPage } from '../../modules/admin/debts/pages/AdminDebtsPage';
+import { RouteDebtsPage } from '../../modules/route-operations/pages/RouteDebtsPage';
 
 export const router = createBrowserRouter([
   {
@@ -118,6 +121,7 @@ export const router = createBrowserRouter([
               { path: 'trips', element: <RouteTripsPage /> },
               { path: 'trips/:id', element: <TripDetailPage /> },
               { path: 'settlements', element: <SettlementsPage /> },
+              { path: 'debts', element: <RouteDebtsPage /> },
             ]
           },
           {
@@ -146,10 +150,15 @@ export const router = createBrowserRouter([
             element: <MyOrdersPage />
           },
           {
+            path: 'my-debts',
+            element: <MyDebtsPage />
+          },
+          {
             path: 'admin',
             element: <AdminRoute />,
             children: [
               { path: 'users', element: <UsersPage /> },
+              { path: 'debts', element: <AdminDebtsPage /> },
             ]
           },
           {

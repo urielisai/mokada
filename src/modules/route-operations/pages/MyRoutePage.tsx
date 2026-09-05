@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/context/useAuth';
 import { useMyCurrentTrip, useTripExpenses, useSaveExpense, useExpenseCategories, useUpdateTripStatus, useUploadExpenseAttachment } from '../hooks/useRouteOperations';
+import { ordersService } from '../../orders/services/orders.service';
+import { generateRouteSettlementPdf } from '../utils/generateRouteSettlementPdf';
+import { supabase } from '../../../lib/supabase/client';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { LoadingState } from '../../../components/ui/LoadingState';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { Modal } from '../../../components/ui/Modal';
 import { formatCurrency } from '../../../utils/formatters';
-import { MapPin, DollarSign, Plus, Truck, Upload } from 'lucide-react';
+import { MapPin, DollarSign, Plus, Truck, Upload, Wallet, Banknote, Building2, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 export const MyRoutePage = () => {
   const { profile } = useAuth();
@@ -16,6 +19,12 @@ export const MyRoutePage = () => {
   const saveExpense = useSaveExpense();
   const updateStatus = useUpdateTripStatus();
   const uploadAttachment = useUploadExpenseAttachment();
+
+  const [payments, setPayments] = useState<any[]>([]);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
+  const [isPaymentsOpen, setIsPaymentsOpen] = useState(false);
+  const [isExpensesOpen, setIsExpensesOpen] = useState(false);
+
   const [expenseModal, setExpenseModal] = useState(false);
   const [form, setForm] = useState({
     expense_category_id: '',
@@ -30,14 +39,68 @@ export const MyRoutePage = () => {
   });
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
+  useEffect(() => {
+    if (trip?.route_id && trip?.week_start_date && trip?.week_end_date) {
+      setIsLoadingPayments(true);
+      ordersService
+        .getRoutePayments(trip.route_id, trip.week_start_date, trip.week_end_date)
+        .then((data) => setPayments(data || []))
+        .catch((err) => console.error('Error fetching route payments:', err))
+        .finally(() => setIsLoadingPayments(false));
+    }
+  }, [trip?.route_id, trip?.week_start_date, trip?.week_end_date]);
+
   if (isLoading) return <LoadingState message="Buscando ruta asignada..." />;
   if (!trip) return <EmptyState title="Sin ruta asignada" description="No tienes una ruta asignada para esta semana." />;
 
+  const cashPayments = payments.filter((p) => p.payment_method === 'CASH');
+  const transferPayments = payments.filter((p) => p.payment_method === 'TRANSFER');
+
   const totalExpenses = expenses?.reduce((sum: number, e: any) => sum + Number(e.amount || 0), 0) || 0;
+  const totalCashCollected = cashPayments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+  const totalTransferCollected = transferPayments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+  const totalCollected = totalCashCollected + totalTransferCollected;
+
   const budget = Number(trip.budget_amount || 0);
   const available = budget - totalExpenses;
+  const netCashToDeliver = totalCashCollected + available;
+
   const startDate = new Date(trip.week_start_date + 'T12:00:00');
   const endDate = new Date(trip.week_end_date + 'T12:00:00');
+
+  const handleDownloadPdfReport = () => {
+    generateRouteSettlementPdf({
+      routeCode: trip.routes?.code || 'RUTA',
+      routeName: trip.routes?.name || 'Ruta Agente',
+      agentName: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Agente de Ruta',
+      vehicleInfo: trip.vehicle ? `${trip.vehicle.internal_code} (${trip.vehicle.brand} ${trip.vehicle.model})` : 'Sin Vehículo',
+      weekStartDate: trip.week_start_date,
+      weekEndDate: trip.week_end_date,
+      budgetAmount: budget,
+      totalExpenses: totalExpenses,
+      totalCashCollected: totalCashCollected,
+      totalTransferCollected: totalTransferCollected,
+      totalCollected: totalCollected,
+      netCashToDeliver: netCashToDeliver,
+      payments: payments.map((p) => ({
+        date: new Date(p.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+        orderId: p.sales_orders?.id || p.sales_order_id || '',
+        customerName: p.sales_orders?.customers?.name || 'Cliente',
+        branchName: p.sales_orders?.customer_branches?.name || 'Principal',
+        method: p.payment_method,
+        amount: Number(p.amount),
+        status: p.status,
+      })),
+      expenses: (expenses || []).map((e: any) => ({
+        date: e.expense_date,
+        category: e.expense_categories?.name || 'Gasto',
+        place: e.place_name || e.merchant_name || 'N/D',
+        description: e.description || '—',
+        amount: Number(e.amount),
+        status: e.status,
+      })),
+    });
+  };
 
   const handleSaveExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,10 +175,71 @@ export const MyRoutePage = () => {
         )}
       </div>
 
+      {/* Resumen de Cierre & Efectivo en Mano */}
+      <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+          <div>
+            <h3 className="text-[17px] font-bold text-[#1D1D1F] flex items-center gap-2">
+              <Banknote className="w-5 h-5 text-[#0066CC]" /> Resumen de Cierre de Semana
+            </h3>
+            <p className="text-[13px] text-[#86868B] mt-0.5">
+              Control de efectivo en mano, cobros y viáticos para liquidar semana.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDownloadPdfReport}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0066CC] px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#0055AA] shadow-sm shrink-0"
+          >
+            <FileText className="w-4 h-4" />
+            Ver / Imprimir PDF
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+          <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+              Efectivo Cobrado
+            </span>
+            <p className="mt-1 text-xl font-bold text-[#1D1D1F]">
+              {formatCurrency(totalCashCollected)}
+            </p>
+            <span className="text-[11px] text-[#86868B]">
+              {cashPayments.length} cobro(s) en efectivo
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+              Gastos de Ruta
+            </span>
+            <p className="mt-1 text-xl font-bold text-[#1D1D1F]">
+              {formatCurrency(totalExpenses)}
+            </p>
+            <span className="text-[11px] text-[#86868B]">
+              Viáticos rest.: {formatCurrency(available)}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0066CC]">
+              Efectivo a Entregar
+            </span>
+            <p className="mt-1 text-2xl font-bold text-[#0066CC]">
+              {formatCurrency(netCashToDeliver)}
+            </p>
+            <span className="text-[11px] text-blue-800">
+              Efectivo en mano para caja
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Budget bar */}
       <div className="bg-white border border-gray-200/60 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[14px] font-medium text-[#1D1D1F]">Presupuesto</span>
+          <span className="text-[14px] font-medium text-[#1D1D1F]">Presupuesto de Viáticos</span>
           <span className="text-[14px] font-semibold text-[#1D1D1F]">{formatCurrency(budget)}</span>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-3 mb-3">
@@ -151,35 +275,149 @@ export const MyRoutePage = () => {
         )}
       </div>
 
-      {/* Expenses list */}
-      <div className="bg-white border border-gray-200/60 rounded-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-[17px] font-semibold text-[#1D1D1F] flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-[#0066CC]" /> Mis gastos
-          </h3>
-        </div>
-        {expenses && expenses.length > 0 ? (
-          <div className="divide-y divide-gray-100">
-            {expenses.map((exp: any) => (
-              <div key={exp.id} className="px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] flex items-center justify-center text-[#86868B]">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[14px] font-medium text-[#1D1D1F]">{exp.expense_categories?.name}</p>
-                    <p className="text-[12px] text-[#86868B]">{exp.place_name || exp.description || '—'} · {new Date(exp.expense_date + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatCurrency(Number(exp.amount))}</p>
-                  <StatusBadge status={exp.status} className="text-[10px]" />
-                </div>
-              </div>
-            ))}
+      {/* Mis pagos section (Accordion) */}
+      <div className="bg-white border border-gray-200/60 rounded-2xl overflow-hidden shadow-sm">
+        <button
+          type="button"
+          onClick={() => setIsPaymentsOpen(!isPaymentsOpen)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left"
+        >
+          <div className="flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-[#0066CC]" />
+            <h3 className="text-[17px] font-semibold text-[#1D1D1F]">Mis pagos / Cobros en Ruta</h3>
+            <span className="text-xs bg-blue-50 text-[#0066CC] font-semibold px-2.5 py-0.5 rounded-full ml-1">
+              {payments.length}
+            </span>
           </div>
-        ) : (
-          <div className="px-6 py-8 text-center text-[#86868B]">Aún no registras gastos.</div>
+
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-[11px] text-[#86868B] block">Total cobrado</span>
+              <span className="text-[14px] font-bold text-[#1D1D1F]">{formatCurrency(totalCollected)}</span>
+            </div>
+            {isPaymentsOpen ? (
+              <ChevronUp className="w-5 h-5 text-[#86868B]" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-[#86868B]" />
+            )}
+          </div>
+        </button>
+
+        {isPaymentsOpen && (
+          <div className="border-t border-gray-100">
+            {isLoadingPayments ? (
+              <div className="px-6 py-8 text-center text-[#86868B]">Cargando pagos de la semana...</div>
+            ) : payments && payments.length > 0 ? (
+              <div className="divide-y divide-gray-100">
+                {payments.map((pmt: any) => (
+                  <div key={pmt.id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] flex items-center justify-center text-[#86868B] shrink-0">
+                        {pmt.payment_method === 'CASH' ? (
+                          <Banknote className="w-5 h-5 text-[#1D1D1F]" />
+                        ) : (
+                          <Building2 className="w-5 h-5 text-[#0066CC]" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                            {pmt.sales_orders?.customers?.name || 'Cliente'}
+                          </p>
+                          <span className="text-[12px] text-[#86868B]">
+                            ({pmt.sales_orders?.customer_branches?.name || 'Sucursal Principal'})
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-[#86868B] mt-0.5">
+                          Pedido #{pmt.sales_orders?.id?.slice(0, 8) || pmt.sales_order_id?.slice(0, 8)} · {pmt.payment_method === 'CASH' ? 'Efectivo' : 'Transferencia'} · {new Date(pmt.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        {pmt.evidence_path && (
+                          <a
+                            href={supabase.storage.from('payment-evidence').getPublicUrl(pmt.evidence_path).data.publicUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[12px] text-[#0066CC] hover:underline inline-block mt-0.5"
+                          >
+                            Ver comprobante
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-4">
+                      <div className="text-right">
+                        <p className="text-[15px] font-bold text-[#1D1D1F]">
+                          {formatCurrency(Number(pmt.amount))}
+                        </p>
+                        <StatusBadge status={pmt.status} className="text-[10px]" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-6 py-8 text-center text-[#86868B]">
+                Aún no registras cobros en esta semana ({startDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} – {endDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}).
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Expenses list (Accordion) */}
+      <div className="bg-white border border-gray-200/60 rounded-2xl overflow-hidden shadow-sm">
+        <button
+          type="button"
+          onClick={() => setIsExpensesOpen(!isExpensesOpen)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left"
+        >
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-[#0066CC]" />
+            <h3 className="text-[17px] font-semibold text-[#1D1D1F]">Mis gastos</h3>
+            <span className="text-xs bg-gray-100 text-gray-700 font-semibold px-2 py-0.5 rounded-full ml-1">
+              {expenses?.length || 0}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-[11px] text-[#86868B] block">Total gastado</span>
+              <span className="text-[14px] font-bold text-[#1D1D1F]">{formatCurrency(totalExpenses)}</span>
+            </div>
+            {isExpensesOpen ? (
+              <ChevronUp className="w-5 h-5 text-[#86868B]" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-[#86868B]" />
+            )}
+          </div>
+        </button>
+
+        {isExpensesOpen && (
+          <div className="border-t border-gray-100">
+            {expenses && expenses.length > 0 ? (
+              <div className="divide-y divide-gray-100">
+                {expenses.map((exp: any) => (
+                  <div key={exp.id} className="px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] flex items-center justify-center text-[#86868B]">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-medium text-[#1D1D1F]">{exp.expense_categories?.name}</p>
+                        <p className="text-[12px] text-[#86868B]">{exp.place_name || exp.description || '—'} · {new Date(exp.expense_date + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[14px] font-semibold text-[#1D1D1F]">{formatCurrency(Number(exp.amount))}</p>
+                      <StatusBadge status={exp.status} className="text-[10px]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-6 py-8 text-center text-[#86868B]">Aún no registras gastos.</div>
+            )}
+          </div>
         )}
       </div>
 

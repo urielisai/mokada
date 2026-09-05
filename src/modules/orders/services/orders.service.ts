@@ -9,6 +9,9 @@ export interface CreateOrderParams {
   customer_id: string;
   total_amount: number;
   shipping_address?: string;
+  branch_id?: string;
+  payment_type?: 'CONTADO' | 'CREDITO';
+  credit_term_days?: 8 | 15 | 21;
   items: {
     product_id: string;
     quantity: number;
@@ -23,7 +26,38 @@ export const ordersService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // 2. Insert order
+    // 2. Fetch user profile to check role for credit approval
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('user_type')
+      .eq('auth_user_id', user.id)
+      .maybeSingle();
+
+    const isStaff = profile?.user_type === 'AGENT' || profile?.user_type === 'ADMIN';
+    const isCredit = params.payment_type === 'CREDITO';
+
+    let creditApprovalStatus: 'NOT_REQUESTED' | 'PENDING' | 'APPROVED' | 'REJECTED' = 'NOT_REQUESTED';
+    let creditApprovedAt: string | null = null;
+    let creditApprovedBy: string | null = null;
+    let dueDate: string | null = null;
+
+    if (isCredit) {
+      if (isStaff) {
+        creditApprovalStatus = 'APPROVED';
+        creditApprovedAt = new Date().toISOString();
+        creditApprovedBy = user.id;
+
+        if (params.credit_term_days) {
+          const d = new Date();
+          d.setDate(d.getDate() + params.credit_term_days);
+          dueDate = d.toISOString().split('T')[0];
+        }
+      } else {
+        creditApprovalStatus = 'PENDING';
+      }
+    }
+
+    // 3. Insert order
     const { data: order, error: orderError } = await supabase
       .from('sales_orders')
       .insert({
@@ -31,6 +65,13 @@ export const ordersService = {
         created_by: user.id,
         total_amount: params.total_amount,
         shipping_address: params.shipping_address,
+        branch_id: params.branch_id || null,
+        payment_type: params.payment_type || 'CONTADO',
+        credit_term_days: params.credit_term_days || null,
+        credit_approval_status: creditApprovalStatus,
+        credit_approved_at: creditApprovedAt,
+        credit_approved_by: creditApprovedBy,
+        due_date: dueDate,
         status: 'PENDING'
       })
       .select()
@@ -38,7 +79,7 @@ export const ordersService = {
 
     if (orderError) throw orderError;
 
-    // 3. Insert items
+    // 4. Insert items
     const itemsToInsert = params.items.map(item => ({
       order_id: order.id,
       product_id: item.product_id,
@@ -124,6 +165,23 @@ export const ordersService = {
   },
 
   async updateOrder(id: string, updates: any) {
+    if (updates.status && ['CONFIRMED', 'SHIPPED', 'DELIVERED'].includes(updates.status)) {
+      const { data: existing } = await supabase
+        .from('sales_orders')
+        .select('payment_type, credit_approval_status')
+        .eq('id', id)
+        .single();
+
+      if (existing?.payment_type === 'CREDITO') {
+        if (existing.credit_approval_status === 'PENDING') {
+          throw new Error('Debes autorizar la solicitud de crédito antes de confirmar, enviar o entregar este pedido.');
+        }
+        if (existing.credit_approval_status === 'REJECTED') {
+          throw new Error('No se puede confirmar ni enviar un pedido con solicitud de crédito rechazada.');
+        }
+      }
+    }
+
     const { data, error } = await supabase
       .from('sales_orders')
       .update(updates)
@@ -257,6 +315,167 @@ export const ordersService = {
       .single();
 
     if (error) throw error;
+    return data;
+  },
+
+  async approveCreditRequest(orderId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: order } = await supabase
+      .from('sales_orders')
+      .select('credit_term_days')
+      .eq('id', orderId)
+      .single();
+
+    const creditApprovedAt = new Date();
+    let dueDate: string | null = null;
+    if (order?.credit_term_days) {
+      const d = new Date(creditApprovedAt);
+      d.setDate(d.getDate() + order.credit_term_days);
+      dueDate = d.toISOString().split('T')[0];
+    }
+
+    const { data, error } = await supabase
+      .from('sales_orders')
+      .update({
+        credit_approval_status: 'APPROVED',
+        credit_approved_at: creditApprovedAt.toISOString(),
+        credit_approved_by: user.id,
+        due_date: dueDate
+      })
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async rejectCreditRequest(orderId: string, comments?: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('sales_orders')
+      .update({
+        credit_approval_status: 'REJECTED',
+        admin_comments: comments || 'Solicitud de crédito rechazada'
+      })
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getAllDebts() {
+    const { data, error } = await supabase
+      .from('sales_orders')
+      .select(`
+        *,
+        customers (name, email, phone),
+        customer_branches (name, street, municipality, state, route_id),
+        sales_order_payments (*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getMyDebts() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .maybeSingle();
+
+    if (!customer) return [];
+
+    const { data, error } = await supabase
+      .from('sales_orders')
+      .select(`
+        *,
+        customer_branches (name, street, municipality, state),
+        sales_order_payments (*)
+      `)
+      .eq('customer_id', customer.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getRouteDebts(routeId: string) {
+    const { data: branches } = await supabase
+      .from('customer_branches')
+      .select('id')
+      .eq('route_id', routeId);
+
+    if (!branches || branches.length === 0) return [];
+
+    const branchIds = branches.map(b => b.id);
+
+    const { data, error } = await supabase
+      .from('sales_orders')
+      .select(`
+        *,
+        customers (name, email, phone),
+        customer_branches (name, street, municipality, state),
+        sales_order_payments (*)
+      `)
+      .in('branch_id', branchIds)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getRoutePayments(routeId: string, weekStartDate: string, weekEndDate: string) {
+    const { data: branches } = await supabase
+      .from('customer_branches')
+      .select('id')
+      .eq('route_id', routeId);
+
+    const branchIds = branches?.map(b => b.id) || [];
+
+    const startIso = `${weekStartDate}T00:00:00`;
+    const endIso = `${weekEndDate}T23:59:59`;
+
+    const { data, error } = await supabase
+      .from('sales_order_payments')
+      .select(`
+        *,
+        sales_orders!inner (
+          id,
+          customer_id,
+          branch_id,
+          total_amount,
+          amount_paid,
+          customers ( name ),
+          customer_branches ( name, route_id )
+        )
+      `)
+      .gte('created_at', startIso)
+      .lte('created_at', endIso)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching route payments:', error);
+      return [];
+    }
+
+    if (!data) return [];
+
+    if (branchIds.length > 0) {
+      return data.filter((p: any) => p.sales_orders && branchIds.includes(p.sales_orders.branch_id));
+    }
+
     return data;
   }
 };

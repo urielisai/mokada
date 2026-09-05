@@ -2030,11 +2030,19 @@ export type Database = {
       sales_orders: {
         Row: {
           admin_comments: string | null
+          amount_paid: number
+          branch_id: string | null
           created_at: string
           created_by: string
+          credit_approval_status: 'NOT_REQUESTED' | 'PENDING' | 'APPROVED' | 'REJECTED'
+          credit_approved_at: string | null
+          credit_approved_by: string | null
+          credit_term_days: number | null
           customer_id: string
+          due_date: string | null
           estimated_delivery_date: string | null
           id: string
+          payment_type: 'CONTADO' | 'CREDITO'
           shipping_address: string | null
           shipping_cost: number | null
           status: Database["public"]["Enums"]["sales_order_status"]
@@ -2043,11 +2051,19 @@ export type Database = {
         }
         Insert: {
           admin_comments?: string | null
+          amount_paid?: number
+          branch_id?: string | null
           created_at?: string
           created_by: string
+          credit_approval_status?: 'NOT_REQUESTED' | 'PENDING' | 'APPROVED' | 'REJECTED'
+          credit_approved_at?: string | null
+          credit_approved_by?: string | null
+          credit_term_days?: number | null
           customer_id: string
+          due_date?: string | null
           estimated_delivery_date?: string | null
           id?: string
+          payment_type?: 'CONTADO' | 'CREDITO'
           shipping_address?: string | null
           shipping_cost?: number | null
           status?: Database["public"]["Enums"]["sales_order_status"]
@@ -2056,11 +2072,19 @@ export type Database = {
         }
         Update: {
           admin_comments?: string | null
+          amount_paid?: number
+          branch_id?: string | null
           created_at?: string
           created_by?: string
+          credit_approval_status?: 'NOT_REQUESTED' | 'PENDING' | 'APPROVED' | 'REJECTED'
+          credit_approved_at?: string | null
+          credit_approved_by?: string | null
+          credit_term_days?: number | null
           customer_id?: string
+          due_date?: string | null
           estimated_delivery_date?: string | null
           id?: string
+          payment_type?: 'CONTADO' | 'CREDITO'
           shipping_address?: string | null
           shipping_cost?: number | null
           status?: Database["public"]["Enums"]["sales_order_status"]

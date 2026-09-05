@@ -80,11 +80,13 @@ export const StatusBadge = ({ status, className, text }: Props) => {
       colorClass = 'text-blue-600';
       break;
     case 'APPROVED':
-      label = 'Aprobado';
+    case 'CREDIT_APPROVED':
+      label = text || 'Aprobado';
       colorClass = 'text-emerald-600';
       break;
     case 'REJECTED':
-      label = 'Rechazado';
+    case 'CREDIT_REJECTED':
+      label = text || 'Rechazado';
       colorClass = 'text-red-600';
       break;
     case 'REQUIRES_INFORMATION':
@@ -92,8 +94,28 @@ export const StatusBadge = ({ status, className, text }: Props) => {
       colorClass = 'text-amber-600';
       break;
     case 'PENDING':
-      label = 'Pendiente';
+      label = text || 'Pendiente';
       colorClass = 'text-yellow-600';
+      break;
+    case 'PENDING_APPROVAL':
+      label = text || 'Por Aprobar';
+      colorClass = 'text-purple-600';
+      break;
+    case 'OVERDUE':
+      label = text || 'Retrasado';
+      colorClass = 'text-red-600';
+      break;
+    case 'PAID':
+      label = text || 'Pagado';
+      colorClass = 'text-emerald-600';
+      break;
+    case 'CONTADO':
+      label = text || 'Contado';
+      colorClass = 'text-blue-600';
+      break;
+    case 'CREDITO':
+      label = text || 'Crédito';
+      colorClass = 'text-amber-600';
       break;
     // Settlement types
     case 'BALANCED':

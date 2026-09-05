@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ordersService } from '../services/orders.service';
 import { statusConfig } from './OrdersPage';
-import { ArrowLeft, Save, Loader2, Calendar, Plus, Minus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -165,6 +165,36 @@ export const OrderDetailsAdminPage = () => {
     }
   };
 
+  const handleApproveCredit = async () => {
+    if (!id) return;
+    try {
+      setIsSaving(true);
+      await ordersService.approveCreditRequest(id);
+      toast.success('Solicitud de crédito autorizada.');
+      fetchOrder(id);
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al autorizar el crédito.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRejectCredit = async () => {
+    if (!id) return;
+    try {
+      setIsSaving(true);
+      await ordersService.rejectCreditRequest(id);
+      toast.success('Solicitud de crédito rechazada.');
+      fetchOrder(id);
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al rechazar la solicitud de crédito.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleUpdateItemQuantity = async (itemId: string, currentQuantity: number, change: number) => {
     const newQuantity = currentQuantity + change;
     if (newQuantity < 1) return;
@@ -305,6 +335,55 @@ export const OrderDetailsAdminPage = () => {
           </div>
         </div>
       </div>
+
+      {order.payment_type === 'CREDITO' && (
+        <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+          order.credit_approval_status === 'PENDING'
+            ? 'bg-purple-50 border-purple-200 text-purple-900'
+            : order.credit_approval_status === 'APPROVED'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+            : 'bg-red-50 border-red-200 text-red-900'
+        }`}>
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">
+                Modalidad de Pago: Crédito a {order.credit_term_days || 15} días
+              </p>
+              <p className="text-xs opacity-90 mt-0.5">
+                Estado de crédito: {
+                  order.credit_approval_status === 'APPROVED'
+                    ? `Autorizado ${order.due_date ? `(Fecha Límite de Pago: ${order.due_date})` : ''}`
+                    : order.credit_approval_status === 'PENDING'
+                    ? 'Pendiente de autorización por Administrador'
+                    : 'Rechazado'
+                }
+              </p>
+            </div>
+          </div>
+
+          {order.credit_approval_status === 'PENDING' && currentUserProfile?.user_type === 'ADMIN' && (
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleApproveCredit}
+                disabled={isSaving}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 shadow-sm"
+              >
+                Autorizar Crédito
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectCredit}
+                disabled={isSaving}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 shadow-sm"
+              >
+                Rechazar
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {isShippedOrDelivered && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-xl text-sm">

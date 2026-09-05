@@ -8,6 +8,8 @@ import { ShoppingCart, CheckCircle2, ChevronRight, Loader2, ArrowLeft } from 'lu
 import toast from 'react-hot-toast';
 import { AsyncSearchSelect } from '../../../components/ui/AsyncSearchSelect';
 
+import { CreditSelector } from '../components/CreditSelector';
+
 export const CheckoutPage = () => {
   const { items, getTotal, clearCart } = useCartStore();
   const { profile, isAdmin } = useAuth();
@@ -20,6 +22,9 @@ export const CheckoutPage = () => {
   const [branches, setBranches] = useState<CustomerBranch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   
+  const [paymentType, setPaymentType] = useState<'CONTADO' | 'CREDITO'>('CONTADO');
+  const [creditTerm, setCreditTerm] = useState<8 | 15 | 21>(15);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -117,6 +122,9 @@ export const CheckoutPage = () => {
     try {
       await ordersService.createOrder({
         customer_id: selectedCustomerId,
+        branch_id: selectedBranchId,
+        payment_type: paymentType,
+        credit_term_days: paymentType === 'CREDITO' ? creditTerm : undefined,
         total_amount: getTotal(),
         shipping_address: branchAddress,
         items: items.map(i => ({
@@ -227,6 +235,14 @@ export const CheckoutPage = () => {
                   ))}
                 </select>
               </div>
+
+              <CreditSelector
+                paymentType={paymentType}
+                onPaymentTypeChange={setPaymentType}
+                creditTerm={creditTerm}
+                onCreditTermChange={setCreditTerm}
+                isStaff={isAdmin || profile?.user_type === 'AGENT'}
+              />
             </div>
           </div>
 
