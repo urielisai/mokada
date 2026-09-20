@@ -40,10 +40,12 @@ interface NavSection {
 
 interface SidebarProps {
   isOpen: boolean;
+  isDesktopOpen: boolean;
   onClose: () => void;
+  onDesktopClose: () => void;
 }
 
-export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+export const Sidebar = ({ isOpen, isDesktopOpen, onClose, onDesktopClose }: SidebarProps) => {
   const { isAdmin, profile } = useAuth();
   const canManageCustomers = isAdmin || profile?.user_type === 'AGENT';
 
@@ -160,7 +162,8 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex h-full w-[260px] flex-col border-r border-gray-200/50 bg-[#F5F5F7] transition-transform duration-200 lg:static lg:translate-x-0 ${
+        id="main-sidebar"
+        className={`fixed inset-y-0 left-0 z-40 flex h-full w-[260px] flex-col border-r border-gray-200/50 bg-[#F5F5F7] transition-transform duration-200 lg:static ${isDesktopOpen ? 'lg:translate-x-0' : 'lg:hidden'} ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -173,6 +176,15 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[#86868B] transition-colors hover:bg-black/5 hover:text-[#1D1D1F] lg:hidden"
             title="Cerrar menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onDesktopClose}
+            className="hidden h-8 w-8 items-center justify-center rounded-lg text-[#86868B] transition-colors hover:bg-black/5 hover:text-[#1D1D1F] lg:flex"
+            aria-label="Cerrar menú lateral"
+            title="Cerrar menú"
           >
             <X className="h-4 w-4" />
           </button>

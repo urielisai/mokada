@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, LogOut, Menu } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { NotificationBell } from '../../modules/notifications/NotificationBell';
 import { UserAvatar } from '../../components/ui/UserAvatar';
 import { useAuth } from '../../modules/auth/context/useAuth';
 
 interface HeaderProps {
   onMenuClick: () => void;
+  onDesktopMenuClick: () => void;
+  isDesktopSidebarOpen: boolean;
 }
 
-export const Header = ({ onMenuClick }: HeaderProps) => {
+export const Header = ({ onMenuClick, onDesktopMenuClick, isDesktopSidebarOpen }: HeaderProps) => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -38,10 +40,23 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         <button
           type="button"
           onClick={onMenuClick}
+          aria-controls="main-sidebar"
+          aria-label="Abrir menú lateral"
           className="flex h-8 w-8 items-center justify-center rounded-lg text-[#424245] transition-colors hover:bg-gray-100 lg:hidden"
           title="Abrir menu"
         >
           <Menu className="h-[18px] w-[18px]" />
+        </button>
+        <button
+          type="button"
+          onClick={onDesktopMenuClick}
+          aria-controls="main-sidebar"
+          aria-expanded={isDesktopSidebarOpen}
+          aria-label={isDesktopSidebarOpen ? 'Cerrar menú lateral' : 'Abrir menú lateral'}
+          title={isDesktopSidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+          className="hidden h-8 w-8 items-center justify-center rounded-lg text-[#424245] transition-colors hover:bg-gray-100 lg:flex"
+        >
+          {isDesktopSidebarOpen ? <PanelLeftClose className="h-[18px] w-[18px]" /> : <PanelLeftOpen className="h-[18px] w-[18px]" />}
         </button>
         {/* Search could go here in the future */}
       </div>
