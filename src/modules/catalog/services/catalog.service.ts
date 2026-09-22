@@ -2,11 +2,18 @@ import { supabase } from '../../../lib/supabase/client';
 import { storageService } from '../../../lib/supabase/storage';
 
 export const catalogService = {
-  async getProducts({ page = 1, pageSize = 25, search = '' }) {
+  async getProducts({ page = 1, pageSize = 25, search = '', brand = '', category = '' }) {
     let query = supabase.from('product_search').select('*', { count: 'exact' });
     
     if (search) {
       query = query.or(`code.ilike.%${search}%,name.ilike.%${search}%,barcode.ilike.%${search}%`);
+    } else {
+      if (brand) {
+        query = query.eq('brand', brand);
+      }
+      if (category) {
+        query = query.eq('category', category);
+      }
     }
 
     const from = (page - 1) * pageSize;

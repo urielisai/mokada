@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInfiniteProducts } from '../hooks/useCatalog';
+import { useInfiniteProducts, useBrands, useCategories } from '../hooks/useCatalog';
 import { catalogService } from '../services/catalog.service';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { Search, Plus, PackageSearch, ShoppingCart, Loader2 } from 'lucide-react';
@@ -17,8 +17,17 @@ export const ProductsPage = () => {
   const debouncedSearch = useDebounce(search, 500);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { addItem, getItemCount } = useCartStore();
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  const { data: brandsData } = useBrands();
+  const { data: categoriesData } = useCategories();
+
+  const brands = brandsData || [];
+  const categories = categoriesData || [];
 
   const { 
+
     data, 
     isLoading, 
     isError,
@@ -26,7 +35,12 @@ export const ProductsPage = () => {
     fetchNextPage, 
     hasNextPage, 
     isFetchingNextPage 
-  } = useInfiniteProducts({ pageSize: 25, search: debouncedSearch });
+  } = useInfiniteProducts({ 
+    pageSize: 25, 
+    search: debouncedSearch,
+    brand: selectedBrand,
+    category: selectedCategory
+  });
 
   const products = data?.pages.flatMap((page) => page.data) || [];
 
@@ -54,9 +68,44 @@ export const ProductsPage = () => {
               placeholder="Buscar por código o nombre..." 
               className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all shadow-sm"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                if (e.target.value) {
+                  setSelectedBrand('');
+                  setSelectedCategory('');
+                }
+              }}
             />
           </div>
+          
+          <select
+            value={selectedBrand}
+            onChange={(e) => {
+              setSelectedBrand(e.target.value);
+              if (e.target.value) setSearch('');
+            }}
+            className="hidden sm:block w-36 px-3 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[13px] text-[#1D1D1F] transition-all shadow-sm"
+          >
+            <option value="">Todas las marcas</option>
+            {brands.map((b: any) => (
+              <option key={b.id} value={b.name}>{b.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              if (e.target.value) setSearch('');
+            }}
+            className="hidden sm:block w-36 px-3 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[13px] text-[#1D1D1F] transition-all shadow-sm"
+          >
+            <option value="">Todas las categorías</option>
+            {categories.map((c: any) => (
+              <option key={c.id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+
           {isAdmin && (
             <button 
               onClick={() => navigate('/catalog/products/new')}
