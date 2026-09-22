@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 
 export const SettlementsPage = () => {
   const { profile } = useAuth();
-  const { data, isLoading } = useFinancialSummary({ status: 'UNDER_REVIEW' });
+  const { data, isLoading } = useFinancialSummary({ statuses: ['COMPLETED', 'UNDER_REVIEW'] });
   const createSettlement = useCreateSettlement();
   const [confirmTrip, setConfirmTrip] = useState<any>(null);
 
@@ -58,9 +58,10 @@ export const SettlementsPage = () => {
       cell: (item) => {
         const balance = Number(item.balance || 0);
         return (
-          <span className={`font-semibold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {balance >= 0 ? '+' : ''}{formatCurrency(balance)}
-          </span>
+          <div className={`text-right ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="font-semibold block">{balance >= 0 ? '+' : ''}{formatCurrency(Math.abs(balance))}</span>
+            <span className="text-[10px] font-normal leading-none block">{balance > 0 ? 'Agente devuelve' : balance < 0 ? 'Empresa reembolsa' : ''}</span>
+          </div>
         );
       },
       className: 'text-right',

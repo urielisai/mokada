@@ -7,7 +7,7 @@ import { Plus, Filter } from 'lucide-react';
 
 export const MovementsPage = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>('');
-  const { data, isLoading } = useMovements(selectedWarehouse || undefined);
+  const { data, isLoading, error } = useMovements(selectedWarehouse || undefined);
   const { data: warehouses } = useWarehouses();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -62,8 +62,8 @@ export const MovementsPage = () => {
       )
     },
     { 
-      header: 'Costo Unit.', 
-      cell: (item) => item.unit_cost ? formatCurrency(item.unit_cost) : '-',
+      header: 'Valor unitario',
+      cell: (item) => <span>{item.unit_cost != null ? formatCurrency(item.unit_cost) : 'Sin costo'}<span className="block text-[11px] text-[#86868B]">{item.movement_type === 'TRANSFER_IN' ? 'Precio interno' : item.movement_type === 'PURCHASE' ? 'Compra' : 'Costo del almacén'}</span></span>,
       className: 'text-right text-slate-500'
     }
   ];
@@ -73,7 +73,7 @@ export const MovementsPage = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Movimientos</h2>
-          <p className="text-[15px] text-[#86868B]">Historial de entradas y salidas de inventario</p>
+          <p className="text-[15px] text-[#86868B]">Compras en el principal, traspasos al secundario y salidas por venta</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -98,11 +98,12 @@ export const MovementsPage = () => {
             className="flex items-center gap-2 px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0055FF] transition-colors text-[14px] font-medium"
           >
             <Plus className="w-4 h-4" />
-            Ajuste Manual
+            Nuevo Movimiento
           </button>
         </div>
       </div>
 
+      {error && <p className="text-[13px] text-red-600 bg-red-50 border border-red-200 rounded-xl p-4">No se pudieron consultar los movimientos: {(error as Error).message}</p>}
       <Table 
         data={data || []} 
         columns={columns}

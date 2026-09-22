@@ -88,7 +88,9 @@ export const expenseService = {
   async getFinancialSummary(filters?: any) {
     let query = supabase.from('route_trip_financial_summary').select('*');
 
-    if (filters?.status) {
+    if (filters?.statuses && Array.isArray(filters.statuses)) {
+      query = query.in('route_trip_status', filters.statuses);
+    } else if (filters?.status) {
       query = query.eq('route_trip_status', filters.status);
     }
 
@@ -158,7 +160,7 @@ export const expenseService = {
     const { count: pendingReview } = await supabase
       .from('route_trips')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'UNDER_REVIEW');
+      .in('status', ['COMPLETED', 'UNDER_REVIEW']);
 
     // Pending settlements
     const { count: pendingSettlements } = await supabase

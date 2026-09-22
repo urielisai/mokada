@@ -5,9 +5,13 @@ import { Table, type Column } from '../../../components/ui/Table';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { formatQuantity } from '../../../utils/formatters';
 import { catalogService } from '../../catalog/services/catalog.service';
+import { InventoryCostModal } from '../components/InventoryProductInfo';
+import type { InventoryStock } from '../services/inventory.service';
+import { formatCurrency } from '../../../utils/formatters';
 
 export const StockPage = () => {
-  const { data, isLoading } = useStock();
+  const { data, isLoading, error, refetch } = useStock();
+  const [editingCost, setEditingCost] = useState<InventoryStock | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>('all');
@@ -63,6 +67,7 @@ export const StockPage = () => {
       }
     },
     { header: 'Almacén', accessorKey: 'warehouse_name' },
+    { header: 'Ubicación', cell: item => item.location_name || 'Sin ubicación' },
     { 
       header: 'Existencia', 
       cell: (item) => formatQuantity(item.quantity || 0),
@@ -81,7 +86,11 @@ export const StockPage = () => {
     { 
       header: 'Estado', 
       cell: (item) => <StatusBadge status={item.availability_status} />
-    }
+    },
+    {header: 'Costo del almacén', className: 'text-right', cell: item => item.average_cost == null ? 'Sin costo' : formatCurrency(item.average_cost)},
+    {header: 'Compra original', className: 'text-right', cell: item => item.original_average_cost == null ? 'Sin costo' : formatCurrency(item.original_average_cost)},
+    {header: 'Precios de venta', cell: item => <div className="text-[12px] space-y-1">{item.warehouse_role === 'PURCHASE' ? 'No aplica · traspasa para vender' : item.sale_prices.length ? item.sale_prices.map((price: InventoryStock['sale_prices'][number]) => <p key={price.price_list_id} className={price.price_list_id === item.default_price_list_id ? 'font-semibold' : ''}>{price.name}: {formatCurrency(price.amount)}{price.price_list_id === item.default_price_list_id ? ' · predeterminado' : ''}</p>) : 'Sin precios'}</div>},
+    {header: 'Acciones', cell: item => <button className="text-[12px] text-[#0066CC] font-medium hover:underline" onClick={() => setEditingCost(item)}>Configurar costos</button>}
   ];
 
   return (
@@ -149,6 +158,7 @@ export const StockPage = () => {
         </div>
       </div>
 
+      {error && <p className="p-4 bg-red-50 border border-red-200 text-red-600 text-[13px] rounded-xl">No se pudo consultar el inventario: {(error as Error).message}. <button className="underline" onClick={() => refetch()}>Reintentar</button></p>}
       {isLoading ? (
         <div className="py-12 text-center text-gray-500">Cargando existencias...</div>
       ) : Object.keys(groupedData).length > 0 ? (
@@ -202,11 +212,18 @@ export const StockPage = () => {
                             </span>
                             <StatusBadge status={item.availability_status} />
                           </div>
+
                           
                           <h3 className="text-[15px] font-semibold text-[#1D1D1F] leading-tight mb-2 line-clamp-2">
                             {item.product_name}
                           </h3>
                           
+                          <div className="text-[12px] text-[#86868B] space-y-1 mt-4">
+                            <p>Costo del almacén: <span className="text-[#1D1D1F] font-medium">{item.average_cost == null ? 'Sin costo' : formatCurrency(item.average_cost)}</span></p>
+                            <p>Compra original: <span className="text-[#1D1D1F] font-medium">{item.original_average_cost == null ? 'Sin costo' : formatCurrency(item.original_average_cost)}</span></p>
+                            {item.warehouse_role === 'SALES' ? item.sale_prices.map((price: InventoryStock['sale_prices'][number]) => <p key={price.price_list_id}>{price.name}: {formatCurrency(price.amount)}</p>) : <p>Precios de venta: no aplican aquí</p>}
+                            <button className="text-[#0066CC] font-medium hover:underline pt-2" onClick={() => setEditingCost(item)}>Configurar costos</button>
+                          </div>
                           <div className="mt-auto pt-4 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
                             <div>
                               <p className="text-[11px] text-[#86868B] uppercase tracking-wider mb-0.5">Disp.</p>
@@ -243,6 +260,7 @@ export const StockPage = () => {
           <p className="text-[14px] text-[#86868B]">No se encontraron productos en el inventario.</p>
         </div>
       )}
+      <InventoryCostModal stock={editingCost} onClose={() => setEditingCost(null)} />
     </div>
   );
 };

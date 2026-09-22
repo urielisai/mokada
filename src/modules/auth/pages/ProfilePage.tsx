@@ -87,7 +87,7 @@ export const ProfilePage = () => {
   const openAvatarPreview = () => {
     const url = storageService.getPublicUrl('user-avatars', profile?.avatar_path || null);
     if (!url) {
-      setErrorMessage('A?n no tienes foto cargada.');
+      setErrorMessage('Aún no tienes foto cargada.');
       return;
     }
 
@@ -134,7 +134,7 @@ export const ProfilePage = () => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">Mi perfil</h2>
-          <p className="text-[14px] text-[#86868B] sm:text-[15px]">Actualiza tu informaci?n personal.</p>
+          <p className="text-[14px] text-[#86868B] sm:text-[15px]">Actualiza tu información personal.</p>
         </div>
         <button
           type="button"
@@ -142,7 +142,7 @@ export const ProfilePage = () => {
           className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
         >
           <KeyRound className="h-4 w-4" />
-          Cambiar contrase?a
+          Cambiar contraseña
         </button>
       </div>
 
@@ -193,7 +193,7 @@ export const ProfilePage = () => {
               <UserRound className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-[#1D1D1F]">Informacion personal</h3>
+              <h3 className="text-base font-semibold text-[#1D1D1F]">Información personal</h3>
               <p className="text-[13px] text-[#86868B]">Estos datos se muestran dentro del sistema.</p>
             </div>
           </div>
@@ -288,24 +288,24 @@ const PasswordChangeDialog = ({ onClose, onUpdatePassword }: PasswordChangeDialo
     setSuccessMessage('');
 
     if (newPassword.length < 8) {
-      setErrorMessage('La nueva contrase?a debe tener al menos 8 caracteres.');
+      setErrorMessage('La nueva contraseña debe tener al menos 8 caracteres.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage('La confirmaci?n no coincide.');
+      setErrorMessage('La confirmación no coincide.');
       return;
     }
 
     setIsSubmitting(true);
     try {
       await onUpdatePassword(currentPassword, newPassword);
-      setSuccessMessage('Contrase?a actualizada.');
+      setSuccessMessage('Contraseña actualizada.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo actualizar la contrase?a.';
+      const message = error instanceof Error ? error.message : 'No se pudo actualizar la contraseña.';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
@@ -324,8 +324,8 @@ const PasswordChangeDialog = ({ onClose, onUpdatePassword }: PasswordChangeDialo
               <KeyRound className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-base font-semibold text-[#1D1D1F]">Cambiar contrase?a</h3>
-              <p className="truncate text-[12px] text-[#86868B]">Usa 8 caracteres o m?s.</p>
+              <h3 className="truncate text-base font-semibold text-[#1D1D1F]">Cambiar contraseña</h3>
+              <p className="truncate text-[12px] text-[#86868B]">Usa 8 caracteres o más.</p>
             </div>
           </div>
           <button
@@ -341,19 +341,19 @@ const PasswordChangeDialog = ({ onClose, onUpdatePassword }: PasswordChangeDialo
         <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
           <div className="space-y-3 sm:space-y-4">
             <PasswordField
-              label="Contrase?a actual"
+              label="Contraseña actual"
               value={currentPassword}
               onChange={setCurrentPassword}
               autoComplete="current-password"
             />
             <PasswordField
-              label="Nueva contrase?a"
+              label="Nueva contraseña"
               value={newPassword}
               onChange={setNewPassword}
               autoComplete="new-password"
             />
             <PasswordField
-              label="Confirmar nueva contrase?a"
+              label="Confirmar nueva contraseña"
               value={confirmPassword}
               onChange={setConfirmPassword}
               autoComplete="new-password"

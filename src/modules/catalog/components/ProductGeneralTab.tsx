@@ -1,5 +1,4 @@
 import { useFormContext } from 'react-hook-form';
-import { ImageUpload } from '../../../components/ui/ImageUpload';
 
 interface Props {
   brands: any[];

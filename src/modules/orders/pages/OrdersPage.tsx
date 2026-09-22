@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ordersService } from '../services/orders.service';
-import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { Search, Filter, ShoppingCart, Loader2, FileText, CheckCircle2, Truck, XCircle, Clock } from 'lucide-react';
+import { Search, Filter, ShoppingCart, Loader2, FileText, CheckCircle2, Truck, XCircle, Clock, Plus } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { supabase } from '../../../lib/supabase/client';
 import { useAuth } from '../../auth/context/useAuth';
 
@@ -19,7 +17,7 @@ export const statusConfig = {
 
 export const OrdersPage = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, profile } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -69,8 +67,9 @@ export const OrdersPage = () => {
           <p className="text-[15px] text-[#86868B] mt-1">Gestión de pedidos de clientes</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-72">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          {(isAdmin || profile?.user_type==='AGENT') && <button type="button" onClick={()=>{sessionStorage.removeItem('warranty-return-id');navigate('/catalog/products');}} className="flex items-center justify-center gap-2 bg-[#0066CC] hover:bg-[#005bb5] text-white px-4 py-2 rounded-xl text-[14px] font-medium transition-colors whitespace-nowrap shadow-sm"><Plus className="w-4 h-4" />Nuevo pedido</button>}
+          <div className="relative flex-1 min-w-[180px] sm:w-72 sm:flex-none">
             <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 

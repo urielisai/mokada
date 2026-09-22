@@ -1,6 +1,15 @@
 -- Migration: Inventory Procedures
 -- Description: Stored procedures to handle inventory movements safely.
 
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inventory_movement_type') THEN
+    CREATE TYPE public.inventory_movement_type AS ENUM (
+      'PURCHASE', 'SALE', 'RETURN_IN', 'RETURN_OUT', 'TRANSFER_IN', 'TRANSFER_OUT', 'ADJUSTMENT_IN', 'ADJUSTMENT_OUT', 'INITIAL_STOCK'
+    );
+  END IF;
+END $$;
+
 -- 1. Process Inventory Movement
 CREATE OR REPLACE FUNCTION public.process_inventory_movement(
   p_product_id uuid,

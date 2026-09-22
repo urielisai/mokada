@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { TrendingUp, Package, DollarSign, Clock, Users, Trophy } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, Clock, Users, Trophy, BarChart2 } from 'lucide-react';
 import { statusConfig } from '../pages/OrdersPage';
 
 const COLORS = ['#0066CC', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#6366F1'];
@@ -15,7 +15,7 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
     const totalOrders = orders.length;
     
     // Only consider non-cancelled orders for revenue
-    const validOrders = orders.filter(o => o.status !== 'CANCELLED');
+    const validOrders = orders.filter(o => o.status !== 'CANCELLED' && !o.warranty_return_id);
     
     const totalRevenue = validOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
     const avgOrderValue = validOrders.length > 0 ? totalRevenue / validOrders.length : 0;
@@ -90,7 +90,19 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
     };
   }, [orders, agents]);
 
-  if (!orders || orders.length === 0) return null;
+  if (!orders || orders.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 bg-white border border-gray-200/60 rounded-2xl shadow-sm mt-6 mb-8">
+        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+          <BarChart2 className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-semibold text-[#1D1D1F] mb-1">Sin datos de ventas</h3>
+        <p className="text-[#86868B] text-center max-w-sm text-sm">
+          Aún no hay pedidos registrados para generar las métricas de este panel.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 mb-8">
@@ -157,7 +169,7 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
                 <Tooltip 
                   cursor={{ fill: '#F3F4F6' }}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => [new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value), 'Ingresos']}
+                  formatter={(value) => [new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(value)), 'Ingresos']}
                 />
                 <Bar dataKey="total" fill="#0066CC" radius={[4, 4, 0, 0]} maxBarSize={50} />
               </BarChart>
@@ -180,7 +192,7 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {metrics.statusData.map((entry, index) => (
+                  {metrics.statusData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

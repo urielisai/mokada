@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, LogOut, Menu } from 'lucide-react';
+import { ChevronDown, LogOut, Menu } from 'lucide-react';
+import { NotificationBell } from '../../modules/notifications/NotificationBell';
 import { UserAvatar } from '../../components/ui/UserAvatar';
 import { useAuth } from '../../modules/auth/context/useAuth';
 
@@ -37,6 +38,8 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         <button
           type="button"
           onClick={onMenuClick}
+          aria-controls="main-sidebar"
+          aria-label="Abrir menú lateral"
           className="flex h-8 w-8 items-center justify-center rounded-lg text-[#424245] transition-colors hover:bg-gray-100 lg:hidden"
           title="Abrir menu"
         >
@@ -46,10 +49,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       </div>
       
       <div className="flex items-center gap-2 text-gray-500 sm:gap-3">
-        <button className="relative flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 hover:text-[#1D1D1F]">
-          <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full border border-white bg-red-500"></span>
-        </button>
+        <NotificationBell />
         
         <div ref={menuRef} className="relative">
           <button

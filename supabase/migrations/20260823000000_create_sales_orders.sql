@@ -1,6 +1,11 @@
-CREATE TYPE public.sales_order_status AS ENUM ('PENDING', 'VALIDATING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'sales_order_status') THEN
+    CREATE TYPE public.sales_order_status AS ENUM ('PENDING', 'VALIDATING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+  END IF;
+END $$;
 
-CREATE TABLE public.sales_orders (
+CREATE TABLE IF NOT EXISTS public.sales_orders (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_id uuid REFERENCES public.customers(id) NOT NULL,
   created_by uuid REFERENCES auth.users(id) NOT NULL,
@@ -14,7 +19,7 @@ CREATE TABLE public.sales_orders (
   updated_at timestamptz DEFAULT now() NOT NULL
 );
 
-CREATE TABLE public.sales_order_items (
+CREATE TABLE IF NOT EXISTS public.sales_order_items (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   order_id uuid REFERENCES public.sales_orders(id) ON DELETE CASCADE NOT NULL,
   product_id uuid REFERENCES public.products(id) NOT NULL,
@@ -29,12 +34,13 @@ ALTER TABLE public.sales_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sales_order_items ENABLE ROW LEVEL SECURITY;
 
 -- Set up Realtime for sales_orders
--- We need to add it to the publication
-BEGIN;
-  DROP PUBLICATION IF EXISTS supabase_realtime;
-  CREATE PUBLICATION supabase_realtime;
-COMMIT;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.sales_orders;
+DO $$
+BEGIN
+  BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.sales_orders;
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+END $$;
 
 -- RLS Policies for sales_orders
 

@@ -7,7 +7,7 @@ import { Plus, Eye } from 'lucide-react';
 
 export const TransfersPage = () => {
   const navigate = useNavigate();
-  const { data, isLoading } = useTransfers();
+  const { data, isLoading, error } = useTransfers();
 
   const columns: Column<any>[] = [
     { header: 'No. Traspaso', accessorKey: 'transfer_number', className: 'font-medium text-slate-900' },
@@ -58,6 +58,7 @@ export const TransfersPage = () => {
         </button>
       </div>
 
+      {error && <p className="text-[13px] text-red-600 bg-red-50 border border-red-200 rounded-xl p-4">No se pudieron consultar los traspasos: {(error as Error).message}</p>}
       <Table 
         data={data || []} 
         columns={columns}

@@ -4,6 +4,13 @@ import { inventoryService } from '../services/inventory.service';
 import { inventoryKeys } from '../../../utils/queryKeys';
 import { supabase } from '../../../lib/supabase/client';
 
+const invalidateInventory = (client: ReturnType<typeof useQueryClient>) => Promise.all([
+  client.invalidateQueries({queryKey: inventoryKeys.all}),
+  client.invalidateQueries({queryKey: ['inventory_valuation']}),
+  client.invalidateQueries({queryKey: ['sales_margins']}),
+  client.invalidateQueries({queryKey: ['inventory_transfers']})
+]);
+
 export const useStock = () => {
   const queryClient = useQueryClient();
 
@@ -15,8 +22,14 @@ export const useStock = () => {
         { event: '*', schema: 'public', table: 'product_inventory' },
         () => {
           queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
+          queryClient.invalidateQueries({ queryKey: ['inventory_valuation'] });
         }
       )
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'inventory_costs'}, () => invalidateInventory(queryClient))
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'product_prices'}, () => queryClient.invalidateQueries({queryKey: inventoryKeys.stock()}))
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'warehouses'}, () => invalidateInventory(queryClient))
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'inventory_transfers'}, () => queryClient.invalidateQueries({queryKey: ['inventory_transfers']}))
+      .on('postgres_changes', {event: '*', schema: 'public', table: 'inventory_transfer_items'}, () => queryClient.invalidateQueries({queryKey: ['inventory_transfers']}))
       .subscribe();
 
     return () => {
@@ -49,7 +62,7 @@ export const useSaveWarehouse = () => {
   return useMutation({
     mutationFn: inventoryService.saveWarehouse,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: inventoryKeys.warehouses() });
+      invalidateInventory(queryClient);
     },
   });
 };
@@ -61,6 +74,7 @@ export const useCreateMovement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.movements() });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
+      queryClient.invalidateQueries({ queryKey: ['inventory_valuation'] });
     },
   });
 };
@@ -119,8 +133,9 @@ export const useCompleteTransfer = () => {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['inventory_transfers'] });
       queryClient.invalidateQueries({ queryKey: ['inventory_transfers', id] });
-      queryClient.invalidateQueries({ queryKey: ['inventory_available'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory_movements'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
+      queryClient.invalidateQueries({ queryKey: ['inventory_valuation'] });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.movements() });
     },
   });
 };

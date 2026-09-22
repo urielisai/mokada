@@ -13,7 +13,7 @@ interface PaymentEvidenceModalProps {
   onSubmit: (amount: number, evidenceFile: File) => Promise<void>;
 }
 
-export const PaymentEvidenceModal = ({ isOpen, onClose, orderId, totalAmount, amountPaid, onSubmit }: PaymentEvidenceModalProps) => {
+export const PaymentEvidenceModal = ({ isOpen, onClose, totalAmount, amountPaid, onSubmit }: PaymentEvidenceModalProps) => {
   const [amount, setAmount] = useState<string>((totalAmount - amountPaid).toString());
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

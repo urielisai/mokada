@@ -1,22 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProducts } from '../hooks/useCatalog';
+import { useInfiniteProducts } from '../hooks/useCatalog';
 import { catalogService } from '../services/catalog.service';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { Search, Plus, PackageSearch, ShoppingCart } from 'lucide-react';
+import { Search, Plus, PackageSearch, ShoppingCart, Loader2 } from 'lucide-react';
 import { useAuth } from '../../auth/context/useAuth';
 import { useCartStore } from '../store/useCartStore';
 import { CartDrawer } from '../components/CartDrawer';
+import { useDebounce } from '../../../hooks/useDebounce';
+import { useIntersectionObserver } from '../../../hooks/useIntersectionObserver';
 
 export const ProductsPage = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [search, setSearch] = useState('');
-  const { data, isLoading } = useProducts({ page: 1, pageSize: 25, search });
+  const debouncedSearch = useDebounce(search, 500);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { addItem, getItemCount } = useCartStore();
 
-  const products = data?.data || [];
+  const { 
+    data, 
+    isLoading, 
+    isError,
+    isFetchNextPageError,
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useInfiniteProducts({ pageSize: 25, search: debouncedSearch });
+
+  const products = data?.pages.flatMap((page) => page.data) || [];
+
+  const [bottomRef, isIntersecting] = useIntersectionObserver({ threshold: 0.1, rootMargin: '200px' });
+
+  useEffect(() => {
+    if (isIntersecting && hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
+      fetchNextPage();
+    }
+  }, [isIntersecting, hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   return (
     <div className="space-y-6">
@@ -43,11 +63,12 @@ export const ProductsPage = () => {
               className="flex items-center justify-center gap-2 bg-[#0066CC] hover:bg-[#005bb5] text-white px-4 py-2 rounded-xl text-[14px] font-medium transition-colors whitespace-nowrap shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              Nuevo
+              Nuevo producto
             </button>
           )}
-          {!isAdmin && (
             <button 
+              type="button"
+              aria-label="Abrir carrito"
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
             >
@@ -58,7 +79,6 @@ export const ProductsPage = () => {
                 </span>
               )}
             </button>
-          )}
         </div>
       </div>
 
@@ -85,6 +105,10 @@ export const ProductsPage = () => {
               </div>
             </div>
           ))}
+        </div>
+      ) : isError && products.length === 0 ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">
+          No se pudieron cargar los productos. Recarga la página para intentarlo de nuevo.
         </div>
       ) : products.length === 0 ? (
         <div className="bg-white border border-gray-200/60 rounded-2xl p-12 text-center flex flex-col items-center shadow-sm">
@@ -117,6 +141,7 @@ export const ProductsPage = () => {
                     <img 
                       src={imageUrl} 
                       alt={item.name} 
+                      loading="lazy"
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
@@ -157,30 +182,49 @@ export const ProductsPage = () => {
                     )}
                   </div>
 
-                  {!isAdmin && (
                     <button 
+                      type="button"
+                      disabled={item.status !== 'ACTIVE' || !(Number(item.public_price) > 0)}
                       onClick={(e) => {
                         e.stopPropagation();
                         addItem({
                           product_id: item.id,
                           name: item.name,
                           code: item.code,
-                          price: item.public_price || 0,
+                          price: item.public_price,
                           quantity: 1,
-                          image_url: imageUrl
+                          image_url: imageUrl ?? undefined
                         });
                         setIsCartOpen(true);
                       }}
-                      className="mt-4 w-full flex items-center justify-center gap-2 bg-[#0066CC]/10 text-[#0066CC] hover:bg-[#0066CC] hover:text-white px-4 py-2 rounded-xl text-[13px] font-medium transition-all"
+                      className="mt-4 w-full flex items-center justify-center gap-2 bg-[#0066CC]/10 text-[#0066CC] hover:bg-[#0066CC] hover:text-white px-4 py-2 rounded-xl text-[13px] font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Agregar al carrito
+                      {Number(item.public_price) > 0 ? 'Agregar al carrito' : 'Sin precio público'}
                     </button>
-                  )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Infinite Scroll trigger */}
+      {!isLoading && products.length > 0 && (
+        <div ref={bottomRef} className="py-6 flex justify-center">
+          {isFetchingNextPage ? (
+            <Loader2 className="w-6 h-6 text-[#0066CC] animate-spin" />
+          ) : hasNextPage ? (
+            <button
+              type="button"
+              onClick={() => fetchNextPage()}
+              className="rounded-xl border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-[#0066CC] shadow-sm hover:bg-gray-50"
+            >
+              {isFetchNextPageError ? 'Reintentar carga' : 'Cargar más productos'}
+            </button>
+          ) : (
+            <span className="text-[13px] text-[#86868B]">No hay más productos</span>
+          )}
         </div>
       )}
       

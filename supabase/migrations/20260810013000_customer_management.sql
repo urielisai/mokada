@@ -1,6 +1,11 @@
-CREATE TYPE public.fiscal_person_type AS ENUM ('INDIVIDUAL', 'LEGAL_ENTITY');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'fiscal_person_type') THEN
+    CREATE TYPE public.fiscal_person_type AS ENUM ('INDIVIDUAL', 'LEGAL_ENTITY');
+  END IF;
+END $$;
 
-CREATE TABLE public.customers (
+CREATE TABLE IF NOT EXISTS public.customers (
   id                 uuid                     DEFAULT gen_random_uuid() NOT NULL,
   auth_user_id       uuid                     NOT NULL,
   name               text                     NOT NULL,
@@ -10,19 +15,29 @@ CREATE TABLE public.customers (
   is_active          boolean                  DEFAULT true NOT NULL,
   created_by         uuid,
   created_at         timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at         timestamp with time zone DEFAULT now() NOT NULL,
-  CONSTRAINT customers_name_check CHECK (length(trim(name)) > 0),
-  CONSTRAINT customers_email_check CHECK (email = lower(email) AND length(trim(email)) > 0),
-  CONSTRAINT customers_phone_check CHECK (length(trim(phone)) > 0)
+  updated_at         timestamp with time zone DEFAULT now() NOT NULL
 );
 
 ALTER TABLE public.customers
-  ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+  ADD COLUMN IF NOT EXISTS auth_user_id uuid,
+  ADD COLUMN IF NOT EXISTS name text,
+  ADD COLUMN IF NOT EXISTS email text,
+  ADD COLUMN IF NOT EXISTS phone text,
+  ADD COLUMN IF NOT EXISTS requires_invoice boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true,
+  ADD COLUMN IF NOT EXISTS created_by uuid;
 
-ALTER TABLE public.customers
-  ADD CONSTRAINT customers_auth_user_id_unique UNIQUE (auth_user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'customers_pkey') THEN
+    ALTER TABLE public.customers ADD CONSTRAINT customers_pkey PRIMARY KEY (id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'customers_auth_user_id_unique') THEN
+    ALTER TABLE public.customers ADD CONSTRAINT customers_auth_user_id_unique UNIQUE (auth_user_id);
+  END IF;
+END $$;
 
-CREATE UNIQUE INDEX customers_email_unique
+CREATE UNIQUE INDEX IF NOT EXISTS customers_email_unique
   ON public.customers (lower(email));
 
 CREATE INDEX idx_customers_active_name

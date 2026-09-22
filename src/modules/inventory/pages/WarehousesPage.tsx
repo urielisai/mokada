@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Plus, Edit2 } from 'lucide-react';
 
 export const WarehousesPage = () => {
-  const { data, isLoading } = useWarehouses();
+  const { data, isLoading, error } = useWarehouses();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
 
@@ -23,6 +23,8 @@ export const WarehousesPage = () => {
   const columns: Column<any>[] = [
     { header: 'Código', accessorKey: 'code', className: 'font-medium text-slate-900' },
     { header: 'Nombre', accessorKey: 'name' },
+    { header: 'Función', cell: item => <span className="text-[#86868B]">{item.warehouse_role === 'PURCHASE' ? 'Compras y abastecimiento' : 'Ventas a clientes'}</span> },
+    { header: 'Lista de venta', cell: item => <span className="text-[#86868B]">{item.warehouse_role === 'PURCHASE' ? 'No aplica' : item.price_lists?.name || 'Sin lista predeterminada'}</span> },
     { header: 'Descripción', accessorKey: 'description', cell: (item) => <span className="text-gray-500">{item.description || '-'}</span> },
     { 
       header: 'Estado', 
@@ -60,6 +62,7 @@ export const WarehousesPage = () => {
         </button>
       </div>
 
+      {error && <p className="p-4 bg-red-50 border border-red-200 rounded-xl text-[13px] text-red-600">No se pudieron consultar los almacenes: {(error as Error).message}</p>}
       <Table 
         data={data || []} 
         columns={columns}

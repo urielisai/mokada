@@ -1,19 +1,32 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useTransferFull, useCompleteTransfer, useCancelTransfer } from '../hooks/useInventory';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useTransferFull, useCompleteTransfer, useCancelTransfer, useStock } from '../hooks/useInventory';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { formatDate } from '../../../utils/formatters';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { AlertModal } from '../../../components/ui/AlertModal';
 import { Modal } from '../../../components/ui/Modal';
-import { Table, type Column } from '../../../components/ui/Table';
+import { Table } from '../../../components/ui/Table';
 import { ArrowLeft, CheckCircle2, Pencil, XCircle, Package, List, LayoutGrid } from 'lucide-react';
 import { catalogService } from '../../catalog/services/catalog.service';
+import { InventoryProductInfo } from '../components/InventoryProductInfo';
 
 export const TransferDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: transfer, isLoading } = useTransferFull(id || null);
+  const { data: transfer, isLoading, error: transferError } = useTransferFull(id || null);
+  const {data: stock, isLoading: loadingStock, error: stockError, refetch: refreshStock} = useStock();
+  const blockers = transfer?.status === 'DRAFT' ? (transfer.items || []).flatMap((item: any) => {
+    const source = stock?.find(row => row.product_id === item.product_id && row.warehouse_id === transfer.source_warehouse_id && row.location_id == null);
+    const label = item.products?.code || item.product_id;
+    if (item.unit_price == null || !Number.isFinite(Number(item.unit_price)) || Number(item.unit_price)<0) return [`${label}: falta precio interno.`];
+    if ((source?.available_quantity ?? 0) < item.quantity) return [`${label}: cantidad superior al disponible del origen.`];
+    if (source?.average_cost == null || source?.original_average_cost == null) return [`${label}: falta costo en ${transfer.source?.name}.`];
+    if (Number(item.unit_price) <= Number(source.average_cost)) return [`${label}: el precio interno debe superar el costo promedio del origen.`];
+    const destination = stock?.find(row => row.product_id === item.product_id && row.warehouse_id === transfer.destination_warehouse_id && row.location_id == null);
+    if (destination && Number(destination.quantity)>0 && (destination.average_cost == null || destination.original_average_cost == null)) return [`${label}: faltan costos para existencias anteriores del destino.`];
+    return [];
+  }) : [];
   
   const { mutateAsync: completeTransfer, isPending: isCompleting } = useCompleteTransfer();
   const { mutateAsync: cancelTransfer, isPending: isCancelling } = useCancelTransfer();
@@ -32,6 +45,11 @@ export const TransferDetailPage = () => {
 
   const handleComplete = async () => {
     if (!transfer?.id) return;
+    if (loadingStock || stockError || blockers.length || !transfer.items?.length) {
+      setConfirmModal(false);
+      setAlertModal({isOpen: true, title: 'Revisa el inventario', message: stockError ? 'No se pudo consultar el inventario.' : blockers.join(' ') || 'Agrega productos y verifica las existencias.', type: 'error'});
+      return;
+    }
     try {
       await completeTransfer(transfer.id);
       setConfirmModal(false);
@@ -43,8 +61,11 @@ export const TransferDetailPage = () => {
       });
     } catch (error: any) {
       console.error('Error completing transfer:', error);
-      let detail = 'Hubo un error al completar el traspaso.';
-      if (error?.message?.includes('Insufficient stock')) {
+      setConfirmModal(false);
+      let detail = error?.message || 'Hubo un error al completar el traspaso.';
+      if (detail.startsWith('Configura el costo')) {
+        detail = 'Falta registrar el costo de compra de un producto en el almacén de origen. Ve a Inventario → Costos y ganancias → Costos del inventario, configura sus costos y vuelve a completar el traspaso. El precio interno del traspaso es distinto del costo de compra.';
+      } else if (detail.includes('Insufficient stock') || detail.includes('INSUFFICIENT_STOCK') || detail.includes('Inventario disponible insuficiente')) {
         detail = 'No hay suficiente inventario en el almacén de origen para uno o más productos.';
       }
       setAlertModal({
@@ -69,10 +90,11 @@ export const TransferDetailPage = () => {
       });
     } catch (error: any) {
       console.error('Error cancelling transfer:', error);
+      setCancelModal(false);
       setAlertModal({
         isOpen: true,
         title: 'Error de Sistema',
-        message: 'Hubo un error al cancelar el traspaso.',
+        message: error?.message || 'Hubo un error al cancelar el traspaso.',
         type: 'error'
       });
     }
@@ -89,7 +111,7 @@ export const TransferDetailPage = () => {
   if (!transfer) {
     return (
       <div className="py-12 text-center text-gray-500 text-[14px]">
-        No se encontró el traspaso.
+        {transferError ? `No se pudo consultar el traspaso: ${(transferError as Error).message}` : 'No se encontró el traspaso.'}
       </div>
     );
   }
@@ -135,7 +157,8 @@ export const TransferDetailPage = () => {
             </button>
             <button
               onClick={() => setConfirmModal(true)}
-              className="px-5 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-xl hover:bg-[#0055FF] transition-colors shadow-sm flex items-center gap-2 ml-2"
+              disabled={isCompleting || isCancelling || loadingStock || !!stockError || blockers.length>0 || !transfer.items?.length}
+              className="px-5 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-xl hover:bg-[#0055FF] transition-colors shadow-sm flex items-center gap-2 ml-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle2 className="w-4 h-4" />
               Completar Traspaso
@@ -145,6 +168,14 @@ export const TransferDetailPage = () => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        {stockError && <p className="text-[13px] text-red-600 mb-4">No se pudo consultar el inventario. <button onClick={() => refreshStock()} className="underline">Reintentar</button></p>}
+        {transfer.status === 'DRAFT' && !loadingStock && !stockError && blockers.length>0 && <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-[13px] text-amber-800 mb-4">{blockers.map((message: string) => <p key={message}>{message}</p>)}</div>}
+        {transfer.status === 'DRAFT' && (
+          <p className="text-[13px] text-[#86868B] bg-gray-50 border border-gray-200/60 rounded-xl p-4 mb-6">
+            Antes de completar, los productos deben tener su costo registrado en el almacén de origen.{' '}
+            <Link to="/admin/margins" className="text-[#0066CC] font-medium hover:underline">Configurar costos del inventario</Link>
+          </p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div>
             <p className="text-[12px] font-semibold text-[#86868B] uppercase tracking-wider mb-2">Almacén de Origen</p>
@@ -209,10 +240,10 @@ export const TransferDetailPage = () => {
                       <div className="w-10 h-10 flex items-center justify-center shrink-0 bg-gray-50 border border-gray-100 rounded-lg overflow-hidden">
                         {item.products?.image_url ? (
                           <img 
-                            src={catalogService.getProductImageUrl(item.products.image_url)} 
+                            src={catalogService.getProductImageUrl(item.products.image_url) ?? undefined}
                             alt={item.products?.name} 
                             className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => setPreviewImage({ url: catalogService.getProductImageUrl(item.products.image_url), title: item.products?.name })}
+                            onClick={() => setPreviewImage({ url: catalogService.getProductImageUrl(item.products.image_url) || '', title: item.products?.name })}
                           />
                         ) : (
                           <Package className="w-5 h-5 text-gray-300 stroke-[1.5]" />
@@ -222,7 +253,9 @@ export const TransferDetailPage = () => {
                     </div>
                   )
                 },
-                { header: 'Cantidad', accessorKey: 'quantity', className: 'font-semibold' }
+                { header: 'Cantidad', accessorKey: 'quantity', className: 'font-semibold' },
+                { header: 'Precio interno', cell: (item: any) => item.unit_price == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(item.unit_price) },
+                { header: 'Inventario y precios', cell: (item: any) => <div className="min-w-80"><InventoryProductInfo productId={item.product_id} source={stock?.find(row => row.product_id===item.product_id && row.warehouse_id===transfer.source_warehouse_id && row.location_id==null)} destination={stock?.find(row => row.product_id===item.product_id && row.warehouse_id===transfer.destination_warehouse_id && row.location_id==null)} sourceName={transfer.source?.name} destinationName={transfer.destination?.name} quantity={transfer.status==='DRAFT' ? Number(item.quantity) : undefined} unitPrice={item.unit_price} stockLoaded={!loadingStock && !stockError} /></div> }
               ]}
             />
           ) : (
@@ -262,6 +295,7 @@ export const TransferDetailPage = () => {
                       <h3 className="text-[15px] font-semibold text-[#1D1D1F] leading-tight mb-2 line-clamp-2" title={item.products?.name}>
                         {item.products?.name}
                       </h3>
+                      <InventoryProductInfo productId={item.product_id} source={stock?.find(row => row.product_id===item.product_id && row.warehouse_id===transfer.source_warehouse_id && row.location_id==null)} destination={stock?.find(row => row.product_id===item.product_id && row.warehouse_id===transfer.destination_warehouse_id && row.location_id==null)} sourceName={transfer.source?.name} destinationName={transfer.destination?.name} quantity={transfer.status==='DRAFT' ? Number(item.quantity) : undefined} unitPrice={item.unit_price} stockLoaded={!loadingStock && !stockError} />
                       
                       <div className="mt-auto pt-4 border-t border-gray-100 flex justify-center text-center">
                         <div>
@@ -269,6 +303,7 @@ export const TransferDetailPage = () => {
                           <p className="text-[14px] font-semibold text-[#1D1D1F]">
                             {item.quantity}
                           </p>
+                          <p className="text-xs text-gray-500 mt-2">Precio interno: {item.unit_price == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(item.unit_price)}</p>
                         </div>
                       </div>
                     </div>
@@ -298,8 +333,8 @@ export const TransferDetailPage = () => {
         message="¿Estás seguro de que deseas cancelar este traspaso? Esta acción no se puede deshacer."
         confirmText={isCancelling ? 'Cancelando...' : 'Sí, cancelar traspaso'}
         cancelText="No, mantener"
-        isDanger={true}
-        isLoading={isCancelling}
+        isDestructive={true}
+        isPending={isCancelling}
       />
 
       <AlertModal

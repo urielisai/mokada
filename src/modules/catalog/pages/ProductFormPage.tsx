@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import { ArrowLeft, Save } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useProductFull, useSaveProductFull, useBrands, useCategories, useUploadProductImage } from '../hooks/useCatalog';
 import { useUnits, usePriceLists } from '../../configuration/hooks/useConfig';
 import { useWarehouses } from '../../inventory/hooks/useInventory';
@@ -9,7 +10,6 @@ import { ProductGeneralTab } from '../components/ProductGeneralTab';
 import { ProductPricesTab } from '../components/ProductPricesTab';
 import { ProductInventoryTab } from '../components/ProductInventoryTab';
 import { ProductFitmentsTab } from '../components/ProductFitmentsTab';
-import { LoadingState } from '../../../components/ui/LoadingState';
 import { useBarcodeScanner } from '../../../utils/useBarcodeScanner';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import { useAuth } from '../../auth/context/useAuth';
@@ -52,7 +52,7 @@ export const ProductFormPage = () => {
     category_id: string;
     unit_of_measure_id: string;
     status: string;
-    prices: { price_list_id: string; amount: number }[];
+    prices: { price_list_id: string; amount: number | null }[];
     inventory: { warehouse_id: string; minimum_stock: number; maximum_stock: number | null }[];
     fitments: { vehicle_model_id: string; year_from: number | null; year_to: number | null; engine: string; notes: string }[];
   }>({
@@ -86,7 +86,13 @@ export const ProductFormPage = () => {
         category_id: p.category_id || '',
         unit_of_measure_id: p.unit_of_measure_id || '',
         status: p.status || 'ACTIVE',
-        prices: (fullProduct.prices as any) || [],
+        prices: priceLists
+          ? priceLists.filter(pl => pl.is_active || fullProduct.prices.some((price: any) => price.price_list_id === pl.id))
+              .map(pl => ({
+                price_list_id: pl.id,
+                amount: fullProduct.prices.find((price: any) => price.price_list_id === pl.id)?.amount ?? null
+              }))
+          : (fullProduct.prices as any) || [],
         inventory: (fullProduct.inventory as any) || [],
         fitments: (fullProduct.fitments as any) || []
       });
@@ -99,7 +105,7 @@ export const ProductFormPage = () => {
       // Initialize arrays for new products based on available lists
       methods.reset({
         ...methods.getValues(),
-        prices: priceLists.map((pl: any) => ({ price_list_id: pl.id, amount: 0 })),
+        prices: priceLists.filter(pl => pl.is_active).map(pl => ({ price_list_id: pl.id, amount: null })),
         inventory: warehouses.map((wh: any) => ({ warehouse_id: wh.id, minimum_stock: 0, maximum_stock: null })),
         fitments: []
       });
@@ -119,10 +125,25 @@ export const ProductFormPage = () => {
       setIsUploading(true);
       const cleanData = {
         ...data,
+        prices: data.prices
+          .filter((price: {price_list_id: string}) =>
+            (priceLists?.find(pl => pl.id === price.price_list_id) as {pricing_mode?: string} | undefined)?.pricing_mode !== 'PUBLIC_DISCOUNT')
+          .map((price: {price_list_id: string; amount: any}) => {
+            const parsedAmount = Number(price.amount);
+            return {
+              price_list_id: price.price_list_id,
+              amount: (price.amount === '' || price.amount == null || Number.isNaN(parsedAmount)) ? null : parsedAmount
+            };
+          }),
+        inventory: data.inventory.map((inv: any) => ({
+          warehouse_id: inv.warehouse_id,
+          minimum_stock: (inv.minimum_stock === '' || inv.minimum_stock == null || Number.isNaN(Number(inv.minimum_stock))) ? 0 : Number(inv.minimum_stock),
+          maximum_stock: (inv.maximum_stock === '' || inv.maximum_stock == null || Number.isNaN(Number(inv.maximum_stock))) ? null : Number(inv.maximum_stock)
+        })),
         fitments: data.fitments.map((f: any) => ({
           ...f,
-          year_from: f.year_from || null,
-          year_to: f.year_to || null,
+          year_from: (f.year_from === '' || Number.isNaN(Number(f.year_from))) ? null : (f.year_from || null),
+          year_to: (f.year_to === '' || Number.isNaN(Number(f.year_to))) ? null : (f.year_to || null),
         }))
       };
       const productId = await saveProduct(cleanData);
@@ -133,10 +154,13 @@ export const ProductFormPage = () => {
         await saveProduct({ ...cleanData, id: productId, image_url: imagePath });
       }
 
-      navigate('/catalog/products');
+      toast.success('Producto guardado correctamente');
+      if (!isEditing) {
+        navigate(`/catalog/products/${productId}`, { replace: true });
+      }
     } catch (error) {
       console.error('Error saving product', error);
-      alert('Hubo un error al guardar el producto');
+      toast.error('Hubo un error al guardar el producto');
     } finally {
       setIsUploading(false);
     }

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ordersService } from '../services/orders.service';
 import { supabase } from '../../../lib/supabase/client';
-import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { OrderReturns } from '../components/OrderReturns';
+import { useSearchParams } from 'react-router-dom';
 import { Package, Clock, Truck, CheckCircle2, XCircle, FileText, Loader2, Info, Plus, Minus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -19,6 +20,7 @@ const statusConfig = {
 };
 
 export const MyOrdersPage = () => {
+  const [params]=useSearchParams();
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -26,9 +28,27 @@ export const MyOrdersPage = () => {
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [isUpdatingItem, setIsUpdatingItem] = useState<string | null>(null);
 
+  const fetchOrders = useCallback(async (showLoader = false) => {
+    try {
+      if (showLoader) setIsLoading(true);
+      const data = await ordersService.getMyOrders();
+      setOrders(data);
+
+      // Update selected order if it exists
+      setSelectedOrder((current: any) => {
+        if (!current) return null;
+        return data.find(o => o.id === current.id) || null;
+      });
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchOrders(true);
-    
+
     // Subscribe to realtime updates for both orders and payments
     const channel = supabase.channel('my_orders_changes')
       .on(
@@ -46,7 +66,10 @@ export const MyOrdersPage = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchOrders]);
+
+  const openedOrder=useRef<string | null>(null);
+  useEffect(()=>{const requested=params.get('order');const target=orders.find(o=>o.id===requested);if(target && openedOrder.current!==requested){setSelectedOrder(target);openedOrder.current=requested;}},[params,orders]);
 
   const handleRemoveItem = async (itemId: string) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
@@ -66,7 +89,7 @@ export const MyOrdersPage = () => {
   const handleUpdateItemQuantity = async (itemId: string, currentQuantity: number, change: number) => {
     const newQuantity = currentQuantity + change;
     if (newQuantity < 1) return;
-    
+
     try {
       setIsUpdatingItem(itemId);
       await ordersService.updateOrderItemQuantity(itemId, newQuantity);
@@ -76,24 +99,6 @@ export const MyOrdersPage = () => {
       toast.error('Error al actualizar la cantidad');
     } finally {
       setIsUpdatingItem(null);
-    }
-  };
-
-  const fetchOrders = async (showLoader = false) => {
-    try {
-      if (showLoader) setIsLoading(true);
-      const data = await ordersService.getMyOrders();
-      setOrders(data);
-      
-      // Update selected order if it exists
-      setSelectedOrder((current: any) => {
-        if (!current) return null;
-        return data.find(o => o.id === current.id) || null;
-      });
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -132,12 +137,12 @@ export const MyOrdersPage = () => {
               const isSelected = selectedOrder?.id === order.id;
 
               return (
-                <div 
+                <div
                   key={order.id}
                   onClick={() => setSelectedOrder(order)}
                   className={`bg-white border rounded-2xl p-4 cursor-pointer transition-all ${
-                    isSelected 
-                      ? 'border-[#0066CC] ring-1 ring-[#0066CC] shadow-md' 
+                    isSelected
+                      ? 'border-[#0066CC] ring-1 ring-[#0066CC] shadow-md'
                       : 'border-gray-200/60 hover:border-gray-300 hover:shadow-sm'
                   }`}
                 >
@@ -155,10 +160,10 @@ export const MyOrdersPage = () => {
                       {config.label}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between items-end mt-4 pt-4 border-t border-gray-50">
                     <p className="text-[13px] text-gray-600">
-                      {order.sales_order_items.length} artículo(s)
+                      {order.sales_order_items.reduce((total: number, item: {quantity: number}) => total + Number(item.quantity || 0), 0)} artículo(s)
                     </p>
                     <p className="text-[15px] font-bold text-[#1D1D1F]">
                       {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}
@@ -192,6 +197,7 @@ export const MyOrdersPage = () => {
               </div>
 
               <div className="p-6 space-y-8">
+                <OrderReturns key={selectedOrder.id} order={selectedOrder} />
                 {/* Timeline / Status indicator */}
                 <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
                    <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
@@ -235,13 +241,13 @@ export const MyOrdersPage = () => {
                   <div className="space-y-3">
                     {selectedOrder.sales_order_items.map((item: any) => {
                       const isEditable = selectedOrder.status === 'PENDING' || selectedOrder.status === 'VALIDATING' || selectedOrder.status === 'CONFIRMED';
-                      
+
                       return (
                         <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-[14px] gap-2">
                           <div className="flex gap-3 items-center">
                             {isEditable ? (
                                <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                                 <button 
+                                 <button
                                    onClick={() => handleUpdateItemQuantity(item.id, item.quantity, -1)}
                                    disabled={item.quantity <= 1 || isUpdatingItem === item.id}
                                    className="p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-50 transition-colors"
@@ -251,7 +257,7 @@ export const MyOrdersPage = () => {
                                  <span className="w-6 text-center text-xs font-medium text-[#1D1D1F]">
                                    {isUpdatingItem === item.id ? <Loader2 className="w-3 h-3 animate-spin mx-auto text-gray-400" /> : item.quantity}
                                  </span>
-                                 <button 
+                                 <button
                                    onClick={() => handleUpdateItemQuantity(item.id, item.quantity, 1)}
                                    disabled={isUpdatingItem === item.id}
                                    className="p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-50 transition-colors"
@@ -264,7 +270,7 @@ export const MyOrdersPage = () => {
                             )}
                             <span className="text-[#1D1D1F]">{item.products.name}</span>
                           </div>
-                          
+
                           <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
                             <span className="text-[#1D1D1F] font-medium">
                               {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.subtotal)}
@@ -294,7 +300,7 @@ export const MyOrdersPage = () => {
                   <div className="flex justify-between text-[14px] text-gray-600">
                     <span>Costo de envío</span>
                     <span>
-                      {selectedOrder.shipping_cost > 0 
+                      {selectedOrder.shipping_cost > 0
                         ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.shipping_cost)
                         : (selectedOrder.status === 'PENDING' ? 'Por definir' : 'Gratis')
                       }
@@ -309,7 +315,7 @@ export const MyOrdersPage = () => {
                 {/* Sección de Pagos */}
                 <div className="border-t border-gray-100 pt-6">
                   <h4 className="text-[14px] font-semibold text-gray-900 mb-4">Pagos y Saldo</h4>
-                  
+
                   {/* Progreso */}
                   <div className="bg-gray-50 rounded-xl p-4 mb-4">
                     <div className="flex justify-between text-[13px] mb-2">
@@ -319,8 +325,8 @@ export const MyOrdersPage = () => {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-2 overflow-hidden">
-                      <div 
-                        className="bg-[#0066CC] h-2 rounded-full transition-all duration-500" 
+                      <div
+                        className="bg-[#0066CC] h-2 rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(((selectedOrder.amount_paid || 0) / (selectedOrder.total_amount + Number(selectedOrder.shipping_cost))) * 100, 100)}%` }}
                       />
                     </div>
@@ -341,7 +347,7 @@ export const MyOrdersPage = () => {
                       {selectedOrder.sales_order_payments.map((payment: any) => (
                         <div key={payment.id} className="flex justify-between items-center text-[13px] p-3 bg-white border border-gray-100 rounded-lg">
                           <div>
-                            <p className="font-medium text-[#1D1D1F]">{payment.payment_method === 'CASH' ? 'Efectivo' : 'Transferencia'}</p>
+                            <p className="font-medium text-[#1D1D1F]">{payment.is_manual_settlement ? 'Registro manual' : payment.payment_method === 'CASH' ? 'Efectivo' : 'Transferencia'}</p>
                             <p className="text-gray-500">{format(new Date(payment.created_at), "d MMM, yyyy", { locale: es })}</p>
                           </div>
                           <div className="text-right">
@@ -349,7 +355,7 @@ export const MyOrdersPage = () => {
                               {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(payment.amount)}
                             </p>
                             <span className={`text-[11px] font-medium ${
-                              payment.status === 'APPROVED' ? 'text-green-600' : 
+                              payment.status === 'APPROVED' ? 'text-green-600' :
                               payment.status === 'PENDING' ? 'text-yellow-600' : 'text-red-600'
                             }`}>
                               {payment.status === 'APPROVED' ? 'Aprobado' : payment.status === 'PENDING' ? 'Pendiente' : 'Rechazado'}

@@ -33,14 +33,18 @@ export const OrdersDashboardPage = () => {
         ordersService.getAllOrders(),
         supabase
           .from('user_profiles')
-          .select('auth_user_id, name')
+          .select('auth_user_id, first_name, last_name')
           .eq('user_type', 'AGENT')
       ]);
 
       setOrders(ordersData);
         
       if (!agentsResponse.error && agentsResponse.data) {
-        setAgents(agentsResponse.data);
+        const formattedAgents = agentsResponse.data.map(agent => ({
+          auth_user_id: agent.auth_user_id,
+          name: `${agent.first_name} ${agent.last_name}`.trim()
+        }));
+        setAgents(formattedAgents);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

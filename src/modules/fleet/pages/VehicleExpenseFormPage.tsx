@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Save, Car, Receipt, Calendar, DollarSign, PenTool, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Car, Receipt, Calendar, DollarSign, PenTool, Upload, FileText, XCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { vehicleExpenseService } from '../services/vehicle-expense.service';
 import { fleetService } from '../services/fleet.service';

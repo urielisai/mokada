@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../../lib/supabase/client';
 import { routeService } from '../services/route.service';
 import { expenseService } from '../services/expense.service';
 import { routeKeys, expenseKeys, settlementKeys, routeOpsKeys } from '../../../utils/queryKeys';
@@ -41,6 +43,14 @@ export const useDeleteRoute = () => {
 
 // Route Trips
 export const useRouteTrips = (filters?: any) => {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const channel = supabase.channel('route-trips-admin-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'route_trips' }, () => {
+        queryClient.invalidateQueries({ queryKey: routeKeys.all });
+      }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
   return useQuery({
     queryKey: routeKeys.trips(filters),
     queryFn: () => routeService.getTrips(filters),
@@ -76,8 +86,17 @@ export const useUpdateTripStatus = () => {
 };
 
 export const useMyCurrentTrip = (agentProfileId: string | null) => {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!agentProfileId) return;
+    const channel = supabase.channel(`route-trips-agent-live-${agentProfileId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'route_trips' }, () => {
+        queryClient.invalidateQueries({ queryKey: routeKeys.myTrip() });
+      }).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [agentProfileId, queryClient]);
   return useQuery({
-    queryKey: routeKeys.myTrip(),
+    queryKey: [...routeKeys.myTrip(), agentProfileId],
     queryFn: () => routeService.getMyCurrentTrip(agentProfileId!),
     enabled: !!agentProfileId,
     refetchInterval: 10000,

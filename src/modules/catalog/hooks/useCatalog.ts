@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { catalogService } from '../services/catalog.service';
 import { catalogKeys } from '../../../utils/queryKeys';
 
@@ -6,6 +6,15 @@ export const useProducts = (filters: any) => {
   return useQuery({
     queryKey: catalogKeys.products(filters),
     queryFn: () => catalogService.getProducts(filters),
+  });
+};
+
+export const useInfiniteProducts = (filters: any) => {
+  return useInfiniteQuery({
+    queryKey: catalogKeys.products(filters),
+    queryFn: ({ pageParam = 1 }) => catalogService.getProducts({ ...filters, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
   });
 };
 

@@ -1,9 +1,12 @@
 import { useForm, Controller } from 'react-hook-form';
 import { Modal } from '../../../components/ui/Modal';
 import { SearchSelect } from '../../../components/ui/SearchSelect';
-import { useCreateMovement, useWarehouses } from '../hooks/useInventory';
-import { useProducts } from '../../catalog/hooks/useCatalog';
+import { useCreateMovement, useWarehouses, useStock } from '../hooks/useInventory';
+import { useQuery } from '@tanstack/react-query';
+import { inventoryService } from '../services/inventory.service';
+import { InventoryProductInfo } from './InventoryProductInfo';
 import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { Package } from 'lucide-react';
 import { catalogService } from '../../catalog/services/catalog.service';
 
@@ -13,34 +16,50 @@ interface Props {
 }
 
 export const MovementFormModal = ({ isOpen, onClose }: Props) => {
-  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = useForm({shouldUnregister: true});
   const { mutateAsync: createMovement, isPending } = useCreateMovement();
   
   const { data: warehouses } = useWarehouses();
-  const { data: productsResult } = useProducts({ page: 1, pageSize: 1000 });
-  const products = productsResult?.data || [];
+  const {data: products = [], error: productsError, isLoading: loadingProducts} = useQuery({queryKey: ['inventory-products'], queryFn: inventoryService.getInventoryProducts, enabled: isOpen});
+  const {data: stock, isLoading: loadingStock, error: stockError} = useStock();
+  const warehouseId = watch('warehouse_id');
+  const productId = watch('product_id');
+  const movementType = watch('movement_type');
+  const incoming = movementType !== 'ADJUSTMENT_OUT';
+  const selectedStock = stock?.find(row => row.product_id === productId && row.warehouse_id === warehouseId && row.location_id == null);
 
   useEffect(() => {
     if (isOpen) {
       reset({
         product_id: '',
         warehouse_id: '',
-        movement_type: 'ADJUSTMENT_IN',
+        movement_type: 'PURCHASE',
+        unit_cost: '',
         quantity: '',
         notes: ''
       });
     }
   }, [isOpen, reset]);
 
+  useEffect(() => {
+    if (incoming && warehouseId && warehouses && warehouses.find(w => w.id === warehouseId)?.warehouse_role !== 'PURCHASE') {
+      setValue('warehouse_id', '');
+    }
+  }, [incoming, warehouseId, warehouses, setValue]);
+
   const onSubmit = async (data: any) => {
     try {
+      if (loadingStock || stockError || productsError) throw new Error('No se pudo verificar el producto y sus existencias.');
+      if (!Number.isFinite(Number(data.quantity)) || Number(data.quantity) <= 0) throw new Error('Captura una cantidad válida.');
+      if (data.movement_type === 'ADJUSTMENT_OUT' && Number(data.quantity) > (selectedStock?.available_quantity ?? 0)) throw new Error('La salida supera el disponible de este producto en el almacén.');
       await createMovement({
         ...data,
-        quantity: Number(data.quantity)
+        quantity: Number(data.quantity),
+        unit_cost: Number(data.unit_cost)
       });
       onClose();
     } catch (error) {
-      console.error('Error creando movimiento:', error);
+      toast.error((error as {message?: string})?.message || 'Error al registrar movimiento');
     }
   };
 
@@ -51,6 +70,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
       title="Nuevo Movimiento de Inventario"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {(productsError || stockError) && <p className="text-[13px] text-red-600">No se pudieron consultar productos o existencias. Cierra y vuelve a abrir el formulario para reintentar.</p>}
         
         <div className="space-y-4">
           <Controller
@@ -74,6 +94,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Busca y selecciona un producto..."
+                      disabled={loadingProducts}
                     />
                   ) : (
                     <div className="p-4 bg-gray-50 border border-gray-200/60 rounded-xl relative group">
@@ -81,7 +102,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 flex items-center justify-center shrink-0 bg-white border border-gray-200/60 rounded-lg overflow-hidden shadow-sm">
                           {imageUrl ? (
-                            <img src={imageUrl} alt={selectedProduct?.name} className="w-full h-full object-cover" />
+                            <img src={imageUrl ?? undefined} alt={selectedProduct?.name ?? ''} className="w-full h-full object-cover" />
                           ) : (
                             <Package className="w-8 h-8 text-gray-300 stroke-[1.5]" />
                           )}
@@ -118,7 +139,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
               <div>
                 <SearchSelect
                   label="Almacén *"
-                  options={warehouses?.map((w: any) => ({
+                  options={warehouses?.filter(w => w.is_active && (!incoming || w.warehouse_role === 'PURCHASE')).map((w: any) => ({
                     value: w.id,
                     label: w.name
                   })) || []}
@@ -132,6 +153,8 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
           />
         </div>
 
+        {productId && warehouseId && <InventoryProductInfo productId={productId} source={selectedStock} sourceName={warehouses?.find(w => w.id === warehouseId)?.name} stockLoaded={!loadingStock && !stockError} />}
+        {movementType !== 'ADJUSTMENT_OUT' && selectedStock && (selectedStock.quantity ?? 0)>0 && (selectedStock.average_cost == null || selectedStock.original_average_cost == null) && <p className="text-[12px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">Hay existencias anteriores sin costo. Configura su costo promedio antes de agregar esta entrada para poder calcular el nuevo promedio.</p>}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Tipo de Movimiento *</label>
@@ -139,6 +162,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
               {...register('movement_type', { required: true })}
               className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px]"
             >
+              <option value="PURCHASE">Compra (+)</option>
               <option value="INITIAL_STOCK">Stock Inicial (+)</option>
               <option value="ADJUSTMENT_IN">Ajuste de Entrada (+)</option>
               <option value="ADJUSTMENT_OUT">Ajuste de Salida (-)</option>
@@ -151,7 +175,8 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
               type="number"
               step="0.01"
               min="0.01"
-              {...register('quantity', { required: 'La cantidad es obligatoria', min: 0.01 })}
+              max={movementType === 'ADJUSTMENT_OUT' ? selectedStock?.available_quantity ?? 0 : undefined}
+              {...register('quantity', { required: 'La cantidad es obligatoria', min: 0.01, validate: value => movementType !== 'ADJUSTMENT_OUT' || Number(value) <= (selectedStock?.available_quantity ?? 0) || 'La cantidad supera el disponible' })}
               className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px]"
               placeholder="0.00"
             />
@@ -159,6 +184,15 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
           </div>
         </div>
 
+        {incoming && (
+          <div>
+            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">{movementType === 'PURCHASE' ? 'Costo de compra por unidad' : 'Costo de la entrada por unidad'} ($) *</label>
+            <input type="number" min="0" step="0.0001" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50"
+              {...register('unit_cost', { required: 'Captura el costo', min: 0 })} />
+            {errors.unit_cost && <p className="text-red-500 text-xs">{String(errors.unit_cost.message)}</p>}
+            <p className="text-[12px] text-[#86868B] mt-2">Este costo pertenece al almacén de compras. El precio interno se captura después, al traspasar al almacén de ventas.</p>
+          </div>
+        )}
         <div>
           <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Notas / Referencia</label>
           <textarea
@@ -179,7 +213,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
           </button>
           <button
             type="submit"
-            disabled={isPending}
+              disabled={isPending || loadingStock || loadingProducts || !!stockError || !!productsError}
             className="px-4 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#0055FF] transition-colors disabled:opacity-50"
           >
             {isPending ? 'Guardando...' : 'Aplicar Movimiento'}

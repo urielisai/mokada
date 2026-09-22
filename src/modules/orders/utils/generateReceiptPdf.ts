@@ -103,6 +103,7 @@ export const generateReceiptPdf = (data: ReceiptData) => {
   doc.setFont('helvetica', 'italic');
   doc.text('Este documento es un comprobante de pago. Gracias por su preferencia.', pageWidth / 2, 280, { align: 'center' });
 
-  // Download
-  doc.save(`Recibo_Pago_Mokada_${data.orderId.substring(0, 8)}.pdf`);
+  // Open PDF in new tab
+  const blobUrl = doc.output('bloburl');
+  window.open(blobUrl, '_blank');
 };

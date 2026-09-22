@@ -1,10 +1,17 @@
-CREATE TYPE public.payment_method AS ENUM ('CASH', 'TRANSFER', 'CARD');
-CREATE TYPE public.payment_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN
+    CREATE TYPE public.payment_method AS ENUM ('CASH', 'TRANSFER', 'CARD');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN
+    CREATE TYPE public.payment_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+  END IF;
+END $$;
 
 -- Add amount_paid to sales_orders
-ALTER TABLE public.sales_orders ADD COLUMN amount_paid numeric(15, 2) DEFAULT 0 NOT NULL;
+ALTER TABLE public.sales_orders ADD COLUMN IF NOT EXISTS amount_paid numeric(15, 2) DEFAULT 0 NOT NULL;
 
-CREATE TABLE public.sales_order_payments (
+CREATE TABLE IF NOT EXISTS public.sales_order_payments (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   order_id uuid REFERENCES public.sales_orders(id) ON DELETE CASCADE NOT NULL,
   amount numeric(15, 2) NOT NULL,

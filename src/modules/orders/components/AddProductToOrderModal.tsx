@@ -54,9 +54,7 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
     try {
       setIsAdding(product.id);
       
-      // Determine base price. In a real scenario, this depends on customer price list.
-      // Here we grab the first available price or default to 0 if not found.
-      const price = product.public_price || product.base_price || 0;
+      const price = Number(product.public_price) || 0;
         
       if (price <= 0) {
         toast.error('Este producto no tiene precio asignado.');
@@ -104,7 +102,7 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
           ) : (
             <div className="space-y-2">
               {products.map((product) => {
-                const price = product.public_price || product.base_price || 0;
+                const price = Number(product.public_price) || 0;
 
                 return (
                   <div key={product.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:border-[#0066CC]/30 hover:shadow-sm transition-all group">
@@ -123,14 +121,14 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
                             {product.code}
                           </span>
                           <span className="text-xs font-semibold text-green-600">
-                            {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(price)}
+                            {price > 0 ? `Público: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(price)}` : 'Sin precio público'}
                           </span>
                         </div>
                       </div>
                     </div>
                     <button
                       onClick={() => handleAddProduct(product)}
-                      disabled={isAdding === product.id}
+                      disabled={isAdding === product.id || price <= 0}
                       className="p-2 text-gray-400 hover:text-[#0066CC] hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
                     >
                       {isAdding === product.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}

@@ -7,18 +7,15 @@ import {
   Receipt,
   FileImage,
   FileText,
-  Paperclip,
   CheckCircle2,
   XCircle,
-  Clock,
-  Filter
+  Clock
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { vehicleExpenseService } from '../services/vehicle-expense.service';
 import { fleetService } from '../services/fleet.service';
 import { useAuth } from '../../auth/context/useAuth';
 import { supabase } from '../../../lib/supabase/client';
-import { LoadingState } from '../../../components/ui/LoadingState';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorState } from '../../../components/ui/ErrorState';
 
@@ -76,7 +73,7 @@ export const VehicleExpensesPage = () => {
     );
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
     switch (status) {
       case 'APPROVED':
         return (
@@ -109,7 +106,8 @@ export const VehicleExpensesPage = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return 'Sin fecha';
     return new Date(dateStr).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'short',

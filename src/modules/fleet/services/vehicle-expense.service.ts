@@ -26,7 +26,7 @@ export const vehicleExpenseService = {
       query = query.eq('vehicle_id', filters.vehicleId);
     }
     if (filters?.status && filters.status !== 'ALL') {
-      query = query.eq('status', filters.status);
+      query = query.eq('status', filters.status as TravelExpenseStatus);
     }
     if (filters?.agentId) {
       query = query.eq('agent_id', filters.agentId);
@@ -79,7 +79,8 @@ export const vehicleExpenseService = {
   async uploadAttachment(expense: { id: string; vehicle_id: string }, file: File, attachmentType: string, uploadedBy: string) {
     const path = await storageService.uploadFile({
       bucket: 'expense-evidence',
-      path: `vehicles/${expense.vehicle_id}/${expense.id}`,
+      ownerId: uploadedBy,
+      folder: `vehicles/${expense.vehicle_id}/${expense.id}`,
       file,
     });
 
@@ -101,12 +102,13 @@ export const vehicleExpenseService = {
   },
 
   async deleteAttachment(attachmentId: string, storagePath: string) {
-    await storageService.deleteFile('expense-evidence', storagePath);
+    const { error: storageError } = await supabase.storage.from('expense-evidence').remove([storagePath]);
+    if (storageError) throw storageError;
     const { error } = await supabase.from('vehicle_expense_attachments').delete().eq('id', attachmentId);
     if (error) throw error;
   },
 
   async getAttachmentUrl(storagePath: string) {
-    return storageService.getSignedUrl('expense-evidence', storagePath);
+    return storageService.createSignedUrl('expense-evidence', storagePath);
   },
 };
