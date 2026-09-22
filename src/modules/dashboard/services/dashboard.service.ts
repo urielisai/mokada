@@ -20,14 +20,14 @@ export const dashboardService = {
       supabase.from('inventory_available').select('*', { count: 'exact', head: true }).eq('availability_status', 'OUT_OF_STOCK'),
       supabase.from('sales_orders').select('id, total_amount, created_by, customer_id, customers(name)').gte('created_at', startStr),
       supabase.from('sales_order_payments').select('id, amount, payment_method, created_by').gte('created_at', startStr),
-      supabase.from('user_profiles').select('auth_user_id, name')
+      supabase.from('user_profiles').select('auth_user_id, first_name, last_name')
     ]);
 
     const orders = ordersResponse.data || [];
     const payments = paymentsResponse.data || [];
     const users = usersResponse.data || [];
 
-    const userMap = new Map(users.map(u => [u.auth_user_id, u.name]));
+    const userMap = new Map(users.map(u => [u.auth_user_id, `${u.first_name} ${u.last_name}`.trim()]));
 
     // 1. Top Clientes (monto total)
     const customerTotals: Record<string, { id: string, name: string, total: number }> = {};

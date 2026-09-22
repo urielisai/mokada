@@ -16,7 +16,7 @@ import {
   Cell,
   Legend
 } from 'recharts';
-import { HeartPulse, Boxes, Users, TrendingUp, Banknote, Award } from 'lucide-react';
+import { HeartPulse, Boxes, Users, Banknote, Award } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatters';
 
 export const DashboardPage = () => {
