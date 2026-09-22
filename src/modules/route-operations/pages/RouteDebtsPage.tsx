@@ -306,7 +306,7 @@ export const RouteDebtsPage = () => {
               Total Cobrado
             </span>
             <div className="p-2 text-[#1D1D1F]">
-              <CheckCircle className="h-5 w-5" />
+              <CheckCircle2 className="h-5 w-5" />
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
