@@ -88,10 +88,10 @@ export const WarrantyOrdersPage = () => {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Garantías', value: counts.total, icon: ShieldCheck, color: 'text-[#0066CC]', background: 'bg-blue-50' },
-          { label: 'Por aprobar', value: counts.pending, icon: Clock, color: 'text-amber-700', background: 'bg-amber-50' },
-          { label: 'Aprobadas', value: counts.approved, icon: CheckCircle2, color: 'text-emerald-700', background: 'bg-emerald-50' },
-          { label: 'Sin reposición', value: counts.withoutReplacement, icon: RotateCcw, color: 'text-violet-700', background: 'bg-violet-50' },
+          { label: 'Garantías', value: counts.total, icon: ShieldCheck, color: 'text-gray-600', background: 'bg-gray-100' },
+          { label: 'Por aprobar', value: counts.pending, icon: Clock, color: 'text-gray-600', background: 'bg-gray-100' },
+          { label: 'Aprobadas', value: counts.approved, icon: CheckCircle2, color: 'text-gray-600', background: 'bg-gray-100' },
+          { label: 'Sin reposición', value: counts.withoutReplacement, icon: RotateCcw, color: 'text-gray-600', background: 'bg-gray-100' },
         ].map(card => (
           <div key={card.label} className="bg-white border border-gray-200/60 rounded-2xl p-4 shadow-sm">
             <div className={`w-9 h-9 rounded-xl ${card.background} ${card.color} flex items-center justify-center mb-3`}><card.icon className="w-4 h-4" /></div>
