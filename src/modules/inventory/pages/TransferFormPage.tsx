@@ -151,7 +151,7 @@ export const TransferFormPage = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 min-w-0">
       <div>
         <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">
           {id ? 'Editar Traspaso' : 'Nuevo Traspaso'}
@@ -161,7 +161,7 @@ export const TransferFormPage = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8 min-w-0">
         {stockError && <div className="text-[13px] text-red-600 bg-red-50 border border-red-200 p-3 rounded-xl mb-4">No se pudo consultar el inventario: {(stockError as Error).message}. <button type="button" className="underline" onClick={() => refreshStock()}>Reintentar</button></div>}
         {id && transferData && transferData.status !== 'DRAFT' && <p className="text-red-600 text-sm mb-4">Este traspaso ya no permite modificaciones.</p>}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -232,8 +232,8 @@ export const TransferFormPage = () => {
           </div>
 
           <div className="border-t border-gray-100 pt-6">
-            <div className="flex justify-between items-center mb-6">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+              <div className="min-w-0">
                 <h3 className="text-[17px] font-semibold text-[#1D1D1F]">Productos a Transferir</h3>
                 <p className="text-[13px] text-[#86868B]">
                   {sourceWarehouseId 
@@ -245,7 +245,7 @@ export const TransferFormPage = () => {
                 type="button"
                 onClick={() => append({ product_id: '', quantity: 1, unit_price: null })}
                 disabled={!sourceWarehouseId}
-                className="flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium text-[#0066CC] bg-[#0066CC]/10 rounded-lg hover:bg-[#0066CC]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 px-3 py-2 text-[13px] font-medium text-[#0066CC] bg-[#0066CC]/10 rounded-lg hover:bg-[#0066CC]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
                 Añadir Producto
@@ -268,11 +268,11 @@ export const TransferFormPage = () => {
                 const imageUrl = productStockInfo?.product_image ? catalogService.getProductImageUrl(productStockInfo.product_image) : null;
 
                 return (
-                  <div key={field.id} className="p-4 bg-white border border-gray-200/60 shadow-sm rounded-[16px] relative group">
-                    <div className="flex flex-col md:flex-row gap-6">
+                  <div key={field.id} className="p-4 sm:p-5 bg-white border border-gray-200/60 shadow-sm rounded-[16px] relative group min-w-0 overflow-visible">
+                    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_20rem] gap-5 xl:gap-6 min-w-0">
                       
                       {/* Product Selector / Visual Info */}
-                      <div className="flex-1">
+                      <div className="min-w-0">
                         {!currentProductId ? (
                           <Controller
                             name={`items.${index}.product_id`}
@@ -295,7 +295,7 @@ export const TransferFormPage = () => {
                             )}
                           />
                         ) : (
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-start gap-3 sm:gap-4 min-w-0">
                             <button 
                               type="button"
                               onClick={() => imageUrl && setPreviewImage({ url: imageUrl, title: productStockInfo?.product_name || 'Producto' })}
@@ -307,7 +307,7 @@ export const TransferFormPage = () => {
                                 <Package className="w-8 h-8 text-gray-300 stroke-[1.5]" />
                               )}
                             </button>
-                            <div className="flex-1 mt-1">
+                            <div className="flex-1 min-w-0 mt-1">
                               <div>
                                 <span className="text-[12px] font-medium text-[#0066CC] block mb-0.5">
                                   {productStockInfo?.product_code || '---'}
@@ -316,8 +316,8 @@ export const TransferFormPage = () => {
                                   {productStockInfo?.product_name || 'Cargando producto...'}
                                 </h4>
                               </div>
-                              <div className="mt-2 flex items-center gap-4">
-                                <div className="inline-flex items-center gap-1.5 text-[12px] text-gray-600 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <div className="inline-flex max-w-full flex-wrap items-center gap-1.5 text-[12px] text-gray-600 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
                                   <span>Disponible en origen:</span>
                                   <span className="font-semibold text-[#1D1D1F]">{productStockInfo?.available_quantity || 0}</span>
                                 </div>
@@ -335,9 +335,9 @@ export const TransferFormPage = () => {
                       </div>
 
                       {/* Quantity + Price Inputs */}
-                      <div className="w-full md:w-72 md:flex-shrink-0 flex flex-col justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 gap-3">
-                        <div className="flex items-end gap-3">
-                          <div className="w-1/2">
+                      <div className="min-w-0 flex flex-col justify-center border-t xl:border-t-0 xl:border-l border-gray-100 pt-5 xl:pt-0 xl:pl-6 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-3 min-w-0">
+                          <div className="min-w-0">
                             <label className="block text-[12px] font-medium text-[#86868B] mb-1">Cantidad *</label>
                             <input
                               type="number"
@@ -356,7 +356,7 @@ export const TransferFormPage = () => {
                             {errors.items?.[index]?.quantity && <p className="text-red-600 text-[11px] mt-1">Cantidad inválida o superior al disponible.</p>}
                           </div>
 
-                          <div className="w-1/2">
+                          <div className="min-w-0">
                             <label className="block text-[12px] font-medium text-[#86868B] mb-1 truncate flex items-center gap-1" title="Precio interno (MXN)">
                               <Tag className="w-3 h-3 text-amber-500" />
                               Precio interno
@@ -384,7 +384,7 @@ export const TransferFormPage = () => {
                             type="button"
                             onClick={() => remove(index)}
                             disabled={fields.length === 1}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 mb-0.5"
+                            className="flex h-10 w-full sm:w-10 items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                             title="Eliminar producto"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -400,18 +400,18 @@ export const TransferFormPage = () => {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-gray-100">
             <button
               type="button"
               onClick={() => navigate('/inventory/transfers')}
-              className="px-5 py-2.5 text-[14px] font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              className="w-full sm:w-auto px-5 py-2.5 text-[14px] font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending || loadingStock || !!stockError || (!!id && transferData?.status !== 'DRAFT')}
-              className="px-5 py-2.5 text-[14px] font-medium text-white bg-[#0066CC] rounded-xl hover:bg-[#0055FF] transition-colors shadow-sm disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 text-[14px] font-medium text-white bg-[#0066CC] rounded-xl hover:bg-[#0055FF] transition-colors shadow-sm disabled:opacity-50"
             >
               {isPending ? 'Guardando...' : id ? 'Actualizar Borrador' : 'Crear Borrador'}
             </button>
