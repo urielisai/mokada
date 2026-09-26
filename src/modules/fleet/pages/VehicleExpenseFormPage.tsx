@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save, Car, Receipt, Calendar, DollarSign, PenTool, Upload, FileText, XCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import { vehicleExpenseService } from '../services/vehicle-expense.service';
 import { fleetService } from '../services/fleet.service';
 import { useAuth } from '../../auth/context/useAuth';
@@ -10,7 +11,7 @@ import { useAuth } from '../../auth/context/useAuth';
 export const VehicleExpenseFormPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { profile } = useAuth();
   
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,25 +40,36 @@ export const VehicleExpenseFormPage = () => {
   const saveMutation = useMutation({
     mutationFn: vehicleExpenseService.saveExpense,
     onSuccess: async (data) => {
-      if (files.length > 0 && user) {
+      if (files.length > 0 && profile) {
         // Upload attachments sequentially
         for (const file of files) {
           const type = file.type.startsWith('image/') ? 'PHOTO' : 'RECEIPT';
-          await vehicleExpenseService.uploadAttachment(data, file, type, user.id);
+          await vehicleExpenseService.uploadAttachment(data, file, type, profile.id);
         }
       }
       queryClient.invalidateQueries({ queryKey: ['vehicle-expenses'] });
+      toast.success('Gasto y evidencias guardados correctamente.');
       navigate('/fleet/expenses');
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Error inesperado.';
+      toast.error(`No se pudo guardar el gasto o la evidencia: ${message}`);
     },
     onSettled: () => setIsSubmitting(false)
   });
 
   const onSubmit = (data: any) => {
+    if (!profile) {
+      toast.error('No se encontró el perfil del usuario. Vuelve a iniciar sesión.');
+      return;
+    }
+
     setIsSubmitting(true);
     saveMutation.mutate({
       ...data,
       amount: Number(data.amount),
-      agent_id: user?.id,
+      agent_id: profile.id,
+      created_by: profile.id,
       status: 'SUBMITTED'
     });
   };

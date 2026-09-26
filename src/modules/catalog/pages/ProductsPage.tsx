@@ -134,18 +134,18 @@ export const ProductsPage = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm flex flex-col h-[380px]">
-              <div className="relative aspect-square bg-gray-100 border-b border-gray-50 animate-pulse" />
-              <div className="p-5 flex-1 flex flex-col gap-3">
+            <div key={i} className="bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm flex flex-col">
+              <div className="relative aspect-[4/3] bg-gray-100 border-b border-gray-50 animate-pulse" />
+              <div className="p-4 flex-1 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
                   <div className="h-5 w-16 bg-gray-200 rounded-full animate-pulse" />
                 </div>
-                <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
-                <div className="h-5 w-2/3 bg-gray-200 rounded animate-pulse mb-auto" />
-                <div className="flex flex-col gap-2 pt-3">
-                  <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-3 w-2/3 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse mb-auto" />
+                <div className="flex gap-2 pt-2">
+                  <div className="h-5 w-16 bg-gray-200 rounded-md animate-pulse" />
+                  <div className="h-5 w-20 bg-gray-200 rounded-md animate-pulse" />
                 </div>
                 <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-1">
                   <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
@@ -177,10 +177,10 @@ export const ProductsPage = () => {
                 className={`group bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm flex flex-col ${isAdmin ? 'hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer' : ''}`}
               >
                 {/* Image Section */}
-                <div className="relative aspect-square bg-white border-b border-gray-50 p-6 flex items-center justify-center overflow-hidden">
+                <div className="relative aspect-[4/3] bg-white border-b border-gray-100 flex items-center justify-center overflow-hidden p-3">
                   {item.is_new && (
-                    <div className="absolute top-4 left-4 z-10">
-                      <span className="text-[11px] bg-[#0066CC]/10 text-[#0066CC] font-semibold px-2.5 py-1 rounded-full uppercase backdrop-blur-md">
+                    <div className="absolute top-3 left-3 z-10">
+                      <span className="text-[10px] bg-[#0066CC]/10 text-[#0066CC] font-semibold px-2 py-0.5 rounded-full uppercase backdrop-blur-md">
                         Nuevo
                       </span>
                     </div>
@@ -194,30 +194,30 @@ export const ProductsPage = () => {
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <PackageSearch className="w-20 h-20 text-gray-200 stroke-[1] group-hover:scale-105 transition-transform duration-500" />
+                    <PackageSearch className="w-16 h-16 text-gray-200 stroke-[1] group-hover:scale-105 transition-transform duration-500" />
                   )}
                 </div>
 
                 {/* Info Section */}
-                <div className="p-5 flex-1 flex flex-col">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="text-[12px] font-medium text-[#0066CC] truncate">
+                <div className="p-4 flex-1 flex flex-col">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <span className="text-[11px] font-medium text-[#0066CC] truncate">
                       {item.code}
                     </span>
                     <StatusBadge status={item.status} />
                   </div>
                   
-                  <h3 className="text-[15px] font-semibold text-[#1D1D1F] leading-tight mb-2 line-clamp-2">
+                  <h3 className="text-[14px] font-semibold text-[#1D1D1F] leading-snug mb-2 line-clamp-2">
                     {item.name}
                   </h3>
                   
-                  <div className="mt-auto pt-3">
-                    <div className="flex flex-col gap-1 text-[13px] text-[#86868B] mb-3">
+                  <div className="mt-auto pt-2">
+                    <div className="flex flex-wrap gap-1.5 text-[11px] text-[#86868B] mb-3">
                       {item.brand && (
-                        <span className="truncate">Marca: <span className="font-medium text-[#1D1D1F]">{item.brand}</span></span>
+                        <span className="truncate bg-gray-100 px-2 py-0.5 rounded-md">{item.brand}</span>
                       )}
                       {item.category && (
-                        <span className="truncate">Categoría: <span className="font-medium text-[#1D1D1F]">{item.category}</span></span>
+                        <span className="truncate bg-gray-100 px-2 py-0.5 rounded-md">{item.category}</span>
                       )}
                     </div>
                     

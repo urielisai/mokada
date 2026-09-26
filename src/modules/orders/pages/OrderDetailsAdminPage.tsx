@@ -14,14 +14,13 @@ import { ImageUpload } from '../../../components/ui/ImageUpload';
 import { AddProductToOrderModal } from '../components/AddProductToOrderModal';
 import { OrderItemDiscount } from '../components/OrderItemDiscount';
 import { OrderReturns } from '../components/OrderReturns';
-import { OrderInvoiceModal } from '../components/OrderInvoiceModal';
+import { OrderInvoiceRequests } from '../components/OrderInvoiceRequests';
 import { DeliverySignatureModal } from '../components/DeliverySignatureModal';
 
 export const OrderDetailsAdminPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState<any>(null);
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
@@ -418,21 +417,22 @@ export const OrderDetailsAdminPage = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Form */}
-        <div className="lg:col-span-1 min-w-0 space-y-6">
-          <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
-            <h3 className="font-semibold text-[#1D1D1F]">Gestión del Pedido</h3>
-            <label className="block text-[13px] font-medium text-[#1D1D1F]">Almacén de salida
-              <select value={warehouseId} disabled={!!order.inventory_posted_at || order.status === 'CANCELLED'} onChange={e => setWarehouseId(e.target.value)} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] transition-all disabled:opacity-50 text-[14px] text-[#1D1D1F] mt-1.5">
+      <div className="space-y-6">
+        <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm">
+          <h3 className="font-semibold text-[#1D1D1F] mb-5">Gestión del Pedido</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex flex-col">
+              <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Almacén de salida</label>
+              <select value={warehouseId} disabled={!!order.inventory_posted_at || order.status === 'CANCELLED'} onChange={e => setWarehouseId(e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] transition-all disabled:opacity-50 text-[14px] text-[#1D1D1F]">
                 <option value="">Selecciona el almacén</option>
                 {warehouses?.filter(w => (w.is_active && w.warehouse_role === 'SALES') || w.id === warehouseId).map(w => <option key={w.id} value={w.id} disabled={w.warehouse_role !== 'SALES'}>{w.name}{w.warehouse_role !== 'SALES' ? ' · no apto para venta' : ''}</option>)}
               </select>
-            </label>
-            <p className="text-xs text-gray-500">Los pedidos salen del almacén de ventas. Enviar o entregar descuenta existencias y guarda los costos para calcular la ganancia.</p>
+              <p className="text-[11px] text-gray-500 mt-1.5 leading-tight">Los pedidos salen del almacén de ventas. Enviar descuenta existencias.</p>
+            </div>
             
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <div className="flex flex-col">
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                 Estado
               </label>
               <select
@@ -447,8 +447,8 @@ export const OrderDetailsAdminPage = () => {
               </select>
             </div>
 
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <div className="flex flex-col">
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                 Costo de Envío
               </label>
               <div className="relative">
@@ -465,8 +465,8 @@ export const OrderDetailsAdminPage = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <div className="flex flex-col">
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                 Fecha Estimada de Entrega
               </label>
               <div className="relative">
@@ -481,23 +481,20 @@ export const OrderDetailsAdminPage = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1">
+            <div className="md:col-span-2 lg:col-span-4 flex flex-col">
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
                 Aclaraciones / Comentarios
               </label>
               <textarea
                 value={adminComments}
                 onChange={(e) => setAdminComments(e.target.value)}
                 disabled={isShippedOrDelivered}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] disabled:opacity-70 transition-all text-sm h-28 resize-none"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] disabled:opacity-70 transition-all text-sm h-16 resize-none"
                 placeholder="Notas para el cliente..."
               />
             </div>
           </div>
         </div>
-
-        {/* Right Column: Customer & Items */}
-        <div className="lg:col-span-2 min-w-0 space-y-6">
           {order.warranty_return_id && <p className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm">Reposición por garantía · {order.warranty_return_id.slice(0,8)}. Su pago manual no representa una segunda venta en el reporte de ganancias.</p>}
           {currentUserProfile?.user_type==='ADMIN' && order.status!=='CANCELLED' && <button disabled={isSaving} className="self-start px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0066CC] disabled:opacity-50" onClick={async()=>{
             setIsSaving(true);try{await ordersService.markPaidManually(order.id);await fetchOrder(order.id);toast.success('Pedido marcado pagado manualmente');}catch(error){toast.error((error as Error).message);}finally{setIsSaving(false);}
@@ -509,12 +506,9 @@ export const OrderDetailsAdminPage = () => {
             <button type="button" onClick={async () => { const tab = window.open('about:blank', '_blank'); if (tab) tab.opener = null; try { const url = await ordersService.getDeliverySignatureUrl(deliveryReceipt.signature_path); if (tab) tab.location.href = url; } catch (error) { tab?.close(); toast.error((error as Error).message); } }} className="mt-3 text-[13px] font-medium text-[#0066CC] hover:underline">Ver firma</button>
           </div>}
           <DeliverySignatureModal isOpen={isSignatureModalOpen} onClose={() => setIsSignatureModalOpen(false)} onConfirm={handleMarkDelivered} saving={isSaving} />
-          {currentUserProfile?.user_type === 'ADMIN' && order.requires_invoice && order.invoice_details && <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-[16px] font-semibold text-[#1D1D1F] mb-2">Factura solicitada</h3>
-            <p className="text-[13px] text-[#86868B] mb-4">Revisa la información fiscal seleccionada para este pedido antes de enviarlo.</p>
-            <button type="button" onClick={() => setIsInvoiceModalOpen(true)} className="bg-[#0066CC] text-white rounded-lg px-4 py-2 text-[13px] font-medium">Datos para facturación</button>
-            <OrderInvoiceModal isOpen={isInvoiceModalOpen} onClose={() => setIsInvoiceModalOpen(false)} order={order} />
-          </div>}
+          {currentUserProfile?.user_type === 'ADMIN' && order.requires_invoice && (
+            <OrderInvoiceRequests order={order} />
+          )}
           <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between gap-4">
             <div>
               <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Cliente</h3>
@@ -546,10 +540,10 @@ export const OrderDetailsAdminPage = () => {
             
             <div className="space-y-4 border-b border-gray-100 pb-4">
               {order.sales_order_items?.map((item: any) => (
-                <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                  <div className="flex gap-4 items-center">
+                <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                  <div className="flex gap-4 items-start">
                     {!isShippedOrDelivered ? (
-                       <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+                       <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg overflow-hidden shrink-0 mt-0.5">
                          <button 
                            onClick={() => handleUpdateItemQuantity(item.id, item.quantity, -1)}
                            disabled={item.quantity <= 1 || isUpdatingItem === item.id}
@@ -716,7 +710,6 @@ export const OrderDetailsAdminPage = () => {
             </div>
           </div>
         </div>
-      </div>
 
       <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} title="Registrar Pago">
         <form onSubmit={handleRegisterPayment} className="space-y-4">

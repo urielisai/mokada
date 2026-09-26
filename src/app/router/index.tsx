@@ -31,6 +31,7 @@ import { UsersPage } from '../../modules/admin/users/pages/UsersPage';
 import { FleetVehiclesPage } from '../../modules/fleet/pages/FleetVehiclesPage';
 import { VehicleExpensesPage } from '../../modules/fleet/pages/VehicleExpensesPage';
 import { VehicleExpenseFormPage } from '../../modules/fleet/pages/VehicleExpenseFormPage';
+import { VehicleExpenseDetailPage } from '../../modules/fleet/pages/VehicleExpenseDetailPage';
 import { RoutesPage } from '../../modules/route-operations/pages/RoutesPage';
 import { RouteFormPage } from '../../modules/route-operations/pages/RouteFormPage';
 import { RouteTripsPage } from '../../modules/route-operations/pages/RouteTripsPage';
@@ -109,7 +110,7 @@ export const router = createBrowserRouter([
               { path: 'vehicles', element: <FleetVehiclesPage /> },
               { path: 'expenses', element: <VehicleExpensesPage /> },
               { path: 'expenses/new', element: <VehicleExpenseFormPage /> },
-              { path: 'expenses/:id', element: <VehicleExpenseFormPage /> },
+              { path: 'expenses/:id', element: <VehicleExpenseDetailPage /> },
             ]
           },
           {

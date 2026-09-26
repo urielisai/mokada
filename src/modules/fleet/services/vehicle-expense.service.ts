@@ -40,7 +40,7 @@ export const vehicleExpenseService = {
   async getExpenseById(id: string) {
     const { data, error } = await supabase
       .from('vehicle_expenses')
-      .select('*, expense_categories(code, name), vehicle_expense_attachments(*)')
+      .select('*, expense_categories(code, name), vehicle_expense_attachments(*), fleet_vehicles(internal_code, plate_number), user_profiles!vehicle_expenses_agent_id_fkey(first_name, last_name)')
       .eq('id', id)
       .single();
     if (error) throw error;

@@ -18,8 +18,6 @@ export interface CreateOrderParams {
   credit_term_days?: 8 | 15 | 21;
   warranty_return_id?: string;
   requires_invoice?: boolean;
-  fiscal_profile_id?: string;
-  invoice_payment_form?: string;
   items: {
     product_id: string;
     quantity: number;
@@ -462,5 +460,77 @@ export const ordersService = {
       getRoutePaymentDay(p.created_at) >= weekStartDate &&
       getRoutePaymentDay(p.created_at) <= weekEndDate
     );
+  },
+
+  async createInvoiceRequest(orderId: string, customerId: string, fiscalProfileId: string, paymentForm: string, items: {order_item_id: string, quantity: number}[]) {
+    const { data: customer } = await supabase.from('customers').select('*').eq('id', customerId).single();
+    const { data: profile } = await supabase.from('customer_fiscal_profiles').select('*').eq('id', fiscalProfileId).single();
+    
+    if (!customer || !profile) throw new Error('Cliente o perfil fiscal no encontrado');
+
+    const invoice_details = {
+      customer_name: customer.name,
+      customer_email: customer.email,
+      legal_name: profile.legal_name,
+      rfc: profile.rfc,
+      cfdi_use: profile.cfdi_use,
+      tax_regime: profile.tax_regime,
+      billing_email: profile.billing_email,
+      fiscal_zip_code: profile.fiscal_zip_code,
+      issuer_zip_code: '42186',
+      payment_form: paymentForm
+    };
+
+    const { data: request, error } = await supabase.from('sales_order_invoice_requests').insert({
+      order_id: orderId,
+      fiscal_profile_id: fiscalProfileId,
+      invoice_payment_form: paymentForm,
+      invoice_details
+    }).select().single();
+    if (error) throw error;
+
+    const itemsToInsert = items.map(item => ({
+      invoice_request_id: request.id,
+      order_item_id: item.order_item_id,
+      quantity: item.quantity
+    }));
+
+    const { error: itemsError } = await supabase.from('sales_order_invoice_request_items').insert(itemsToInsert);
+    if (itemsError) throw itemsError;
+    
+    return request;
+  },
+
+  async getInvoiceRequests(orderId: string) {
+    const { data, error } = await supabase.from('sales_order_invoice_requests').select(`
+      *,
+      items:sales_order_invoice_request_items (
+        id,
+        quantity,
+        order_item:sales_order_items (
+          id,
+          product_id,
+          unit_price,
+          products (name, code)
+        )
+      )
+    `).eq('order_id', orderId).order('created_at', { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+  
+  async deleteInvoiceRequest(requestId: string) {
+    const { error } = await supabase.from('sales_order_invoice_requests').delete().eq('id', requestId);
+    if (error) throw error;
+  },
+
+  async updateInvoiceRequestStatus(requestId: string, status: 'PENDING' | 'INVOICED' | 'CANCELLED') {
+    const { data, error } = await supabase.from('sales_order_invoice_requests')
+      .update({ status })
+      .eq('id', requestId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   }
 };

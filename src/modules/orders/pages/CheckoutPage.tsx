@@ -58,18 +58,7 @@ export const CheckoutPage = () => {
   const [customerOptions, setCustomerOptions] = useState<{value: string, label: string, description: string}[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [requiresInvoice, setRequiresInvoice] = useState(false);
-  const [fiscalProfileId, setFiscalProfileId] = useState('');
-  const [invoicePaymentForm, setInvoicePaymentForm] = useState('UNDEFINED');
-  const fiscalProfiles = useCustomerFiscalProfiles(selectedCustomerId || null);
-  const activeFiscalProfiles = fiscalProfiles.data?.filter(p => p.is_active) || [];
-  const selectedFiscalProfile = activeFiscalProfiles.find(p => p.id === fiscalProfileId);
-  useEffect(() => { setFiscalProfileId(''); setRequiresInvoice(false); setInvoicePaymentForm('UNDEFINED'); }, [selectedCustomerId]);
-  useEffect(() => {
-    if (fiscalProfiles.data && !fiscalProfileId) {
-      const preferred = fiscalProfiles.data.find(p => p.is_active && p.is_default) || fiscalProfiles.data.find(p => p.is_active);
-      if (preferred) setFiscalProfileId(preferred.id);
-    }
-  }, [fiscalProfiles.data, fiscalProfileId]);
+  useEffect(() => { setRequiresInvoice(false); }, [selectedCustomerId]);
   
   const [branches, setBranches] = useState<CustomerBranch[]>([]);
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
@@ -161,9 +150,6 @@ export const CheckoutPage = () => {
   }
 
   const handleConfirmOrder = async () => {
-    if (requiresInvoice && (!selectedFiscalProfile || fiscalProfiles.isFetching || fiscalProfiles.error)) {
-      toast.error('Selecciona un perfil fiscal activo del cliente para solicitar la factura.'); return;
-    }
     if(warrantyId && (!isAdmin || !warranty || items.some(i=>i.product_id!==warranty.item.product_id) || items.reduce((sum,i)=>sum+i.quantity,0)>warranty.quantity)) {
       toast.error('La reposición debe usar el producto y hasta la cantidad registrada en la garantía.');return;
     }
@@ -195,8 +181,6 @@ export const CheckoutPage = () => {
       await ordersService.createOrder({
         customer_id: selectedCustomerId,
         requires_invoice: requiresInvoice,
-        fiscal_profile_id: requiresInvoice ? fiscalProfileId : undefined,
-        invoice_payment_form: requiresInvoice ? invoicePaymentForm : undefined,
         warranty_return_id: isAdmin ? warrantyId || undefined : undefined,
         warehouse_id: warehouseId || undefined,
         price_list_id: priceListId || undefined,
@@ -348,22 +332,6 @@ export const CheckoutPage = () => {
                   <input type="checkbox" checked={requiresInvoice} disabled={!selectedCustomerId} onChange={e => setRequiresInvoice(e.target.checked)} className="w-4 h-4 rounded border-gray-300 accent-[#0066CC]" />
                   Requiere factura
                 </label>
-                {requiresInvoice && <div className="space-y-3 bg-gray-50 rounded-xl border border-gray-100 p-4">
-                  {fiscalProfiles.isFetching ? <p className="text-[13px] text-[#86868B]">Cargando datos fiscales…</p> : fiscalProfiles.error ? <p className="text-[13px] text-red-600">No se pudieron cargar los perfiles fiscales. <button type="button" onClick={() => fiscalProfiles.refetch()} className="underline">Reintentar</button></p> : activeFiscalProfiles.length === 0 ? <p className="text-[13px] text-[#86868B]">Este cliente no tiene perfiles fiscales activos. Registra sus datos fiscales en Clientes antes de solicitar la factura.</p> : <>
-                    <label className="block text-[13px] font-medium">Información de facturación
-                      <select value={fiscalProfileId} onChange={e => setFiscalProfileId(e.target.value)} className="mt-1 w-full bg-white border border-gray-200 rounded-lg px-3 py-2">
-                        <option value="">Seleccionar perfil fiscal</option>
-                        {activeFiscalProfiles.map(p => <option key={p.id} value={p.id}>{p.legal_name} · {p.rfc}{p.is_default ? ' · Predeterminado' : ''}</option>)}
-                      </select>
-                    </label>
-                    {selectedFiscalProfile && <p className="text-[12px] text-[#86868B] break-words">RFC: {selectedFiscalProfile.rfc} · CP: {selectedFiscalProfile.fiscal_zip_code} · {selectedFiscalProfile.billing_email}</p>}
-                  </>}
-                  <label className="block text-[13px] font-medium">Forma de pago para facturación
-                    <select value={invoicePaymentForm} onChange={e => setInvoicePaymentForm(e.target.value)} className="mt-1 w-full bg-white border border-gray-200 rounded-lg px-3 py-2">
-                      {invoicePaymentForms.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-                    </select>
-                  </label>
-                </div>}
               </div>
             </div>
           </div>

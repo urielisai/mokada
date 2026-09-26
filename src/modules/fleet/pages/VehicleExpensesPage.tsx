@@ -22,7 +22,7 @@ import { ErrorState } from '../../../components/ui/ErrorState';
 export const VehicleExpensesPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [vehicleFilter, setVehicleFilter] = useState<string>('ALL');
@@ -33,11 +33,11 @@ export const VehicleExpensesPage = () => {
   });
 
   const { data: expenses = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ['vehicle-expenses', { status: statusFilter, vehicleId: vehicleFilter, agentId: isAdmin ? undefined : user?.id }],
+    queryKey: ['vehicle-expenses', { status: statusFilter, vehicleId: vehicleFilter, agentId: isAdmin ? undefined : profile?.id }],
     queryFn: () => vehicleExpenseService.getExpenses({ 
       status: statusFilter, 
       vehicleId: vehicleFilter === 'ALL' ? undefined : vehicleFilter,
-      agentId: isAdmin ? undefined : user?.id 
+      agentId: isAdmin ? undefined : profile?.id
     }),
   });
 
@@ -52,7 +52,7 @@ export const VehicleExpensesPage = () => {
           table: 'vehicle_expenses'
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['vehicleExpenses'] });
+          queryClient.invalidateQueries({ queryKey: ['vehicle-expenses'] });
         }
       )
       .subscribe();

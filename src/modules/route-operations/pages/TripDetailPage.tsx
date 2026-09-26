@@ -266,15 +266,17 @@ export const TripDetailPage = () => {
           <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-4 flex items-center gap-2">
             <MapPin className="w-5 h-5 text-[#0066CC]" /> Itinerario
           </h3>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {trip.stops.map((stop: any, idx: number) => (
-              <div key={stop.id} className="flex items-center gap-3">
+              <div key={stop.id} className="flex items-center gap-3 bg-gray-50/50 border border-gray-100 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#0066CC]/10 text-[#0066CC] text-[12px] font-bold shrink-0">
                   {idx + 1}
                 </div>
-                <div>
-                  <p className="text-[14px] font-medium text-[#1D1D1F]">{stop.client_branches?.name || 'Parada'}</p>
-                  <p className="text-[12px] text-[#86868B]">{stop.client_branches?.city}, {stop.client_branches?.state}</p>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-[#1D1D1F] truncate">{stop.client_branches?.name || 'Parada'}</p>
+                  <p className="text-[11px] text-[#86868B] truncate">
+                    {stop.client_branches?.city}{stop.client_branches?.city && stop.client_branches?.state ? ', ' : ''}{stop.client_branches?.state}
+                  </p>
                 </div>
               </div>
             ))}
