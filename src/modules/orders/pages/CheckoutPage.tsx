@@ -13,8 +13,6 @@ import { useWarehouses } from '../../inventory/hooks/useInventory';
 import { configService } from '../../configuration/services/config.service';
 import { supabase } from '../../../lib/supabase/client';
 import { CreditSelector } from '../components/CreditSelector';
-import { useCustomerFiscalProfiles } from '../../customers/hooks/useCustomers';
-import { invoicePaymentForms } from '../utils/orderInvoice';
 
 export const CheckoutPage = () => {
   const { items, clearCart } = useCartStore();

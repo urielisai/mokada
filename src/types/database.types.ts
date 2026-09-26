@@ -2113,6 +2113,93 @@ export type Database = {
           },
         ]
       }
+      sales_order_invoice_request_items: {
+        Row: {
+          created_at: string
+          id: string
+          invoice_request_id: string
+          order_item_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invoice_request_id: string
+          order_item_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invoice_request_id?: string
+          order_item_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_invoice_request_items_invoice_request_id_fkey"
+            columns: ["invoice_request_id"]
+            isOneToOne: false
+            referencedRelation: "sales_order_invoice_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_invoice_request_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "sales_order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_order_invoice_requests: {
+        Row: {
+          created_at: string
+          fiscal_profile_id: string
+          id: string
+          invoice_details: Json
+          invoice_payment_form: string
+          order_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fiscal_profile_id: string
+          id?: string
+          invoice_details: Json
+          invoice_payment_form: string
+          order_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fiscal_profile_id?: string
+          id?: string
+          invoice_details?: Json
+          invoice_payment_form?: string
+          order_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_invoice_requests_fiscal_profile_id_fkey"
+            columns: ["fiscal_profile_id"]
+            isOneToOne: false
+            referencedRelation: "customer_fiscal_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_invoice_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_order_items: {
         Row: {
           created_at: string
