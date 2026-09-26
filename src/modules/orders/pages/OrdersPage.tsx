@@ -54,7 +54,7 @@ export const OrdersPage = () => {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
       order.id.toLowerCase().includes(search.toLowerCase()) || 
-      order.customers?.name.toLowerCase().includes(search.toLowerCase());
+      order.customers?.name?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -157,7 +157,7 @@ export const OrdersPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-[13px] text-gray-600">
-                          {order.sales_order_items?.length || 0} prod.
+                          {order.sales_order_items?.reduce((total: number, item: { quantity: number }) => total + Number(item.quantity || 0), 0) || 0} art.
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

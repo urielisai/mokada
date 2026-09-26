@@ -3,6 +3,33 @@ import { createClientUuid } from '../../../utils/createClientUuid';
 import type { Database } from '../../../types/database.types';
 export type OrderReturn = Database['public']['Tables']['sales_order_returns']['Row'];
 export const returnsService = {
+  async getAll() {
+    const rows:any[]=[];
+    for(let from=0;;from+=500){
+      const {data,error}=await (supabase as any)
+        .from('sales_order_returns')
+        .select(`
+          *,
+          source_order:sales_orders!sales_order_returns_order_id_fkey(
+            id, created_at, status, customer_id,
+            customers(name, email)
+          ),
+          item:sales_order_items!sales_order_returns_item_id_fkey(
+            id, product_id,
+            products(name, code)
+          ),
+          replacement_orders:sales_orders!sales_orders_warranty_return_id_fkey(
+            id, created_at, status
+          )
+        `)
+        .order('created_at',{ascending:false})
+        .order('id')
+        .range(from,from+499);
+      if(error)throw error;
+      rows.push(...(data || []));
+      if((data || []).length<500)return rows;
+    }
+  },
   async review(returnId:string,approve:boolean,comment:string) {
     const {data,error}=await supabase.rpc('review_order_return',{p_return_id:returnId,p_approve:approve,p_comment:comment});
     if(error)throw error;return data as OrderReturn;

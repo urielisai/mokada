@@ -42,6 +42,7 @@ import { CheckoutPage } from '../../modules/orders/pages/CheckoutPage';
 import { MyOrdersPage } from '../../modules/orders/pages/MyOrdersPage';
 import { MyDebtsPage } from '../../modules/orders/pages/MyDebtsPage';
 import { OrdersPage } from '../../modules/orders/pages/OrdersPage';
+import { WarrantyOrdersPage } from '../../modules/orders/pages/WarrantyOrdersPage';
 import { OrderDetailsAdminPage } from '../../modules/orders/pages/OrderDetailsAdminPage';
 import { MarginsPage } from '../../modules/inventory/pages/MarginsPage';
 import { AdminDebtsPage } from '../../modules/admin/debts/pages/AdminDebtsPage';
@@ -141,6 +142,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <OrdersPage /> },
               { path: 'checkout', element: <CheckoutPage /> },
+              { path: 'warranties', element: <AdminRoute><WarrantyOrdersPage /></AdminRoute> },
               { path: ':id', element: <OrderDetailsAdminPage /> },
             ]
           },

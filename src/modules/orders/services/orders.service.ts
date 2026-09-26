@@ -88,6 +88,7 @@ export const ordersService = {
         ),
         sales_order_payments (*)
       `)
+      .is('warranty_return_id', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

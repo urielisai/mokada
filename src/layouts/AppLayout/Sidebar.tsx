@@ -18,6 +18,7 @@ import {
   Route,
   Settings,
   ShoppingCart,
+  ShieldCheck,
   Tags,
   Truck,
   UserRound,
@@ -125,6 +126,7 @@ export const Sidebar = ({ isOpen, isDesktopOpen, onClose, onDesktopToggle }: Sid
         label: 'Ventas',
         items: [
           { path: '/orders', label: 'Pedidos', icon: ShoppingCart },
+          ...(isAdmin ? [{ path: '/orders/warranties', label: 'Pedidos en garantía', icon: ShieldCheck }] : []),
         ],
       });
     }
