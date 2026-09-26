@@ -259,16 +259,16 @@ export const TransferDetailPage = () => {
               ]}
             />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-5">
               {transfer.items?.map((item: any, index: number) => {
                 const imageUrl = item.products?.image_url ? catalogService.getProductImageUrl(item.products.image_url) : null;
                 return (
                   <div 
                     key={item.id || index}
-                    className="group bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
+                    className="group min-w-0 bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 grid grid-cols-1 md:grid-cols-[14rem_minmax(0,1fr)]"
                   >
                     {/* Image Section */}
-                    <div className="relative aspect-square bg-white border-b border-gray-50 p-6 flex items-center justify-center overflow-hidden">
+                    <div className="relative aspect-[4/3] md:aspect-auto md:min-h-72 bg-white border-b md:border-b-0 md:border-r border-gray-100 p-6 flex items-center justify-center overflow-hidden">
                       {imageUrl ? (
                         <img 
                           src={imageUrl} 
@@ -282,29 +282,24 @@ export const TransferDetailPage = () => {
                     </div>
 
                     {/* Info Section */}
-                    <div className="p-5 flex-1 flex flex-col">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <span className="text-[12px] font-medium text-[#0066CC] truncate">
+                    <div className="p-4 sm:p-5 min-w-0 flex flex-col">
+                      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                        <span className="min-w-0 text-[12px] font-medium text-[#0066CC] break-all">
                           {item.products?.code}
                         </span>
-                        <span className="text-[12px] font-medium text-emerald-600">
+                        <span className="shrink-0 text-[12px] font-medium text-emerald-600">
                           • Traspaso
                         </span>
                       </div>
                       
-                      <h3 className="text-[15px] font-semibold text-[#1D1D1F] leading-tight mb-2 line-clamp-2" title={item.products?.name}>
+                      <h3 className="text-[15px] font-semibold text-[#1D1D1F] leading-snug mb-2 break-words" title={item.products?.name}>
                         {item.products?.name}
                       </h3>
                       <InventoryProductInfo productId={item.product_id} source={stock?.find(row => row.product_id===item.product_id && row.warehouse_id===transfer.source_warehouse_id && row.location_id==null)} destination={stock?.find(row => row.product_id===item.product_id && row.warehouse_id===transfer.destination_warehouse_id && row.location_id==null)} sourceName={transfer.source?.name} destinationName={transfer.destination?.name} quantity={transfer.status==='DRAFT' ? Number(item.quantity) : undefined} unitPrice={item.unit_price} stockLoaded={!loadingStock && !stockError} />
                       
-                      <div className="mt-auto pt-4 border-t border-gray-100 flex justify-center text-center">
-                        <div>
-                          <p className="text-[11px] text-[#86868B] uppercase tracking-wider mb-0.5">Cantidad</p>
-                          <p className="text-[14px] font-semibold text-[#1D1D1F]">
-                            {item.quantity}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-2">Precio interno: {item.unit_price == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(item.unit_price)}</p>
-                        </div>
+                      <div className="mt-auto pt-4 border-t border-gray-100 flex flex-wrap gap-x-8 gap-y-3">
+                        <div><p className="text-[11px] text-[#86868B] uppercase tracking-wider">Cantidad</p><p className="text-[14px] font-semibold text-[#1D1D1F] mt-1">{item.quantity}</p></div>
+                        <div><p className="text-[11px] text-[#86868B] uppercase tracking-wider">Precio interno</p><p className="text-[14px] font-semibold text-[#1D1D1F] mt-1">{item.unit_price == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style: 'currency', currency: 'MXN'}).format(item.unit_price)}</p></div>
                       </div>
                     </div>
                   </div>
