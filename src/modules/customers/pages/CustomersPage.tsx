@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Pencil, Phone, Plus, ReceiptText, Route, Search, ToggleLeft, ToggleRight, Users } from 'lucide-react';
+import { Building2, Pencil, Phone, Plus, ReceiptText, Search, ToggleLeft, ToggleRight, Users } from 'lucide-react';
 import { AlertModal } from '../../../components/ui/AlertModal';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -8,9 +8,8 @@ import { ErrorState } from '../../../components/ui/ErrorState';
 import { LoadingState } from '../../../components/ui/LoadingState';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { IconButton } from '../../../components/ui/IconButton';
-import { useCustomers, useCustomerRoutes, useSaveCustomer } from '../hooks/useCustomers';
+import { useCustomers, useSaveCustomer } from '../hooks/useCustomers';
 import type { CustomerSummary } from '../services/customers.service';
-import { useAuth } from '../../auth/context/useAuth';
 import { useRouteStore } from '../../../store/routeStore';
 
 export const CustomersPage = () => {
@@ -25,9 +24,7 @@ export const CustomersPage = () => {
     type: 'error',
   });
   const { data: customers = [], isLoading, isError, error, refetch } = useCustomers({ search });
-  const { data: routeOptions = [] } = useCustomerRoutes();
   const saveCustomer = useSaveCustomer();
-  const { isAdmin } = useAuth();
 
   const filteredCustomers = customers.filter((customer) => !globalSelectedRouteId || customer.main_branch_route_id === globalSelectedRouteId);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { Check, ChevronDown, Search, X, Loader2 } from 'lucide-react';
 
 export interface AsyncSelectOption {
@@ -39,23 +39,7 @@ export const AsyncSelect = ({
   const [selectedOption, setSelectedOption] = useState<AsyncSelectOption | null>(defaultOption || null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Initial load when opened
-  useEffect(() => {
-    if (isOpen) {
-      handleSearch('');
-    }
-  }, [isOpen]);
-
-  // Update selected option if value changes externally (e.g. form reset)
-  useEffect(() => {
-    if (defaultOption && defaultOption.value === value) {
-      setSelectedOption(defaultOption);
-    } else if (!value) {
-      setSelectedOption(null);
-    }
-  }, [value, defaultOption]);
-
-  const handleSearch = async (searchQuery: string) => {
+  const handleSearch = useCallback(async (searchQuery: string) => {
     setIsLoading(true);
     try {
       const results = await loadOptions(searchQuery);
@@ -66,7 +50,16 @@ export const AsyncSelect = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [loadOptions]);
+
+  // Update selected option if value changes externally (e.g. form reset)
+  useEffect(() => {
+    if (defaultOption && defaultOption.value === value) {
+      setSelectedOption(defaultOption);
+    } else if (!value) {
+      setSelectedOption(null);
+    }
+  }, [value, defaultOption]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -75,7 +68,27 @@ export const AsyncSelect = ({
       }
     }, 300); // Debounce
     return () => clearTimeout(timeoutId);
-  }, [query, isOpen]);
+  }, [query, isOpen, handleSearch]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const closeWhenOutside = (event: Event) => {
+      if (!wrapperRef.current?.contains(event.target as Node | null)) setIsOpen(false);
+    };
+    const closeWithEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeWhenOutside);
+    document.addEventListener('focusin', closeWhenOutside);
+    document.addEventListener('keydown', closeWithEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeWhenOutside);
+      document.removeEventListener('focusin', closeWhenOutside);
+      document.removeEventListener('keydown', closeWithEscape);
+    };
+  }, [isOpen]);
 
   const selectOption = (option: AsyncSelectOption) => {
     setSelectedOption(option);
@@ -93,15 +106,7 @@ export const AsyncSelect = ({
   };
 
   return (
-    <div
-      ref={wrapperRef}
-      className="relative min-w-0"
-      onBlur={(event) => {
-        if (!wrapperRef.current?.contains(event.relatedTarget as Node | null)) {
-          setIsOpen(false);
-        }
-      }}
-    >
+    <div ref={wrapperRef} className="relative min-w-0">
       {label && <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>}
       <button
         type="button"

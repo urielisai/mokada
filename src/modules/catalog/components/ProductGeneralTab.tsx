@@ -1,6 +1,6 @@
 import { useFormContext } from 'react-hook-form';
 import { SearchSelect } from '../../../components/ui/SearchSelect';
-import { AsyncSelect, AsyncSelectOption } from '../../../components/ui/AsyncSelect';
+import { AsyncSelect, type AsyncSelectOption } from '../../../components/ui/AsyncSelect';
 import { catalogService } from '../services/catalog.service';
 
 interface Props {
