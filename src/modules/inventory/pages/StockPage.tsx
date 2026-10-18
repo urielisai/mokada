@@ -136,7 +136,7 @@ export const StockPage = () => {
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-lg transition ${
                 viewMode === 'table' 
-                  ? 'bg-white shadow-sm text-ink' 
+                  ? 'bg-white shadow-sm text-ink'
                   : 'text-gray-500 hover:text-ink'
               }`}
               title="Vista de Tabla"
@@ -147,7 +147,7 @@ export const StockPage = () => {
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition ${
                 viewMode === 'grid' 
-                  ? 'bg-white shadow-sm text-ink' 
+                  ? 'bg-white shadow-sm text-ink'
                   : 'text-gray-500 hover:text-ink'
               }`}
               title="Vista de Cuadrícula"

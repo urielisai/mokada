@@ -667,7 +667,7 @@ export const OrderDetailsAdminPage = () => {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-2 overflow-hidden">
                 <div 
-                  className="bg-accent h-2 rounded-full transition duration-500" 
+                  className="bg-accent h-2 rounded-full transition duration-500"
                   style={{ width: `${order.total_amount > 0 ? Math.min(((order.amount_paid || 0) / order.total_amount) * 100, 100) : 100}%` }}
                 />
               </div>

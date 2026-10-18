@@ -145,7 +145,7 @@ export const DashboardPage = () => {
                 />
                 <Bar 
                   dataKey="valor" 
-                  fill="#0071E3" 
+                  fill="#0071E3"
                   radius={[8, 8, 8, 8]}
                   barSize={40}
                   animationDuration={700}
