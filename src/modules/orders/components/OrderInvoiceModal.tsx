@@ -20,16 +20,16 @@ export const OrderInvoiceModal = ({ isOpen, onClose, order }: {
     } catch { preview.close(); toast.error('No se pudo preparar la impresión.'); }
   };
   return <Modal isOpen={isOpen} onClose={onClose} title="Datos para facturación" size="lg">
-    <p className="text-[13px] text-[#86868B] mb-5">Datos fiscales seleccionados al crear el pedido.</p>
+    <p className="text-[13px] text-muted mb-5">Datos fiscales seleccionados al crear el pedido.</p>
     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {invoiceRows(order.invoice_details).map(([label, value]) => <div key={label} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
-        <dt className="text-[12px] text-[#86868B] mb-1">{label}</dt>
-        <dd className="text-[14px] text-[#1D1D1F] font-medium break-words">{value}</dd>
+        <dt className="text-[12px] text-muted mb-1">{label}</dt>
+        <dd className="text-[14px] text-ink font-medium break-words">{value}</dd>
       </div>)}
     </dl>
     <div className="flex flex-wrap justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
       <button type="button" onClick={print} className="flex items-center gap-2 border border-gray-200 rounded-lg px-4 py-2 text-[13px] font-medium"><Printer size={16} />Imprimir</button>
-      <button type="button" onClick={() => buildOrderInvoicePdf(order.id, order.invoice_details).save(`facturacion-${order.id}.pdf`)} className="flex items-center gap-2 bg-[#0066CC] text-white rounded-lg px-4 py-2 text-[13px] font-medium"><Download size={16} />Descargar PDF</button>
+      <button type="button" onClick={() => buildOrderInvoicePdf(order.id, order.invoice_details).save(`facturacion-${order.id}.pdf`)} className="flex items-center gap-2 bg-accent text-white rounded-lg px-4 py-2 text-[13px] font-medium"><Download size={16} />Descargar PDF</button>
     </div>
   </Modal>;
 };

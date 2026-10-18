@@ -95,12 +95,12 @@ export const MyDebtsPage = () => {
         <div>
           <Link
             to={`/my-orders`}
-            className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#0066CC] hover:underline"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent hover:underline"
           >
             #{item.id.slice(0, 8)}
             <ExternalLink className="h-3 w-3" />
           </Link>
-          <p className="text-[12px] text-[#86868B]">
+          <p className="text-[12px] text-muted">
             {item.customer_branches?.name || 'Sucursal Principal'}
           </p>
         </div>
@@ -110,27 +110,27 @@ export const MyDebtsPage = () => {
       header: 'Modalidad / Plazo',
       cell: (item) => (
         <div>
-          <span className="text-xs font-semibold text-[#1D1D1F]">
+          <span className="text-xs font-semibold text-ink">
             {item.payment_type === 'CREDITO' ? `Crédito (${item.credit_term_days || 15}d)` : 'Contado'}
           </span>
-          {item.due_date && <p className="text-[11px] text-[#86868B]">Límite: {item.due_date}</p>}
+          {item.due_date && <p className="text-[11px] text-muted">Límite: {item.due_date}</p>}
         </div>
       ),
     },
     {
       header: 'Monto Total',
-      cell: (item) => <span className="font-medium text-[#1D1D1F]">{formatCurrency(item.totalCost)}</span>,
+      cell: (item) => <span className="font-medium text-ink">{formatCurrency(item.totalCost)}</span>,
       className: 'text-right',
     },
     {
       header: 'Abonado',
-      cell: (item) => <span className="font-medium text-[#1D1D1F]">{formatCurrency(item.amountPaid)}</span>,
+      cell: (item) => <span className="font-medium text-ink">{formatCurrency(item.amountPaid)}</span>,
       className: 'text-right',
     },
     {
       header: 'Saldo Pendiente',
       cell: (item) => (
-        <span className="font-semibold text-[#1D1D1F]">
+        <span className="font-semibold text-ink">
           {formatCurrency(item.remainingBalance)}
         </span>
       ),
@@ -147,10 +147,10 @@ export const MyDebtsPage = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">
+        <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">
           Mis Adeudos y Créditos
         </h2>
-        <p className="text-[14px] text-[#86868B] sm:text-[15px]">
+        <p className="text-[14px] text-muted sm:text-[15px]">
           Consulta el estado de tus compras a crédito, plazos y fechas límite.
         </p>
       </div>
@@ -158,24 +158,24 @@ export const MyDebtsPage = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Saldo Total Pendiente
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <Wallet className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {formatCurrency(metrics.totalPending)}
           </p>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Pedidos Vencidos
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <AlertCircle className="h-5 w-5" />
             </div>
           </div>

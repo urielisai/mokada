@@ -193,8 +193,8 @@ export const AdminDebtsPage = () => {
       header: 'Cliente / Sucursal',
       cell: (item) => (
         <div>
-          <p className="font-semibold text-[#1D1D1F] text-sm">{item.customers?.name || 'Cliente'}</p>
-          <p className="text-[12px] text-[#86868B]">
+          <p className="font-semibold text-ink text-sm">{item.customers?.name || 'Cliente'}</p>
+          <p className="text-[12px] text-muted">
             {item.customer_branches?.name ? `Sucursal: ${item.customer_branches.name}` : 'Sucursal Principal'}
           </p>
         </div>
@@ -205,7 +205,7 @@ export const AdminDebtsPage = () => {
       cell: (item) => (
         <Link
           to={`/orders/${item.id}`}
-          className="inline-flex items-center gap-1 text-[13px] font-semibold text-[#0066CC] hover:underline"
+          className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent hover:underline"
         >
           #{item.id.slice(0, 8)}
           <ExternalLink className="h-3 w-3" />
@@ -216,27 +216,27 @@ export const AdminDebtsPage = () => {
       header: 'Modalidad / Plazo',
       cell: (item) => (
         <div>
-          <span className="text-xs font-semibold text-[#1D1D1F]">
+          <span className="text-xs font-semibold text-ink">
             {item.payment_type === 'CREDITO' ? `Crédito (${item.credit_term_days || 15}d)` : 'Contado'}
           </span>
-          {item.due_date && <p className="text-[11px] text-[#86868B]">Límite: {item.due_date}</p>}
+          {item.due_date && <p className="text-[11px] text-muted">Límite: {item.due_date}</p>}
         </div>
       ),
     },
     {
       header: 'Monto Total',
-      cell: (item) => <span className="font-medium text-[#1D1D1F]">{formatCurrency(item.totalCost)}</span>,
+      cell: (item) => <span className="font-medium text-ink">{formatCurrency(item.totalCost)}</span>,
       className: 'text-right',
     },
     {
       header: 'Abonado',
-      cell: (item) => <span className="font-medium text-[#1D1D1F]">{formatCurrency(item.amountPaid)}</span>,
+      cell: (item) => <span className="font-medium text-ink">{formatCurrency(item.amountPaid)}</span>,
       className: 'text-right',
     },
     {
       header: 'Saldo Pendiente',
       cell: (item) => (
-        <span className="font-semibold text-[#1D1D1F]">
+        <span className="font-semibold text-ink">
           {formatCurrency(item.remainingBalance)}
         </span>
       ),
@@ -280,7 +280,7 @@ export const AdminDebtsPage = () => {
         return (
           <Link
             to={`/orders/${item.id}`}
-            className="inline-flex h-8 items-center rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold text-[#1D1D1F] transition-colors hover:bg-gray-50"
+            className="inline-flex h-8 items-center rounded-lg border border-gray-300 bg-white px-3 text-xs font-semibold text-ink transition-colors hover:bg-gray-50"
           >
             Ver Detalle
           </Link>
@@ -295,10 +295,10 @@ export const AdminDebtsPage = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">
+        <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">
           Adeudos y Crédito
         </h2>
-        <p className="text-[14px] text-[#86868B] sm:text-[15px]">
+        <p className="text-[14px] text-muted sm:text-[15px]">
           Gestión de cuentas por cobrar, solicitudes de crédito y saldos.
         </p>
       </div>
@@ -307,56 +307,56 @@ export const AdminDebtsPage = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Total por Cobrar
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <Wallet className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {formatCurrency(metrics.totalToCollect)}
           </p>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Adeudos Vencidos
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <AlertTriangle className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {formatCurrency(metrics.totalOverdue)}
           </p>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Por Autorizar
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <Clock className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {metrics.totalPendingApprovalCount} Solicitudes
           </p>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Total Cobrado
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <CheckCircle className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {formatCurrency(metrics.totalCollected)}
           </p>
         </div>
@@ -369,7 +369,7 @@ export const AdminDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('ALL')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'ALL' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'ALL' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Todos ({processedOrders.length})
@@ -379,7 +379,7 @@ export const AdminDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('PENDING')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'PENDING' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'PENDING' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Pendientes
@@ -389,7 +389,7 @@ export const AdminDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('OVERDUE')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'OVERDUE' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'OVERDUE' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Retrasados
@@ -399,7 +399,7 @@ export const AdminDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('PENDING_APPROVAL')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'PENDING_APPROVAL' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'PENDING_APPROVAL' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Por Aprobar ({metrics.totalPendingApprovalCount})
@@ -409,15 +409,15 @@ export const AdminDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('PAID')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'PAID' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'PAID' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Pagados
           </button>
         </div>
 
-        <label className="flex h-11 w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 shadow-sm focus-within:border-[#0066CC] focus-within:ring-2 focus-within:ring-[#0066CC]/15 sm:w-72">
-          <Search className="h-4 w-4 text-[#86868B]" />
+        <label className="flex h-11 w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 shadow-sm focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15 sm:w-72">
+          <Search className="h-4 w-4 text-muted" />
           <input
             type="text"
             placeholder="Buscar por cliente, sucursal o pedido..."

@@ -23,7 +23,7 @@ export const ProductDetailDrawer = ({ productId, isOpen, onClose }: Props) => {
       
       <div className="fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-xl z-50 transform transition-transform duration-300 flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-[22px] font-bold tracking-tight text-[#1D1D1F]">Detalle del Producto</h2>
+          <h2 className="text-[22px] font-bold tracking-tight text-ink">Detalle del Producto</h2>
           <button 
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"

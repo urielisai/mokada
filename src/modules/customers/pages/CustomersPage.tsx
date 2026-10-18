@@ -10,12 +10,12 @@ import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { IconButton } from '../../../components/ui/IconButton';
 import { useCustomers, useSaveCustomer } from '../hooks/useCustomers';
 import type { CustomerSummary } from '../services/customers.service';
-import { useRouteStore } from '../../../store/routeStore';
+import { useRouteScope } from '../../route-operations/hooks/useRouteScope';
 
 export const CustomersPage = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const { globalSelectedRouteId } = useRouteStore();
+  const { matchesRoute } = useRouteScope();
   const [customerToToggle, setCustomerToToggle] = useState<CustomerSummary | null>(null);
   const [alertModal, setAlertModal] = useState<{ isOpen: boolean; title: string; message: string; type: 'error' | 'success' | 'info' }>({
     isOpen: false,
@@ -26,7 +26,7 @@ export const CustomersPage = () => {
   const { data: customers = [], isLoading, isError, error, refetch } = useCustomers({ search });
   const saveCustomer = useSaveCustomer();
 
-  const filteredCustomers = customers.filter((customer) => !globalSelectedRouteId || customer.main_branch_route_id === globalSelectedRouteId);
+  const filteredCustomers = customers.filter((customer) => matchesRoute(customer.main_branch_route_id));
 
   const handleToggleCustomer = (customer: CustomerSummary) => {
     setAlertModal((current) => ({ ...current, isOpen: false }));
@@ -67,15 +67,15 @@ export const CustomersPage = () => {
     <div className="space-y-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">Clientes</h2>
-          <p className="text-[14px] text-[#86868B] sm:text-[15px]">
+          <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">Clientes</h2>
+          <p className="text-[14px] text-muted sm:text-[15px]">
             Cuentas de cliente, información fiscal y sucursales.
           </p>
         </div>
         <button
           type="button"
           onClick={() => navigate('/customers/new')}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD]"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
         >
           <Plus className="h-4 w-4" />
           Nuevo cliente
@@ -83,8 +83,8 @@ export const CustomersPage = () => {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex h-11 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 shadow-sm focus-within:border-[#0066CC] focus-within:ring-2 focus-within:ring-[#0066CC]/15">
-          <Search className="h-4 w-4 text-[#86868B]" />
+        <label className="flex h-11 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 shadow-sm focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15">
+          <Search className="h-4 w-4 text-muted" />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -103,7 +103,7 @@ export const CustomersPage = () => {
             <button
               type="button"
               onClick={() => navigate('/customers/new')}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#0066CC] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD]"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
             >
               <Plus className="h-4 w-4" />
               Nuevo cliente
@@ -114,7 +114,7 @@ export const CustomersPage = () => {
         <>
           <div className="hidden overflow-hidden rounded-lg border border-gray-200/70 bg-white shadow-sm lg:block">
             <table className="w-full text-left text-[13px]">
-              <thead className="border-b border-gray-200/70 text-[#86868B]">
+              <thead className="border-b border-gray-200/70 text-muted">
                 <tr>
                   <th className="px-4 py-3.5 font-semibold">Cliente</th>
                   <th className="px-4 py-3.5 font-semibold">Contacto</th>
@@ -128,28 +128,28 @@ export const CustomersPage = () => {
                 {filteredCustomers.map((customer) => (
                   <tr
                     key={customer.id}
-                    className="cursor-pointer transition-colors hover:bg-[#F5F5F7]/50"
+                    className="cursor-pointer transition-colors hover:bg-canvas/50"
                     onClick={() => navigate(`/customers/${customer.id}`)}
                   >
                     <td className="px-4 py-3.5">
-                      <p className="max-w-[240px] truncate font-semibold text-[#1D1D1F]">{customer.name}</p>
-                      <p className="mt-0.5 text-[12px] text-[#86868B]">
+                      <p className="max-w-[240px] truncate font-semibold text-ink">{customer.name}</p>
+                      <p className="mt-0.5 text-[12px] text-muted">
                         {customer.requires_invoice ? 'Requiere factura' : 'Sin facturación marcada'}
                       </p>
                     </td>
-                    <td className="px-4 py-3.5 text-[#424245]">
+                    <td className="px-4 py-3.5 text-ink-2">
                       <p className="max-w-[220px] truncate">{customer.email}</p>
-                      <p className="mt-0.5 text-[12px] text-[#86868B]">{customer.phone}</p>
+                      <p className="mt-0.5 text-[12px] text-muted">{customer.phone}</p>
                     </td>
-                    <td className="px-4 py-3.5 text-[#424245]">
+                    <td className="px-4 py-3.5 text-ink-2">
                       <p>{customer.active_fiscal_profile_count} activos</p>
-                      <p className="mt-0.5 max-w-[180px] truncate text-[12px] text-[#86868B]">
+                      <p className="mt-0.5 max-w-[180px] truncate text-[12px] text-muted">
                         {customer.default_fiscal_rfc || '-'}
                       </p>
                     </td>
-                    <td className="px-4 py-3.5 text-[#424245]">
+                    <td className="px-4 py-3.5 text-ink-2">
                       <p>{customer.active_branch_count} activas</p>
-                      <p className="mt-0.5 max-w-[180px] truncate text-[12px] text-[#86868B]">
+                      <p className="mt-0.5 max-w-[180px] truncate text-[12px] text-muted">
                         {customer.main_branch_route_name || customer.main_branch_name || '-'}
                       </p>
                     </td>
@@ -227,22 +227,22 @@ const CustomerCard = ({
     <button type="button" onClick={onEdit} className="block w-full text-left">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-[#1D1D1F]">{customer.name}</h3>
-          <p className="mt-0.5 truncate text-[12px] text-[#86868B]">{customer.email}</p>
+          <h3 className="truncate text-sm font-semibold text-ink">{customer.name}</h3>
+          <p className="mt-0.5 truncate text-[12px] text-muted">{customer.email}</p>
         </div>
         <StatusBadge status={customer.is_active ? 'ACTIVE' : 'INACTIVE'} />
       </div>
-      <div className="mt-3 grid gap-1 text-[12px] text-[#424245]">
+      <div className="mt-3 grid gap-1 text-[12px] text-ink-2">
         <span className="inline-flex min-w-0 items-center gap-2">
-          <Phone className="h-3.5 w-3.5 shrink-0 text-[#86868B]" />
+          <Phone className="h-3.5 w-3.5 shrink-0 text-muted" />
           <span className="truncate">{customer.phone}</span>
         </span>
         <span className="inline-flex min-w-0 items-center gap-2">
-          <ReceiptText className="h-3.5 w-3.5 shrink-0 text-[#86868B]" />
+          <ReceiptText className="h-3.5 w-3.5 shrink-0 text-muted" />
           <span>{customer.active_fiscal_profile_count} fiscales activos</span>
         </span>
         <span className="inline-flex min-w-0 items-center gap-2">
-          <Building2 className="h-3.5 w-3.5 shrink-0 text-[#86868B]" />
+          <Building2 className="h-3.5 w-3.5 shrink-0 text-muted" />
           <span className="truncate">{customer.active_branch_count} sucursales activas</span>
         </span>
       </div>

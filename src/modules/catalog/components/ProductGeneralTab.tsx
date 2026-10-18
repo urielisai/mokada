@@ -20,11 +20,13 @@ export const ProductGeneralTab = ({ initialBrand, initialCategory, units }: Prop
 
         {/* Code */}
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Código *</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">
+            {watch('item_type') === 'PURCHASE' ? 'Código de compra *' : 'Clave de venta *'}
+          </label>
           <input 
             type="text" 
             {...register('code', { required: 'El código es obligatorio' })}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition"
             placeholder="Ej: PROD-001"
           />
           {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code.message?.toString()}</p>}
@@ -32,22 +34,22 @@ export const ProductGeneralTab = ({ initialBrand, initialCategory, units }: Prop
 
         {/* Barcode */}
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Código de Barras</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Código de Barras</label>
           <input 
             type="text" 
             {...register('barcode')}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition"
             placeholder="Opcional"
           />
         </div>
 
         {/* Name */}
         <div className="md:col-span-2">
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Nombre del Producto *</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Nombre del Producto *</label>
           <input 
             type="text" 
             {...register('name', { required: 'El nombre es obligatorio' })}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition"
             placeholder="Ej: Amortiguador Trasero"
           />
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message?.toString()}</p>}
@@ -93,10 +95,10 @@ export const ProductGeneralTab = ({ initialBrand, initialCategory, units }: Prop
 
         {/* Status */}
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Estado</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Estado</label>
           <select 
             {...register('status')}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all text-[#1D1D1F]"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition text-ink"
           >
             <option value="ACTIVE">Activo</option>
             <option value="INACTIVE">Inactivo</option>
@@ -106,11 +108,11 @@ export const ProductGeneralTab = ({ initialBrand, initialCategory, units }: Prop
 
         {/* Description */}
         <div className="md:col-span-2">
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Descripción</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Descripción</label>
           <textarea 
             {...register('description')}
             rows={4}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all resize-y"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition resize-y"
             placeholder="Detalles adicionales del producto..."
           />
         </div>

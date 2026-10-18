@@ -3,6 +3,15 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../../lib/supabase/client';
 import { authService, type UpdateProfileInput, type UserProfile } from '../services/auth.service';
 import { AuthContext, type AuthContextValue } from './AuthContextState';
+import { queryClient } from '../../../app/config/queryClient';
+import { useRouteStore } from '../../../store/routeStore';
+
+// Cached queries and the persisted route filter belong to the previous user;
+// drop them so a different user on the same device never sees that data.
+const clearUserScopedState = () => {
+  queryClient.clear();
+  useRouteStore.getState().setGlobalSelectedRouteId('');
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -66,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Only process state changes if it's a significant event (like SIGNED_IN or TOKEN_REFRESHED)
       // and do not aggressively log out if the profile fetch fails (e.g. due to brief network drop).
       if (event === 'SIGNED_OUT') {
+        clearUserScopedState();
         setProfile(null);
         setSession(null);
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
@@ -86,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signIn = useCallback(
     async (email: string, password: string) => {
       const authSession = await authService.signIn(email, password);
+      clearUserScopedState();
       setSession(authSession.session);
       setProfile(authSession.profile);
     },
@@ -94,6 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = useCallback(async () => {
     await authService.signOut();
+    clearUserScopedState();
     setSession(null);
     setProfile(null);
   }, []);

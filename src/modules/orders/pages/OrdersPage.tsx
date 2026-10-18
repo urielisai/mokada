@@ -5,13 +5,13 @@ import { Search, Filter, ShoppingCart, Loader2, FileText, CheckCircle2, Truck, X
 import { format } from 'date-fns';
 import { supabase } from '../../../lib/supabase/client';
 import { useAuth } from '../../auth/context/useAuth';
-import { useRouteStore } from '../../../store/routeStore';
+import { useRouteScope } from '../../route-operations/hooks/useRouteScope';
 
 export const statusConfig = {
   PENDING: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   VALIDATING: { label: 'Validando Stock', color: 'bg-blue-100 text-blue-800', icon: FileText },
   CONFIRMED: { label: 'Confirmado', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle2 },
-  SHIPPED: { label: 'Enviado', color: 'bg-[#0066CC]/10 text-[#0066CC]', icon: Truck },
+  SHIPPED: { label: 'Enviado', color: 'bg-accent/10 text-accent', icon: Truck },
   DELIVERED: { label: 'Entregado', color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
   CANCELLED: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle },
 };
@@ -23,7 +23,7 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const { globalSelectedRouteId } = useRouteStore();
+  const { matchesRoute } = useRouteScope();
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'UNPAID' | 'PAID'>(initialPaymentFilter);
   const isAgent = profile?.user_type === 'AGENT';
 
@@ -66,13 +66,13 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
       order.id.toLowerCase().includes(search.toLowerCase()) || 
       order.customers?.name?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
-    const matchesRoute = !globalSelectedRouteId || order.customer_branches?.route_id === globalSelectedRouteId;
+    const isInRoute = matchesRoute(order.customer_branches?.route_id);
     const { isPaid } = getPaymentSummary(order);
     const matchesPayment = paymentFilter === 'ALL' || (paymentFilter === 'PAID' ? isPaid : !isPaid);
-    return matchesSearch && matchesStatus && matchesRoute && matchesPayment;
+    return matchesSearch && matchesStatus && isInRoute && matchesPayment;
   });
 
-  const paymentCounts = orders.reduce((counts, order) => {
+  const paymentCounts = orders.filter(order => matchesRoute(order.customer_branches?.route_id)).reduce((counts, order) => {
     if (getPaymentSummary(order).isPaid) counts.paid += 1;
     else counts.unpaid += 1;
     return counts;
@@ -82,18 +82,18 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">{isAgent ? (initialPaymentFilter === 'PAID' ? 'Pedidos pagados' : 'Mis pedidos') : 'Ventas / Pedidos'}</h2>
-          <p className="text-[15px] text-[#86868B] mt-1">{isAgent ? 'Pedidos y pagos de mis clientes' : 'Gestión de pedidos de clientes'}</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">{isAgent ? (initialPaymentFilter === 'PAID' ? 'Pedidos pagados' : 'Mis pedidos') : 'Ventas / Pedidos'}</h2>
+          <p className="text-[15px] text-muted mt-1">{isAgent ? 'Pedidos y pagos de mis clientes' : 'Gestión de pedidos de clientes'}</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-          {(isAdmin || profile?.user_type==='AGENT') && <button type="button" onClick={()=>{sessionStorage.removeItem('warranty-return-id');navigate('/catalog/products');}} className="flex items-center justify-center gap-2 bg-[#0066CC] hover:bg-[#005bb5] text-white px-4 py-2 rounded-xl text-[14px] font-medium transition-colors whitespace-nowrap shadow-sm"><Plus className="w-4 h-4" />Nuevo pedido</button>}
+          {(isAdmin || profile?.user_type==='AGENT') && <button type="button" onClick={()=>{sessionStorage.removeItem('warranty-return-id');navigate('/catalog/products');}} className="flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-xl text-[14px] font-medium transition-colors whitespace-nowrap shadow-sm"><Plus className="w-4 h-4" />Nuevo pedido</button>}
           <div className="relative flex-1 min-w-[180px] sm:w-72 sm:flex-none">
             <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
               placeholder="Buscar por cliente o folio..." 
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition shadow-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -103,7 +103,7 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none pl-10 pr-10 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] font-medium text-[#1D1D1F] transition-all shadow-sm cursor-pointer"
+              className="appearance-none pl-10 pr-10 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] font-medium text-ink transition shadow-sm cursor-pointer"
             >
               <option value="ALL">Todos los estados</option>
               {Object.entries(statusConfig).map(([key, value]) => (
@@ -127,7 +127,7 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
               type="button"
               onClick={() => setPaymentFilter(tab.value as 'ALL' | 'UNPAID' | 'PAID')}
               className={`shrink-0 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
-                paymentFilter === tab.value ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:bg-gray-50 hover:text-[#1D1D1F]'
+                paymentFilter === tab.value ? 'bg-accent text-white shadow-sm' : 'text-muted hover:bg-gray-50 hover:text-ink'
               }`}
             >
               {tab.label} ({tab.count})
@@ -154,7 +154,7 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
               {isLoading ? (
                 <tr>
                   <td colSpan={isAgent ? 7 : 6} className="px-6 py-12 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#0066CC] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-accent mx-auto" />
                   </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
@@ -177,13 +177,13 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
                       className="hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-mono text-[13px] font-medium text-[#0066CC]">
+                        <span className="font-mono text-[13px] font-medium text-accent">
                           {order.id.split('-')[0].toUpperCase()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span className="text-[13px] text-[#1D1D1F]">
+                          <span className="text-[13px] text-ink">
                             {format(new Date(order.created_at), "dd/MM/yyyy")}
                           </span>
                           <span className="text-[11px] text-gray-500">
@@ -193,7 +193,7 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span className="text-[14px] font-medium text-[#1D1D1F]">{order.customers?.name}</span>
+                          <span className="text-[14px] font-medium text-ink">{order.customers?.name}</span>
                           <span className="text-[12px] text-gray-500">{order.customers?.email}</span>
                         </div>
                       </td>
@@ -203,7 +203,7 @@ export const OrdersPage = ({ initialPaymentFilter = 'ALL' }: { initialPaymentFil
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-[14px] font-bold text-[#1D1D1F]">
+                        <span className="text-[14px] font-bold text-ink">
                           {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(payment.total)}
                         </span>
                       </td>

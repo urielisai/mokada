@@ -96,8 +96,8 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
           <BarChart2 className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-semibold text-[#1D1D1F] mb-1">Sin datos de ventas</h3>
-        <p className="text-[#86868B] text-center max-w-sm text-sm">
+        <h3 className="text-lg font-semibold text-ink mb-1">Sin datos de ventas</h3>
+        <p className="text-muted text-center max-w-sm text-sm">
           Aún no hay pedidos registrados para generar las métricas de este panel.
         </p>
       </div>
@@ -110,45 +110,45 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">Ingresos Totales</h3>
-            <DollarSign className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[11px] font-semibold text-muted uppercase tracking-wider">Ingresos Totales</h3>
+            <DollarSign className="w-4 h-4 text-muted" />
           </div>
-          <p className="text-2xl font-bold text-[#1D1D1F]">
+          <p className="text-2xl font-bold text-ink">
             {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(metrics.totalRevenue)}
           </p>
         </div>
 
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">Pedidos Totales</h3>
-            <Package className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[11px] font-semibold text-muted uppercase tracking-wider">Pedidos Totales</h3>
+            <Package className="w-4 h-4 text-muted" />
           </div>
-          <p className="text-2xl font-bold text-[#1D1D1F]">{metrics.totalOrders}</p>
+          <p className="text-2xl font-bold text-ink">{metrics.totalOrders}</p>
         </div>
 
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">Ticket Promedio</h3>
-            <TrendingUp className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[11px] font-semibold text-muted uppercase tracking-wider">Ticket Promedio</h3>
+            <TrendingUp className="w-4 h-4 text-muted" />
           </div>
-          <p className="text-2xl font-bold text-[#1D1D1F]">
+          <p className="text-2xl font-bold text-ink">
             {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(metrics.avgOrderValue)}
           </p>
         </div>
 
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">Pendientes</h3>
-            <Clock className="w-4 h-4 text-[#86868B]" />
+            <h3 className="text-[11px] font-semibold text-muted uppercase tracking-wider">Pendientes</h3>
+            <Clock className="w-4 h-4 text-muted" />
           </div>
-          <p className="text-2xl font-bold text-[#1D1D1F]">{metrics.pendingOrders}</p>
+          <p className="text-2xl font-bold text-ink">{metrics.pendingOrders}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Chart */}
         <div className="lg:col-span-2 bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-semibold text-[#1D1D1F] mb-6">Ingresos (Últimos 14 días con ventas)</h3>
+          <h3 className="font-semibold text-ink mb-6">Ingresos (Últimos 14 días con ventas)</h3>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={metrics.salesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -179,7 +179,7 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
 
         {/* Status Pie Chart */}
         <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-          <h3 className="font-semibold text-[#1D1D1F] mb-6">Estado de Pedidos</h3>
+          <h3 className="font-semibold text-ink mb-6">Estado de Pedidos</h3>
           <div className="h-[300px] flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -211,8 +211,8 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
         {/* Top Agentes */}
         <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
-            <Trophy className="w-4 h-4 text-[#86868B]" />
-            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Pedidos por Agente</h3>
+            <Trophy className="w-4 h-4 text-muted" />
+            <h3 className="text-[14px] font-semibold text-ink">Pedidos por Agente</h3>
           </div>
           {metrics.topAgents.length === 0 ? (
             <p className="text-[13px] text-gray-500 italic">No hay datos de agentes.</p>
@@ -220,10 +220,10 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
             <div className="space-y-4">
               {metrics.topAgents.map((agent, index) => (
                 <div key={agent.name} className="flex justify-between items-center text-[13px]">
-                  <span className="text-[#1D1D1F]">
-                    <span className="text-[#86868B] mr-2">{index + 1}.</span> {agent.name}
+                  <span className="text-ink">
+                    <span className="text-muted mr-2">{index + 1}.</span> {agent.name}
                   </span>
-                  <span className="font-semibold text-[#1D1D1F]">{agent.count}</span>
+                  <span className="font-semibold text-ink">{agent.count}</span>
                 </div>
               ))}
             </div>
@@ -233,16 +233,16 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
         {/* Top Clientes */}
         <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
-            <Users className="w-4 h-4 text-[#86868B]" />
-            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Clientes Frecuentes</h3>
+            <Users className="w-4 h-4 text-muted" />
+            <h3 className="text-[14px] font-semibold text-ink">Clientes Frecuentes</h3>
           </div>
           <div className="space-y-4">
             {metrics.topCustomers.map((customer, index) => (
               <div key={customer.name} className="flex justify-between items-center text-[13px]">
-                <span className="text-[#1D1D1F] truncate pr-4">
-                  <span className="text-[#86868B] mr-2">{index + 1}.</span> {customer.name}
+                <span className="text-ink truncate pr-4">
+                  <span className="text-muted mr-2">{index + 1}.</span> {customer.name}
                 </span>
-                <span className="font-semibold text-[#1D1D1F] flex-shrink-0">
+                <span className="font-semibold text-ink flex-shrink-0">
                   {customer.count}
                 </span>
               </div>
@@ -253,19 +253,19 @@ export const OrdersDashboard = ({ orders, agents = [] }: { orders: any[], agents
         {/* Top Pedidos (Monto) */}
         <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-6">
-            <DollarSign className="w-4 h-4 text-[#86868B]" />
-            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Mayores Ventas</h3>
+            <DollarSign className="w-4 h-4 text-muted" />
+            <h3 className="text-[14px] font-semibold text-ink">Mayores Ventas</h3>
           </div>
           <div className="space-y-4">
             {metrics.largestOrders.map((order: any) => (
               <div key={order.id} className="flex justify-between items-center text-[13px] border-b border-gray-100 pb-3 last:border-0 last:pb-0">
                 <div className="flex flex-col">
-                  <span className="text-[#1D1D1F] truncate pr-2">
+                  <span className="text-ink truncate pr-2">
                     {order.customers?.name || 'Cliente'}
                   </span>
-                  <span className="text-[#86868B] text-[11px] uppercase tracking-wider mt-0.5">Folio: {order.id.split('-')[0]}</span>
+                  <span className="text-muted text-[11px] uppercase tracking-wider mt-0.5">Folio: {order.id.split('-')[0]}</span>
                 </div>
-                <span className="font-semibold text-[#1D1D1F] flex-shrink-0">
+                <span className="font-semibold text-ink flex-shrink-0">
                   {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}
                 </span>
               </div>

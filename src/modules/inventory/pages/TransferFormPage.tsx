@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { useSaveTransfer, useUpdateTransfer, useTransferFull, useWarehouses, useStock } from '../hooks/useInventory';
-import { Plus, Trash2, Package, Tag } from 'lucide-react';
+import { useSaveTransfer, useUpdateTransfer, useTransferFull, useWarehouses, useStock, useSaleLinks } from '../hooks/useInventory';
+import { Plus, Trash2, Package } from 'lucide-react';
 import { AlertModal } from '../../../components/ui/AlertModal';
 import { SearchSelect } from '../../../components/ui/SearchSelect';
 import { Modal } from '../../../components/ui/Modal';
 import { catalogService } from '../../catalog/services/catalog.service';
-import { InventoryProductInfo } from '../components/InventoryProductInfo';
+import { TransferFlowSummary } from '../components/TransferLine';
 import { createClientUuid } from '../../../utils/createClientUuid';
 
 export const TransferFormPage = () => {
   const navigate = useNavigate();
+  // Prefilled from an order that needs stock: purchase code -> sale key and missing quantity.
+  const prefill = (useLocation().state as { prefill?: { destination_warehouse_id: string | null; notes: string; items: { product_id: string; destination_product_id: string; quantity: number }[] } } | null)?.prefill;
   const { id } = useParams<{ id: string }>();
   
   const { data: transferData, isLoading: isLoadingTransfer } = useTransferFull(id || null);
@@ -21,6 +23,13 @@ export const TransferFormPage = () => {
 
   const { data: warehouses } = useWarehouses();
   const { data: stockData, isLoading: loadingStock, error: stockError, refetch: refreshStock } = useStock();
+  const { data: saleLinks, isLoading: loadingLinks } = useSaleLinks();
+  // A purchase code goes out of ALM-01 and comes into ALM-02 as one of its linked sale keys.
+  const linksFor = (productId: string) => (saleLinks || [])
+    .filter(link => link.purchase_product_id === productId)
+    .sort((a, b) => Number(b.is_default) - Number(a.is_default));
+  const defaultDestination = (productId: string) => linksFor(productId)[0]?.sale_product_id || '';
+  const isPurchaseCode = (productId: string) => stockData?.some(s => s.product_id === productId && s.item_type === 'PURCHASE') ?? false;
 
   const [alertModal, setAlertModal] = useState<{ isOpen: boolean; title: string; message: string; type: 'error' | 'success' | 'info' }>({
     isOpen: false,
@@ -37,7 +46,7 @@ export const TransferFormPage = () => {
       source_warehouse_id: '',
       destination_warehouse_id: '',
       notes: '',
-      items: [{ product_id: '', quantity: 1, unit_price: null as number | null }]
+      items: [{ product_id: '', destination_product_id: '', quantity: 1, unit_price: null as number | null }]
     }
   });
 
@@ -57,6 +66,22 @@ export const TransferFormPage = () => {
     item.warehouse_id === sourceWarehouseId && item.location_id == null && item.available_quantity > 0
   ) || [];
 
+  useEffect(() => {
+    if (id || !prefill || !warehouses || isDirty) return;
+    const source = warehouses.find((w: any) => w.is_active && w.warehouse_role === 'PURCHASE');
+    const destination = warehouses.find((w: any) => w.is_active && w.warehouse_role === 'SALES' && (!prefill.destination_warehouse_id || w.id === prefill.destination_warehouse_id))
+      || warehouses.find((w: any) => w.is_active && w.warehouse_role === 'SALES');
+    reset({
+      transfer_number: `TR-${createClientUuid().slice(0, 8).toUpperCase()}`,
+      source_warehouse_id: source?.id || '',
+      destination_warehouse_id: destination?.id || '',
+      notes: prefill.notes,
+      items: prefill.items.length > 0
+        ? prefill.items.map(item => ({ product_id: item.product_id, destination_product_id: item.destination_product_id, quantity: item.quantity, unit_price: null }))
+        : [{ product_id: '', destination_product_id: '', quantity: 1, unit_price: null }]
+    });
+  }, [id, prefill, warehouses, isDirty, reset]);
+
   // Populate form if editing
   useEffect(() => {
     if (transferData && id && !isDirty) {
@@ -68,10 +93,11 @@ export const TransferFormPage = () => {
         items: transferData.items?.length > 0 
           ? transferData.items.map((item: any) => ({
               product_id: item.product_id,
+              destination_product_id: item.destination_product_id || '',
               quantity: item.quantity,
               unit_price: item.unit_price ?? null
             }))
-          : [{ product_id: '', quantity: 1, unit_price: null }]
+          : [{ product_id: '', destination_product_id: '', quantity: 1, unit_price: null }]
       });
     }
   }, [transferData, reset, id, isDirty]);
@@ -94,10 +120,18 @@ export const TransferFormPage = () => {
       if (id && transferData?.status !== 'DRAFT') throw new Error('Solo se pueden editar traspasos en borrador.');
       if (!sourceWarehouse?.is_active || !destinationWarehouse?.is_active) throw new Error('Selecciona almacenes activos.');
       if (sourceWarehouse.warehouse_role !== 'PURCHASE' || destinationWarehouse.warehouse_role !== 'SALES') throw new Error('El traspaso debe ir del almacén de compras al de ventas.');
-      if (new Set(validItems.map((item: any) => item.product_id)).size !== validItems.length) throw new Error('El producto está repetido. Agrupa la cantidad en una sola partida.');
+      if (loadingLinks) throw new Error('Cargando las claves de venta, intenta de nuevo.');
       for (const item of validItems) {
-        const stock = availableStock.find(row => row.product_id === item.product_id);
-        if (!Number.isFinite(Number(item.quantity)) || !stock || Number(item.quantity) > Number(stock.available_quantity)) throw new Error('La cantidad de un producto supera el disponible del almacén de origen.');
+        if (isPurchaseCode(item.product_id) && !item.destination_product_id) throw new Error('Elige la clave de venta destino de cada código.');
+      }
+      const lineKey = (item: any) => `${item.product_id}:${item.destination_product_id || item.product_id}`;
+      if (new Set(validItems.map(lineKey)).size !== validItems.length) throw new Error('El producto está repetido con la misma clave. Agrupa la cantidad en una sola partida.');
+      // One code can feed several keys, so availability is checked on the total per code.
+      const totals = new Map<string, number>();
+      for (const item of validItems) totals.set(item.product_id, (totals.get(item.product_id) || 0) + Number(item.quantity));
+      for (const [productId, total] of totals) {
+        const stock = availableStock.find(row => row.product_id === productId);
+        if (!Number.isFinite(total) || !stock || total > Number(stock.available_quantity)) throw new Error('La cantidad de un producto supera el disponible del almacén de origen.');
         if (stock.average_cost == null || stock.original_average_cost == null) throw new Error('Falta configurar el costo del producto en el almacén de compras.');
       }
       
@@ -117,6 +151,7 @@ export const TransferFormPage = () => {
         notes: data.notes,
         items: validItems.map((item: any) => ({
           product_id: item.product_id,
+          destination_product_id: item.destination_product_id || null,
           quantity: Number(item.quantity),
           unit_price: availableStock.find(row => row.product_id === item.product_id)?.average_cost ?? null
         }))
@@ -142,7 +177,7 @@ export const TransferFormPage = () => {
   if (id && isLoadingTransfer) {
     return (
       <div className="py-12 flex justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0066CC]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
       </div>
     );
   }
@@ -150,10 +185,10 @@ export const TransferFormPage = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6 min-w-0">
       <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">
+        <h2 className="text-[28px] font-bold tracking-tight text-ink">
           {id ? 'Editar Traspaso' : 'Nuevo Traspaso'}
         </h2>
-        <p className="text-[15px] text-[#86868B]">
+        <p className="text-[15px] text-muted">
           {id ? `Editando borrador ${transferData?.transfer_number}` : 'Mover inventario entre almacenes'}
         </p>
       </div>
@@ -179,7 +214,7 @@ export const TransferFormPage = () => {
                     value={field.value}
                     onChange={(val) => {
                       if (val !== field.value) {
-                        setValue('items', [{ product_id: '', quantity: 1, unit_price: null }]);
+                        setValue('items', [{ product_id: '', destination_product_id: '', quantity: 1, unit_price: null }]);
                         if (val === destinationWarehouseId) setValue('destination_warehouse_id', '');
                       }
                       field.onChange(val);
@@ -213,17 +248,12 @@ export const TransferFormPage = () => {
             />
           </div>
 
-          <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-[13px] text-amber-800">
-            <Tag className="w-5 h-5 shrink-0" />
-            El precio de traspaso se toma automáticamente del costo promedio del almacén de compras. El almacén principal queda sin margen y el almacén de ventas recibe un costo válido para calcular la ganancia de los pedidos.
-          </div>
-
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Notas / Referencia</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5">Notas / Referencia</label>
             <input
               type="text"
               {...register('notes')}
-              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all"
+              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition"
               placeholder="Ej: Traspaso urgente para sucursal norte"
             />
           </div>
@@ -231,8 +261,8 @@ export const TransferFormPage = () => {
           <div className="border-t border-gray-100 pt-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
               <div className="min-w-0">
-                <h3 className="text-[17px] font-semibold text-[#1D1D1F]">Productos a Transferir</h3>
-                <p className="text-[13px] text-[#86868B]">
+                <h3 className="text-[17px] font-semibold text-ink">Productos a Transferir</h3>
+                <p className="text-[13px] text-muted">
                   {sourceWarehouseId 
                     ? `Mostrando ${availableStock.length} productos disponibles en el origen.`
                     : 'Selecciona un almacén de origen para ver el inventario disponible.'}
@@ -240,9 +270,9 @@ export const TransferFormPage = () => {
               </div>
               <button
                 type="button"
-                onClick={() => append({ product_id: '', quantity: 1, unit_price: null })}
+                onClick={() => append({ product_id: '', destination_product_id: '', quantity: 1, unit_price: null })}
                 disabled={!sourceWarehouseId}
-                className="flex w-full sm:w-auto items-center justify-center gap-2 px-3 py-2 text-[13px] font-medium text-[#0066CC] bg-[#0066CC]/10 rounded-lg hover:bg-[#0066CC]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 px-3 py-2 text-[13px] font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
                 Añadir Producto
@@ -252,8 +282,10 @@ export const TransferFormPage = () => {
             <div className="space-y-4">
               {fields.map((field, index) => {
                 const currentProductId = watch(`items.${index}.product_id`);
+                const currentDestinationId = watch(`items.${index}.destination_product_id`) || currentProductId;
+                const productLinks = currentProductId ? linksFor(currentProductId) : [];
                 const stockItem = stockData?.find(s => s.product_id === currentProductId && s.warehouse_id === sourceWarehouseId && s.location_id == null);
-                const destinationStock = stockData?.find(s => s.product_id === currentProductId && s.warehouse_id === destinationWarehouseId && s.location_id == null);
+                const destinationStock = stockData?.find(s => s.product_id === currentDestinationId && s.warehouse_id === destinationWarehouseId && s.location_id == null);
                 const transferItem = transferData?.items?.find((i: any) => i.product_id === currentProductId);
                 const productStockInfo = stockItem || (transferItem ? {
                   product_code: transferItem.products?.code,
@@ -266,7 +298,7 @@ export const TransferFormPage = () => {
 
                 return (
                   <div key={field.id} className="p-4 sm:p-5 bg-white border border-gray-200/60 shadow-sm rounded-[16px] relative group min-w-0 overflow-visible">
-                    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_20rem] gap-5 xl:gap-6 min-w-0">
+                    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_12rem] gap-5 xl:gap-6 min-w-0">
                       
                       {/* Product Selector / Visual Info */}
                       <div className="min-w-0">
@@ -278,14 +310,22 @@ export const TransferFormPage = () => {
                             render={({ field }) => (
                               <SearchSelect
                                 label="Buscar Producto *"
-                                options={availableStock.filter(p => !watchedItems.some((item, otherIndex) => otherIndex !== index && item.product_id === p.product_id)).map((p: any) => ({
+                                options={availableStock.filter(p => linksFor(p.product_id!).length > 1 || !watchedItems.some((item, otherIndex) => otherIndex !== index && item.product_id === p.product_id)).map((p: any) => ({
                                   value: p.product_id,
                                   label: `[${p.product_code}] ${p.product_name}`,
                                   description: `Disponible: ${p.available_quantity}`,
                                   keywords: p.product_code
                                 }))}
                                 value={field.value}
-                                onChange={value => {field.onChange(value); setValue(`items.${index}.quantity`, 1); setValue(`items.${index}.unit_price`, availableStock.find(item => item.product_id === value)?.average_cost ?? null);}}
+                                onChange={value => {
+                                  field.onChange(value);
+                                  setValue(`items.${index}.quantity`, 1);
+                                  setValue(`items.${index}.unit_price`, availableStock.find(item => item.product_id === value)?.average_cost ?? null);
+                                  // Prefer a key this code is not already sending to on another line.
+                                  const used = watchedItems.filter((_, otherIndex) => otherIndex !== index && _.product_id === value).map(item => item.destination_product_id);
+                                  const next = linksFor(value || '').find(link => !used.includes(link.sale_product_id))?.sale_product_id;
+                                  setValue(`items.${index}.destination_product_id`, next || defaultDestination(value || ''));
+                                }}
                                 placeholder="Busca en el inventario del origen..."
                                 disabled={!sourceWarehouseId}
                               />
@@ -306,26 +346,50 @@ export const TransferFormPage = () => {
                             </button>
                             <div className="flex-1 min-w-0 mt-1">
                               <div>
-                                <span className="text-[12px] font-medium text-[#0066CC] block mb-0.5">
+                                <span className="text-[12px] font-medium text-accent block mb-0.5">
                                   {productStockInfo?.product_code || '---'}
                                 </span>
-                                <h4 className="text-[14px] font-semibold text-[#1D1D1F] line-clamp-1 pr-4">
+                                <h4 className="text-[14px] font-semibold text-ink line-clamp-1 pr-4">
                                   {productStockInfo?.product_name || 'Cargando producto...'}
                                 </h4>
                               </div>
                               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-                                <div className="inline-flex max-w-full flex-wrap items-center gap-1.5 text-[12px] text-gray-600 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-                                  <span>Disponible en origen:</span>
-                                  <span className="font-semibold text-[#1D1D1F]">{productStockInfo?.available_quantity || 0}</span>
-                                </div>
                                 <button
                                   type="button"
-                                  onClick={() => {setValue(`items.${index}.product_id`, ''); setValue(`items.${index}.unit_price`, null); setValue(`items.${index}.quantity`, 1);}}
-                                  className="text-[12px] text-[#0066CC] hover:underline font-medium"
+                                  onClick={() => {setValue(`items.${index}.product_id`, ''); setValue(`items.${index}.destination_product_id`, ''); setValue(`items.${index}.unit_price`, null); setValue(`items.${index}.quantity`, 1);}}
+                                  className="text-[12px] text-accent hover:underline font-medium"
                                 >
                                   Cambiar producto
                                 </button>
                               </div>
+                              {isPurchaseCode(currentProductId) && (
+                                <div className="mt-3 max-w-md">
+                                  {productLinks.length > 0 ? (
+                                    <Controller
+                                      name={`items.${index}.destination_product_id`}
+                                      control={control}
+                                      render={({ field }) => (
+                                        <SearchSelect
+                                          label="Entra a ventas como clave *"
+                                          options={productLinks.map(link => ({
+                                            value: link.sale_product_id,
+                                            label: link.sale?.code || 'Clave',
+                                            description: `${link.sale?.name || ''}${link.is_default ? ' · predeterminada' : ''}`,
+                                            keywords: link.sale?.code
+                                          }))}
+                                          value={field.value}
+                                          onChange={field.onChange}
+                                          placeholder="Elige la clave de venta"
+                                        />
+                                      )}
+                                    />
+                                  ) : (
+                                    <p className="text-[12px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                                      Este código no tiene clave de venta ligada. Lígala desde el catálogo antes de traspasar.
+                                    </p>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -333,9 +397,9 @@ export const TransferFormPage = () => {
 
                       {/* Quantity + Price Inputs */}
                       <div className="min-w-0 flex flex-col justify-center border-t xl:border-t-0 xl:border-l border-gray-100 pt-5 xl:pt-0 xl:pl-6 gap-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-3 min-w-0">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 min-w-0">
                           <div className="min-w-0">
-                            <label className="block text-[12px] font-medium text-[#86868B] mb-1">Cantidad *</label>
+                            <label className="block text-[12px] font-medium text-muted mb-1">Cantidad *</label>
                             <input
                               type="number"
                               min="0.01"
@@ -348,35 +412,17 @@ export const TransferFormPage = () => {
                                 valueAsNumber: true 
                               })}
                               disabled={!currentProductId}
-                              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all disabled:opacity-50"
+                              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition disabled:opacity-50"
                             />
                             {errors.items?.[index]?.quantity && <p className="text-red-600 text-[11px] mt-1">Cantidad inválida o superior al disponible.</p>}
                           </div>
 
-                          <div className="min-w-0">
-                            <label className="block text-[12px] font-medium text-[#86868B] mb-1 truncate flex items-center gap-1" title="Precio de traspaso (MXN)">
-                              <Tag className="w-3 h-3 text-amber-500" />
-                              Precio de traspaso
-                            </label>
-                            <div className="relative" title="Se calcula con el costo promedio del almacén de origen">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[13px] text-gray-400 font-medium">$</span>
-                              <input
-                                type="number"
-                                value={stockItem?.average_cost ?? ''}
-                                readOnly
-                                disabled={!currentProductId || stockItem?.average_cost == null}
-                                placeholder="0.00"
-                                className="w-full pl-6 pr-2 py-2 bg-gray-50 border border-gray-200/60 rounded-lg text-[14px] text-[#1D1D1F] disabled:opacity-50"
-                              />
-                              {currentProductId && stockItem?.average_cost == null && <p className="text-red-600 text-[11px] mt-1">Configura el costo del origen.</p>}
-                            </div>
-                          </div>
 
                           <button
                             type="button"
                             onClick={() => remove(index)}
                             disabled={fields.length === 1}
-                            className="flex h-10 w-full sm:w-10 items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            className="flex h-10 w-10 items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                             title="Eliminar producto"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -385,7 +431,7 @@ export const TransferFormPage = () => {
                       </div>
 
                     </div>
-                    {currentProductId && <InventoryProductInfo source={stockItem} destination={destinationStock} sourceName={sourceWarehouse?.name} destinationName={destinationWarehouse?.name} productId={currentProductId} quantity={Number(watch(`items.${index}.quantity`))} unitPrice={stockItem?.average_cost} stockLoaded={!loadingStock && !stockError} />}
+                    {currentProductId && <TransferFlowSummary source={stockItem} destination={destinationStock} sourceName={sourceWarehouse?.name} destinationName={destinationWarehouse?.name} destinationCode={productLinks.find(link => link.sale_product_id === currentDestinationId)?.sale?.code} quantity={Number(watch(`items.${index}.quantity`))} stockLoaded={!loadingStock && !stockError} />}
                   </div>
                 );
               })}
@@ -403,7 +449,7 @@ export const TransferFormPage = () => {
             <button
               type="submit"
               disabled={isPending || loadingStock || !!stockError || (!!id && transferData?.status !== 'DRAFT')}
-              className="w-full sm:w-auto px-5 py-2.5 text-[14px] font-medium text-white bg-[#0066CC] rounded-xl hover:bg-[#0055FF] transition-colors shadow-sm disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 text-[14px] font-medium text-white bg-accent rounded-xl hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-50"
             >
               {isPending ? 'Guardando...' : id ? 'Actualizar Borrador' : 'Crear Borrador'}
             </button>

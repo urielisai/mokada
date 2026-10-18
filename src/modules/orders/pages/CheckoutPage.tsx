@@ -165,10 +165,10 @@ export const CheckoutPage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
         <ShoppingCart className="w-16 h-16 text-gray-200 stroke-[1]" />
-        <h2 className="text-xl font-bold text-[#1D1D1F]">Tu carrito está vacío</h2>
+        <h2 className="text-xl font-bold text-ink">Tu carrito está vacío</h2>
         <button 
           onClick={() => navigate('/catalog/products')}
-          className="text-[#0066CC] font-medium hover:underline"
+          className="text-accent font-medium hover:underline"
         >
           Volver al catálogo
         </button>
@@ -242,20 +242,20 @@ export const CheckoutPage = () => {
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
           <CheckCircle2 className="w-10 h-10 text-green-600" />
         </div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">¡Pedido Confirmado!</h2>
-        <p className="text-[15px] text-[#86868B] max-w-md">
+        <h2 className="text-[28px] font-bold tracking-tight text-ink">¡Pedido Confirmado!</h2>
+        <p className="text-[15px] text-muted max-w-md">
           Tu pedido ha sido registrado exitosamente y está siendo validado por nuestro equipo.
         </p>
         <div className="flex gap-4 pt-4">
           <button 
             onClick={() => navigate('/catalog/products')}
-            className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1D1D1F] rounded-xl font-medium transition-colors"
+            className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-ink rounded-xl font-medium transition-colors"
           >
             Seguir Comprando
           </button>
           <button 
             onClick={() => navigate(isAdmin || profile?.user_type === 'AGENT' ? '/orders' : '/my-orders')}
-            className="px-6 py-2.5 bg-[#0066CC] hover:bg-[#005bb5] text-white rounded-xl font-medium transition-colors"
+            className="px-6 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-xl font-medium transition-colors"
           >
             Ver mis Pedidos
           </button>
@@ -274,15 +274,15 @@ export const CheckoutPage = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Checkout</h2>
-          <p className="text-[15px] text-[#86868B] mt-1">Revisa y confirma tu pedido</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">Checkout</h2>
+          <p className="text-[15px] text-muted mt-1">Revisa y confirma tu pedido</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-[#1D1D1F] mb-6">Detalles del Pedido</h3>
+            <h3 className="text-lg font-semibold text-ink mb-6">Detalles del Pedido</h3>
             
             <div className="space-y-4">
               {isStaff && <div className="space-y-4">
@@ -313,7 +313,7 @@ export const CheckoutPage = () => {
                   value={selectedBranchId}
                   onChange={(e) => setSelectedBranchId(e.target.value)}
                   disabled={!selectedCustomerId || branches.length === 0}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] transition-all disabled:opacity-50"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent transition disabled:opacity-50"
                 >
                   <option value="">
                     {!selectedCustomerId 
@@ -339,8 +339,8 @@ export const CheckoutPage = () => {
                 isStaff={isAdmin || profile?.user_type === 'AGENT'}
               />
               <div className="pt-4 border-t border-gray-100 space-y-3">
-                <label className="flex items-center gap-3 text-[14px] font-medium text-[#1D1D1F] cursor-pointer">
-                  <input type="checkbox" checked={requiresInvoice} disabled={!selectedCustomerId} onChange={e => setRequiresInvoice(e.target.checked)} className="w-4 h-4 rounded border-gray-300 accent-[#0066CC]" />
+                <label className="flex items-center gap-3 text-[14px] font-medium text-ink cursor-pointer">
+                  <input type="checkbox" checked={requiresInvoice} disabled={!selectedCustomerId} onChange={e => setRequiresInvoice(e.target.checked)} className="w-4 h-4 rounded border-gray-300 accent-accent" />
                   Requiere factura
                 </label>
               </div>
@@ -348,8 +348,8 @@ export const CheckoutPage = () => {
           </div>
 
           <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-[#1D1D1F] mb-4">Productos</h3>
-            {isAdmin && <label className="block text-[13px] mb-5">Reposición por garantía (opcional)<select value={warrantyId} disabled={warranties.isLoading || !!warranties.error} onChange={e=>{setWarrantyId(e.target.value);sessionStorage.removeItem('warranty-return-id');}} className="block w-full border border-gray-200 rounded-lg p-2 mt-1"><option value="">Venta normal</option>{warranties.data?.map(r=><option value={r.id} key={r.id}>{r.item.products?.code} · {r.quantity} pieza(s) · {r.id.slice(0,8)}</option>)}</select>{warranties.error && <span className="text-red-600">No se pudieron consultar las garantías.</span>}{warrantyId && <p className="text-[#86868B] mt-2">La reposición consume inventario. Su importe marcado pagado no se cuenta como una nueva venta en el reporte de ganancias.</p>}</label>}
+            <h3 className="text-lg font-semibold text-ink mb-4">Productos</h3>
+            {isAdmin && <label className="block text-[13px] mb-5">Reposición por garantía (opcional)<select value={warrantyId} disabled={warranties.isLoading || !!warranties.error} onChange={e=>{setWarrantyId(e.target.value);sessionStorage.removeItem('warranty-return-id');}} className="block w-full border border-gray-200 rounded-lg p-2 mt-1"><option value="">Venta normal</option>{warranties.data?.map(r=><option value={r.id} key={r.id}>{r.item.products?.code} · {r.quantity} pieza(s) · {r.id.slice(0,8)}</option>)}</select>{warranties.error && <span className="text-red-600">No se pudieron consultar las garantías.</span>}{warrantyId && <p className="text-muted mt-2">La reposición consume inventario. Su importe marcado pagado no se cuenta como una nueva venta en el reporte de ganancias.</p>}</label>}
             <div className="space-y-4">
               {pricedItems.map(item => (
                 <div key={item.product_id} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
@@ -358,18 +358,18 @@ export const CheckoutPage = () => {
                       {item.quantity}
                     </span>
                     <div>
-                      <p className="text-[14px] font-medium text-[#1D1D1F]">{item.name}</p>
-                      <p className="text-[12px] text-[#86868B]">{item.code}</p>
+                      <p className="text-[14px] font-medium text-ink">{item.name}</p>
+                      <p className="text-[12px] text-muted">{item.code}</p>
                       {isStaff && <div className="flex flex-wrap gap-3 mt-3 text-[12px]">
-                        <p className="w-full text-[#86868B]">Precio de lista: {item.listPrice == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style:'currency',currency:'MXN'}).format(item.listPrice)}</p>
+                        <p className="w-full text-muted">Precio de lista: {item.listPrice == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style:'currency',currency:'MXN'}).format(item.listPrice)}</p>
                         <label>Descuento (%)<input aria-label={`Descuento ${item.code}`} type="number" min="0" max="100" step="any" value={discounts[item.product_id]?.percent || ''} onChange={e=>setDiscounts(old=>({...old,[item.product_id]:{reason:old[item.product_id]?.reason || '',percent:e.target.value}}))} className="block w-24 mt-1 px-3 py-2 border border-gray-200 rounded-lg" /></label>
                         <label>Precio final por unidad ($)<input aria-label={`Precio final ${item.code}`} disabled={item.listPrice==null || item.listPrice===0} type="number" min="0" max={item.listPrice ?? 0} step="0.01" value={item.price ?? ''} onChange={e=>{if(item.listPrice && e.target.value!=='')setDiscounts(old=>({...old,[item.product_id]:{reason:old[item.product_id]?.reason || '',percent:String(100*(1-Number(e.target.value)/item.listPrice!))}}));}} className="block w-36 mt-1 px-3 py-2 border border-gray-200 rounded-lg" /></label>
                         <label>Motivo<input value={discounts[item.product_id]?.reason || ''} onChange={e=>setDiscounts(old=>({...old,[item.product_id]:{percent:old[item.product_id]?.percent || '',reason:e.target.value}}))} className="block mt-1 px-3 py-2 border border-gray-200 rounded-lg" /></label>
-                        <p className="w-full text-[#1D1D1F]">Precio final por unidad: {item.price == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style:'currency',currency:'MXN'}).format(item.price)}</p>
+                        <p className="w-full text-ink">Precio final por unidad: {item.price == null ? 'Sin precio' : new Intl.NumberFormat('es-MX', {style:'currency',currency:'MXN'}).format(item.price)}</p>
                       </div>}
                     </div>
                   </div>
-                  <span className="font-medium text-[#1D1D1F]">
+                  <span className="font-medium text-ink">
                     {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format((item.price ?? 0) * item.quantity)}
                   </span>
                 </div>
@@ -380,7 +380,7 @@ export const CheckoutPage = () => {
 
         <div className="lg:col-span-1">
           <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm sticky top-6">
-            <h3 className="text-lg font-semibold text-[#1D1D1F] mb-6">Resumen</h3>
+            <h3 className="text-lg font-semibold text-ink mb-6">Resumen</h3>
             
             <div className="space-y-3 pb-6 border-b border-gray-100">
               <div className="flex justify-between items-center text-[14px] text-gray-600">
@@ -389,7 +389,7 @@ export const CheckoutPage = () => {
               </div>
             </div>
 
-            <div className="flex justify-between items-center py-4 text-lg font-bold text-[#1D1D1F]">
+            <div className="flex justify-between items-center py-4 text-lg font-bold text-ink">
               <span>Total</span>
               <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(orderTotal)}</span>
             </div>
@@ -397,7 +397,7 @@ export const CheckoutPage = () => {
             <button
               onClick={handleConfirmOrder}
               disabled={isLoading || !selectedCustomerId || (isStaff && (!warehouseId || !priceListId || loadingPrices || !!priceError || missingPrices))}
-              className="w-full bg-[#0066CC] hover:bg-[#005bb5] disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-accent hover:bg-accent-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>

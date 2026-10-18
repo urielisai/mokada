@@ -1,15 +1,370 @@
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────────────────────────
+   Mokada design system
+   Apple-style foundations: system type with size-specific
+   tracking, neutral canvas, one accent, soft layered depth,
+   translucent chrome and short, interruptible motion.
+   ────────────────────────────────────────────────────────────── */
+
 @theme {
-  --color-primary: #0066CC;
-  --color-background: #F5F5F7;
+  /* Type */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Semantic colour roles */
+  --color-canvas: #F5F5F7;
   --color-surface: #FFFFFF;
+  --color-background: #F5F5F7;
+  --color-ink: #1D1D1F;
+  --color-ink-2: #424245;
+  --color-muted: #6E6E73;
+  --color-hairline: rgb(0 0 0 / 0.08);
+  --color-accent: #0071E3;
+  --color-accent-hover: #0077ED;
+  --color-accent-press: #006EDB;
+  --color-primary: #0071E3;
+
+  /* Apple neutral ramp replaces Tailwind's cool grays, so every
+     existing gray-* / slate-* class lands on the same palette. */
+  --color-gray-50: #FAFAFC;
+  --color-gray-100: #F5F5F7;
+  --color-gray-200: #E8E8ED;
+  --color-gray-300: #D2D2D7;
+  --color-gray-400: #AEAEB2;
+  --color-gray-500: #86868B;
+  --color-gray-600: #6E6E73;
+  --color-gray-700: #48484A;
+  --color-gray-800: #2C2C2E;
+  --color-gray-900: #1D1D1F;
+  --color-gray-950: #111113;
+  --color-slate-50: #FAFAFC;
+  --color-slate-100: #F5F5F7;
+  --color-slate-200: #E8E8ED;
+  --color-slate-300: #D2D2D7;
+  --color-slate-400: #AEAEB2;
+  --color-slate-500: #86868B;
+  --color-slate-600: #6E6E73;
+  --color-slate-700: #48484A;
+  --color-slate-800: #2C2C2E;
+  --color-slate-900: #1D1D1F;
+  --color-slate-950: #111113;
+
+  /* Blue ramp aligned with the accent */
+  --color-blue-50: #EEF5FE;
+  --color-blue-100: #DCEBFC;
+  --color-blue-200: #B9D7FA;
+  --color-blue-300: #86BAF5;
+  --color-blue-400: #4497EE;
+  --color-blue-500: #0A84FF;
+  --color-blue-600: #0071E3;
+  --color-blue-700: #0062C4;
+  --color-blue-800: #004F9E;
+  --color-blue-900: #003A75;
+
+  /* Continuous-feeling corners, one step rounder than default */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+  --radius-3xl: 1.5rem;
+
+  /* Soft, layered depth: a tight contact shadow plus a wide ambient one */
+  --shadow-xs: 0 1px 1px rgb(0 0 0 / 0.03);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.05);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.04), 0 8px 20px -6px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 4px 8px rgb(0 0 0 / 0.04), 0 16px 36px -10px rgb(0 0 0 / 0.12);
+  --shadow-xl: 0 8px 16px rgb(0 0 0 / 0.05), 0 24px 56px -12px rgb(0 0 0 / 0.16);
+  --shadow-2xl: 0 12px 24px rgb(0 0 0 / 0.06), 0 40px 80px -16px rgb(0 0 0 / 0.22);
+
+  /* Motion tokens */
+  --default-transition-duration: 180ms;
+  --default-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --animate-page-in: page-in 320ms var(--ease-out) both;
+  --animate-pop-in: pop-in 180ms var(--ease-out) both;
+  --animate-fade-in: fade-in 200ms var(--ease-out) both;
+  --animate-rise-in: rise-in 360ms var(--ease-out) both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
 }
 
-body {
-  background-color: var(--color-background);
-  color: #1D1D1F;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes spinner-fade {
+  from { opacity: 1; }
+  to { opacity: 0.15; }
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.47;
+    letter-spacing: -0.006em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-optical-sizing: auto;
+  }
+
+  /* Size-specific tracking: large text tightens, small text opens up */
+  h1, h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.022em;
+    line-height: 1.12;
+  }
+  h3, h4 {
+    letter-spacing: -0.014em;
+    line-height: 1.25;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  }
+
+  td, th, input[type="number"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Every pressable thing answers on pointer-down */
+  button,
+  [role="button"],
+  a {
+    -webkit-tap-highlight-color: transparent;
+    transition-property: color, background-color, border-color, box-shadow, opacity, scale;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out);
+  }
+  button:not(:disabled):active,
+  [role="button"]:active {
+    scale: 0.97;
+    transition-duration: 100ms;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
+    outline-offset: 2px;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+  }
+
+  input,
+  select,
+  textarea {
+    transition-property: border-color, box-shadow, background-color;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-out);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+
+  /* Native select gets a quiet chevron that matches the system */
+  select:not([multiple]) {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236E6E73' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 15 5 5 5-5'/%3E%3Cpath d='m7 9 5-5 5 5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.75rem;
+    padding-right: 2rem !important;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--color-accent);
+  }
+
+  /* Thin, overlay-feeling scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(0 0 0 / 0.18) transparent;
+  }
+}
+
+/* ── Materials ────────────────────────────────────────────── */
+@utility material-chrome {
+  background-color: rgb(255 255 255 / 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+@utility material-sidebar {
+  background-color: rgb(236 236 240 / 0.82);
+  backdrop-filter: saturate(160%) blur(24px);
+  -webkit-backdrop-filter: saturate(160%) blur(24px);
+}
+@utility material-popover {
+  background-color: rgb(255 255 255 / 0.86);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+}
+@utility material-dark {
+  background-color: rgb(29 29 31 / 0.86);
+  backdrop-filter: saturate(160%) blur(20px);
+  -webkit-backdrop-filter: saturate(160%) blur(20px);
+}
+
+/* Hairline that reads as light catching the edge of a surface */
+@utility ring-hairline {
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.08);
+}
+
+/* Shimmering skeleton, used in place of a flat pulse */
+@utility skeleton {
+  background-image: linear-gradient(90deg, var(--color-gray-100) 0%, var(--color-gray-200) 40%, var(--color-gray-100) 80%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Children enter one after another, 40ms apart */
+@utility stagger {
+  & > * {
+    animation: var(--animate-rise-in);
+  }
+  & > *:nth-child(2) { animation-delay: 40ms; }
+  & > *:nth-child(3) { animation-delay: 80ms; }
+  & > *:nth-child(4) { animation-delay: 120ms; }
+  & > *:nth-child(5) { animation-delay: 160ms; }
+  & > *:nth-child(6) { animation-delay: 200ms; }
+  & > *:nth-child(7) { animation-delay: 240ms; }
+  & > *:nth-child(n + 8) { animation-delay: 280ms; }
+}
+
+/* ── Overlay transitions (driven by data-state from usePresence) ── */
+.overlay-scrim {
+  transition: opacity 240ms var(--ease-out);
+}
+.overlay-scrim[data-state="closed"] {
+  opacity: 0;
+}
+
+.overlay-dialog {
+  transition:
+    opacity 240ms var(--ease-out),
+    transform 240ms var(--ease-out);
+}
+.overlay-dialog[data-state="closed"] {
+  opacity: 0;
+  transform: scale(0.96) translateY(4px);
+}
+
+.overlay-sheet-right {
+  transition: transform 420ms var(--ease-drawer);
+}
+.overlay-sheet-right[data-state="closed"] {
+  transform: translateX(100%);
+}
+
+.overlay-popover {
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+.overlay-popover[data-state="closed"] {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* Hover lift on cards, only where a real pointer exists */
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift {
+    transition:
+      transform 240ms var(--ease-out),
+      box-shadow 240ms var(--ease-out);
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* ── Accessibility preferences ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  /* Progress indicators keep turning: they carry status, not decoration */
+  .animate-spin,
+  [role="status"] > span {
+    animation-duration: 800ms !important;
+    animation-iteration-count: infinite !important;
+  }
+  .animate-spin {
+    animation-duration: 1s !important;
+  }
+  button:not(:disabled):active,
+  [role="button"]:active {
+    scale: 1;
+  }
+  .overlay-dialog[data-state="closed"],
+  .overlay-popover[data-state="closed"] {
+    transform: none;
+  }
+  .overlay-sheet-right {
+    transition: opacity 200ms ease;
+  }
+  .overlay-sheet-right[data-state="closed"] {
+    transform: none;
+    opacity: 0;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
+  .skeleton {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .material-chrome,
+  .material-popover {
+    background-color: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .material-sidebar {
+    background-color: #ECECF0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }

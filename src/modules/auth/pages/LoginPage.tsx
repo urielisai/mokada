@@ -51,7 +51,7 @@ export const LoginPage = () => {
       await signIn(email, password);
       navigate(redirectTo, { replace: true });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo iniciar sesió.';
+      const message = error instanceof Error ? error.message : 'No se pudo iniciar sesión.';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
@@ -59,30 +59,30 @@ export const LoginPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
+    <main className="min-h-screen bg-canvas text-ink">
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)]">
-        <section className="hidden overflow-hidden border-r border-gray-200 bg-[#F5F5F7] lg:block">
+        <section className="hidden overflow-hidden bg-canvas lg:block">
           <LoginParallaxShowcase />
         </section>
 
-        <section className="flex items-center justify-center px-5 py-10 sm:px-8">
-          <div className="w-full max-w-[420px] rounded-lg border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="mb-7">
-              <img src={logoMokada} alt="Mokada" className="mb-6 h-auto w-40 lg:hidden" />
-              <h2 className="text-2xl font-semibold tracking-tight">Iniciar sesión</h2>
-              <p className="mt-1 text-sm text-[#86868B]">Entra con tu correo y contrasena.</p>
+        <section className="flex items-center justify-center bg-white px-5 py-10 sm:px-8 lg:shadow-[-0.5px_0_0_rgb(0_0_0/0.08)]">
+          <div className="w-full max-w-[380px] stagger">
+            <div className="mb-9">
+              <img src={logoMokada} alt="Mokada" className="mb-8 h-auto w-36 lg:hidden" />
+              <h2 className="text-[34px] font-semibold tracking-[-0.03em]">Iniciar sesión</h2>
+              <p className="mt-2 text-[15px] text-muted">Entra con tu correo y contraseña.</p>
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <label className="block">
-                <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Correo</span>
-                <div className="flex items-center rounded-lg border border-gray-300 bg-white px-3 focus-within:border-[#0066CC] focus-within:ring-2 focus-within:ring-[#0066CC]/15">
-                  <Mail className="h-4 w-4 text-[#86868B]" />
+                <span className="mb-1.5 block text-[13px] font-medium text-ink-2">Correo</span>
+                <div className="flex items-center rounded-xl border border-transparent bg-gray-100 px-3.5 transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-accent/60 focus-within:bg-white focus-within:ring-4 focus-within:ring-accent/15">
+                  <Mail className="h-4 w-4 text-muted" />
                   <input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
+                    className="h-12 min-w-0 flex-1 bg-transparent px-3 text-[15px] outline-none"
                     autoComplete="email"
                     required
                   />
@@ -90,14 +90,14 @@ export const LoginPage = () => {
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Contrasena</span>
-                <div className="flex items-center rounded-lg border border-gray-300 bg-white px-3 focus-within:border-[#0066CC] focus-within:ring-2 focus-within:ring-[#0066CC]/15">
-                  <Lock className="h-4 w-4 text-[#86868B]" />
+                <span className="mb-1.5 block text-[13px] font-medium text-ink-2">Contraseña</span>
+                <div className="flex items-center rounded-xl border border-transparent bg-gray-100 px-3.5 transition-[background-color,border-color,box-shadow] duration-200 focus-within:border-accent/60 focus-within:bg-white focus-within:ring-4 focus-within:ring-accent/15">
+                  <Lock className="h-4 w-4 text-muted" />
                   <input
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
+                    className="h-12 min-w-0 flex-1 bg-transparent px-3 text-[15px] outline-none"
                     autoComplete="current-password"
                     required
                   />
@@ -105,7 +105,7 @@ export const LoginPage = () => {
               </label>
 
               {errorMessage && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+                <div role="alert" className="animate-pop-in rounded-xl bg-red-50 px-3.5 py-2.5 text-[13px] text-red-700">
                   {errorMessage}
                 </div>
               )}
@@ -113,11 +113,11 @@ export const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex h-11 w-full items-center justify-center rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+                className="!mt-6 flex h-12 w-full items-center justify-center rounded-full bg-accent px-4 text-[15px] font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
               >
-                {isSubmitting ? 'Entrando...' : 'Entrar'}
+                {isSubmitting ? 'Entrando…' : 'Entrar'}
               </button>
-              <p className="pt-1 text-center text-[12px] font-medium text-[#A1A1A6] lg:hidden">
+              <p className="pt-1 text-center text-[12px] font-medium text-gray-400 lg:hidden">
                 Developed by Nizana Studio
               </p>
             </form>
@@ -234,10 +234,10 @@ const LoginParallaxShowcase = () => {
         </div>
       </div>
       <div className="absolute bottom-10 left-8 z-20 max-w-sm">
-        <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-[#86868B]">Autopartes</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-[#1D1D1F]">Acceso operativo</h1>
-        <p className="mt-4 text-[15px] leading-6 text-[#6E6E73]">
-          Gestiona catalogo, inventario y usuarios con cuentas verificadas por correo.
+        <p className="text-[13px] font-semibold text-accent">Autopartes</p>
+        <h1 className="mt-3 text-[40px] font-semibold tracking-[-0.035em] text-ink">Acceso operativo</h1>
+        <p className="mt-4 text-[15px] leading-6 text-muted">
+          Gestiona catálogo, inventario y usuarios con cuentas verificadas por correo.
         </p>
       </div>
     </div>

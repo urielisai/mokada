@@ -62,24 +62,24 @@ export const UnitFormModal = ({ isOpen, onClose, unit }: UnitFormModalProps) => 
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Código *</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Código *</label>
           <input
             type="text"
             {...register('code', { required: 'El código es obligatorio' })}
             placeholder="Ej: PZA, KG, LTS"
-            className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all"
+            className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition"
             disabled={isPending}
           />
           {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code.message?.toString()}</p>}
         </div>
 
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Nombre *</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Nombre *</label>
           <input
             type="text"
             {...register('name', { required: 'El nombre es obligatorio' })}
             placeholder="Ej: Pieza, Kilogramo"
-            className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all"
+            className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition"
             disabled={isPending}
           />
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message?.toString()}</p>}
@@ -90,10 +90,10 @@ export const UnitFormModal = ({ isOpen, onClose, unit }: UnitFormModalProps) => 
             type="checkbox"
             id="allows_decimals"
             {...register('allows_decimals')}
-            className="w-4 h-4 text-[#0066CC] border-gray-300 rounded focus:ring-[#0066CC]"
+            className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
             disabled={isPending}
           />
-          <label htmlFor="allows_decimals" className="text-[13px] font-medium text-[#1D1D1F]">
+          <label htmlFor="allows_decimals" className="text-[13px] font-medium text-ink">
             Permite decimales (ej. para kilos, litros)
           </label>
         </div>
@@ -102,14 +102,14 @@ export const UnitFormModal = ({ isOpen, onClose, unit }: UnitFormModalProps) => 
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-[14px] font-medium text-ink bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
             disabled={isPending}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#0055FF] disabled:opacity-50"
+            className="px-4 py-2 text-[14px] font-medium text-white bg-accent rounded-lg hover:bg-accent-hover disabled:opacity-50"
             disabled={isPending}
           >
             {isPending ? 'Guardando...' : 'Guardar Unidad'}

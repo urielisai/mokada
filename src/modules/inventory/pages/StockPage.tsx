@@ -47,7 +47,7 @@ export const StockPage = () => {
   }, [filteredData]);
 
   const columns: Column<any>[] = [
-    { header: 'Código', accessorKey: 'product_code', className: 'font-medium text-slate-900' },
+    { header: 'Código / Clave', accessorKey: 'product_code', className: 'font-medium text-slate-900' },
     { 
       header: 'Producto', 
       cell: (item) => {
@@ -61,7 +61,7 @@ export const StockPage = () => {
                 <Package className="w-6 h-6 text-gray-300 stroke-[1.5]" />
               )}
             </div>
-            <span className="font-medium text-[#1D1D1F]">{item.product_name}</span>
+            <span className="font-medium text-ink">{item.product_name}</span>
           </div>
         );
       }
@@ -90,15 +90,15 @@ export const StockPage = () => {
     {header: 'Costo del almacén', className: 'text-right', cell: item => item.average_cost == null ? 'Sin costo' : formatCurrency(item.average_cost)},
     {header: 'Compra original', className: 'text-right', cell: item => item.original_average_cost == null ? 'Sin costo' : formatCurrency(item.original_average_cost)},
     {header: 'Precios de venta', cell: item => <div className="text-[12px] space-y-1">{item.warehouse_role === 'PURCHASE' ? 'No aplica · traspasa para vender' : item.sale_prices.length ? item.sale_prices.map((price: InventoryStock['sale_prices'][number]) => <p key={price.price_list_id} className={price.price_list_id === item.default_price_list_id ? 'font-semibold' : ''}>{price.name}: {formatCurrency(price.amount)}{price.price_list_id === item.default_price_list_id ? ' · predeterminado' : ''}</p>) : 'Sin precios'}</div>},
-    {header: 'Acciones', cell: item => <button className="text-[12px] text-[#0066CC] font-medium hover:underline" onClick={() => setEditingCost(item)}>Configurar costos</button>}
+    {header: 'Acciones', cell: item => <button className="text-[12px] text-accent font-medium hover:underline" onClick={() => setEditingCost(item)}>Configurar costos</button>}
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Existencias</h2>
-          <p className="text-[15px] text-[#86868B]">Consulta de inventario disponible por almacén</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">Existencias</h2>
+          <p className="text-[15px] text-muted">Consulta de inventario disponible por almacén</p>
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
@@ -106,7 +106,7 @@ export const StockPage = () => {
           <select
             value={selectedWarehouse}
             onChange={(e) => setSelectedWarehouse(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] text-[#1D1D1F] transition-all shadow-sm appearance-none cursor-pointer pr-10"
+            className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] text-ink transition shadow-sm appearance-none cursor-pointer pr-10"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
               backgroundPosition: `right 0.5rem center`,
@@ -127,17 +127,17 @@ export const StockPage = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por código, producto o almacén..."
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition shadow-sm"
             />
           </div>
           
           <div className="flex items-center bg-gray-100/80 p-1 rounded-xl border border-gray-200/50">
             <button
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-1.5 rounded-lg transition ${
                 viewMode === 'table' 
-                  ? 'bg-white shadow-sm text-[#1D1D1F]' 
-                  : 'text-gray-500 hover:text-[#1D1D1F]'
+                  ? 'bg-white shadow-sm text-ink' 
+                  : 'text-gray-500 hover:text-ink'
               }`}
               title="Vista de Tabla"
             >
@@ -145,10 +145,10 @@ export const StockPage = () => {
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-1.5 rounded-lg transition ${
                 viewMode === 'grid' 
-                  ? 'bg-white shadow-sm text-[#1D1D1F]' 
-                  : 'text-gray-500 hover:text-[#1D1D1F]'
+                  ? 'bg-white shadow-sm text-ink' 
+                  : 'text-gray-500 hover:text-ink'
               }`}
               title="Vista de Cuadrícula"
             >
@@ -167,7 +167,7 @@ export const StockPage = () => {
             <div key={warehouse} className="space-y-4">
               <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
                 <Warehouse className="w-5 h-5 text-gray-400" />
-                <h3 className="text-[20px] font-semibold text-[#1D1D1F]">
+                <h3 className="text-[20px] font-semibold text-ink">
                   {warehouse}
                 </h3>
               </div>
@@ -189,7 +189,7 @@ export const StockPage = () => {
                     return (
                       <div 
                         key={`${item.product_id}-${item.warehouse_id}-${index}`}
-                        className="group bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
+                        className="group bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition duration-300 flex flex-col"
                       >
                         {/* Image Section */}
                         <div className="relative aspect-square bg-white border-b border-gray-50 p-6 flex items-center justify-center overflow-hidden">
@@ -207,39 +207,39 @@ export const StockPage = () => {
                         {/* Info Section */}
                         <div className="p-5 flex-1 flex flex-col">
                           <div className="flex items-start justify-between gap-2 mb-2">
-                            <span className="text-[12px] font-medium text-[#0066CC] truncate">
+                            <span className="text-[12px] font-medium text-accent truncate">
                               {item.product_code}
                             </span>
                             <StatusBadge status={item.availability_status} />
                           </div>
 
                           
-                          <h3 className="text-[15px] font-semibold text-[#1D1D1F] leading-tight mb-2 line-clamp-2">
+                          <h3 className="text-[15px] font-semibold text-ink leading-tight mb-2 line-clamp-2">
                             {item.product_name}
                           </h3>
                           
-                          <div className="text-[12px] text-[#86868B] space-y-1 mt-4">
-                            <p>Costo del almacén: <span className="text-[#1D1D1F] font-medium">{item.average_cost == null ? 'Sin costo' : formatCurrency(item.average_cost)}</span></p>
-                            <p>Compra original: <span className="text-[#1D1D1F] font-medium">{item.original_average_cost == null ? 'Sin costo' : formatCurrency(item.original_average_cost)}</span></p>
+                          <div className="text-[12px] text-muted space-y-1 mt-4">
+                            <p>Costo del almacén: <span className="text-ink font-medium">{item.average_cost == null ? 'Sin costo' : formatCurrency(item.average_cost)}</span></p>
+                            <p>Compra original: <span className="text-ink font-medium">{item.original_average_cost == null ? 'Sin costo' : formatCurrency(item.original_average_cost)}</span></p>
                             {item.warehouse_role === 'SALES' ? item.sale_prices.map((price: InventoryStock['sale_prices'][number]) => <p key={price.price_list_id}>{price.name}: {formatCurrency(price.amount)}</p>) : <p>Precios de venta: no aplican aquí</p>}
-                            <button className="text-[#0066CC] font-medium hover:underline pt-2" onClick={() => setEditingCost(item)}>Configurar costos</button>
+                            <button className="text-accent font-medium hover:underline pt-2" onClick={() => setEditingCost(item)}>Configurar costos</button>
                           </div>
                           <div className="mt-auto pt-4 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
                             <div>
-                              <p className="text-[11px] text-[#86868B] uppercase tracking-wider mb-0.5">Disp.</p>
+                              <p className="text-[11px] text-muted uppercase tracking-wider mb-0.5">Disp.</p>
                               <p className="text-[14px] font-semibold text-emerald-600">
                                 {formatQuantity(item.available_quantity || 0)}
                               </p>
                             </div>
                             <div className="border-x border-gray-100">
-                              <p className="text-[11px] text-[#86868B] uppercase tracking-wider mb-0.5">Rsv.</p>
+                              <p className="text-[11px] text-muted uppercase tracking-wider mb-0.5">Rsv.</p>
                               <p className="text-[14px] font-medium text-gray-500">
                                 {formatQuantity(item.reserved_quantity || 0)}
                               </p>
                             </div>
                             <div>
-                              <p className="text-[11px] text-[#86868B] uppercase tracking-wider mb-0.5">Total</p>
-                              <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                              <p className="text-[11px] text-muted uppercase tracking-wider mb-0.5">Total</p>
+                              <p className="text-[14px] font-semibold text-ink">
                                 {formatQuantity(item.quantity || 0)}
                               </p>
                             </div>
@@ -256,8 +256,8 @@ export const StockPage = () => {
       ) : (
         <div className="bg-white border border-gray-200/60 rounded-2xl p-12 text-center flex flex-col items-center shadow-sm">
           <Package className="w-12 h-12 text-gray-300 mb-4 stroke-[1.5]" />
-          <h3 className="text-[16px] font-semibold text-[#1D1D1F] mb-1">No hay existencias</h3>
-          <p className="text-[14px] text-[#86868B]">No se encontraron productos en el inventario.</p>
+          <h3 className="text-[16px] font-semibold text-ink mb-1">No hay existencias</h3>
+          <p className="text-[14px] text-muted">No se encontraron productos en el inventario.</p>
         </div>
       )}
       <InventoryCostModal stock={editingCost} onClose={() => setEditingCost(null)} />

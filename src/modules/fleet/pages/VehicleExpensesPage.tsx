@@ -120,13 +120,13 @@ export const VehicleExpensesPage = () => {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-2">
-            <div className="h-8 w-64 animate-pulse rounded-lg bg-gray-200" />
-            <div className="h-4 w-96 animate-pulse rounded-lg bg-gray-200" />
+            <div className="h-8 w-64 skeleton rounded-lg bg-gray-200" />
+            <div className="h-4 w-96 skeleton rounded-lg bg-gray-200" />
           </div>
-          <div className="h-10 w-48 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-10 w-48 skeleton rounded-lg bg-gray-200" />
         </div>
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="p-10 flex justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#0066CC]"></div></div>
+          <div className="p-10 flex justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-accent"></div></div>
         </div>
       </div>
     );
@@ -140,13 +140,13 @@ export const VehicleExpensesPage = () => {
     <div className="space-y-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">Gastos de Vehículos</h2>
-          <p className="text-[14px] text-[#86868B] sm:text-[15px]">Mantenimientos, reparaciones y gastos generales operativos.</p>
+          <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">Gastos de Vehículos</h2>
+          <p className="text-[14px] text-muted sm:text-[15px]">Mantenimientos, reparaciones y gastos generales operativos.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/fleet/expenses/new')}
-            className="flex items-center gap-2 rounded-lg bg-[#0066CC] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0057AD]"
+            className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
           >
             <Plus className="h-4 w-4" />
             Registrar Gasto
@@ -155,7 +155,7 @@ export const VehicleExpensesPage = () => {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <label className="flex h-11 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 focus-within:border-[#0066CC] focus-within:ring-2 focus-within:ring-[#0066CC]/15">
+        <label className="flex h-11 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15">
           <Search className="h-5 w-5 text-gray-400" />
           <input
             type="text"
@@ -169,7 +169,7 @@ export const VehicleExpensesPage = () => {
         <select
           value={vehicleFilter}
           onChange={(e) => setVehicleFilter(e.target.value)}
-          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
         >
           <option value="ALL">Todos los vehículos</option>
           {vehicles.map(v => (
@@ -180,7 +180,7 @@ export const VehicleExpensesPage = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
         >
           <option value="ALL">Todos los estados</option>
           <option value="SUBMITTED">Pendientes</option>
@@ -197,7 +197,7 @@ export const VehicleExpensesPage = () => {
           action={
             <button
               onClick={() => navigate('/fleet/expenses/new')}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#0066CC] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0057AD]"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
             >
               <Plus className="h-4 w-4" />
               Registrar Gasto
@@ -210,12 +210,12 @@ export const VehicleExpensesPage = () => {
             <Link
               key={expense.id}
               to={`/fleet/expenses/${expense.id}`}
-              className="group relative flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-xl"
+              className="group relative flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 hover-lift hover:border-transparent"
             >
               <div>
                 <div className="mb-4 flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors group-hover:bg-[#0066CC]/10 group-hover:text-[#0066CC]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 transition-colors group-hover:bg-accent/10 group-hover:text-accent">
                       <Car className="h-5 w-5" />
                     </div>
                     <div>

@@ -14,7 +14,7 @@ const statusConfig = {
   PENDING: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   VALIDATING: { label: 'Validando Stock', color: 'bg-blue-100 text-blue-800', icon: FileText },
   CONFIRMED: { label: 'Confirmado', color: 'bg-indigo-100 text-indigo-800', icon: CheckCircle2 },
-  SHIPPED: { label: 'Enviado', color: 'bg-[#0066CC]/10 text-[#0066CC]', icon: Truck },
+  SHIPPED: { label: 'Enviado', color: 'bg-accent/10 text-accent', icon: Truck },
   DELIVERED: { label: 'Entregado', color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
   CANCELLED: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle },
 };
@@ -110,7 +110,7 @@ export const MyOrdersPage = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0066CC]" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
@@ -118,8 +118,8 @@ export const MyOrdersPage = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Mis Pedidos</h2>
-        <p className="text-[15px] text-[#86868B] mt-1">Historial y estado de tus compras</p>
+        <h2 className="text-[28px] font-bold tracking-tight text-ink">Mis Pedidos</h2>
+        <p className="text-[15px] text-muted mt-1">Historial y estado de tus compras</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -128,7 +128,7 @@ export const MyOrdersPage = () => {
           {orders.length === 0 ? (
             <div className="bg-white border border-gray-200/60 rounded-2xl p-8 text-center flex flex-col items-center shadow-sm">
               <Package className="w-12 h-12 text-gray-300 mb-3 stroke-[1.5]" />
-              <p className="text-[14px] text-[#86868B]">Aún no tienes pedidos.</p>
+              <p className="text-[14px] text-muted">Aún no tienes pedidos.</p>
             </div>
           ) : (
             orders.map(order => {
@@ -140,9 +140,9 @@ export const MyOrdersPage = () => {
                 <div
                   key={order.id}
                   onClick={() => setSelectedOrder(order)}
-                  className={`bg-white border rounded-2xl p-4 cursor-pointer transition-all ${
+                  className={`bg-white border rounded-2xl p-4 cursor-pointer transition ${
                     isSelected
-                      ? 'border-[#0066CC] ring-1 ring-[#0066CC] shadow-md'
+                      ? 'border-accent ring-1 ring-accent shadow-md'
                       : 'border-gray-200/60 hover:border-gray-300 hover:shadow-sm'
                   }`}
                 >
@@ -151,7 +151,7 @@ export const MyOrdersPage = () => {
                       <p className="text-[12px] text-gray-500 font-medium">
                         {format(new Date(order.created_at), "d 'de' MMMM, yyyy", { locale: es })}
                       </p>
-                      <p className="text-[13px] font-mono text-[#1D1D1F] mt-0.5">
+                      <p className="text-[13px] font-mono text-ink mt-0.5">
                         {order.id.split('-')[0].toUpperCase()}
                       </p>
                     </div>
@@ -165,7 +165,7 @@ export const MyOrdersPage = () => {
                     <p className="text-[13px] text-gray-600">
                       {order.sales_order_items.reduce((total: number, item: {quantity: number}) => total + Number(item.quantity || 0), 0)} artículo(s)
                     </p>
-                    <p className="text-[15px] font-bold text-[#1D1D1F]">
+                    <p className="text-[15px] font-bold text-ink">
                       {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}
                     </p>
                   </div>
@@ -181,7 +181,7 @@ export const MyOrdersPage = () => {
             <div className="bg-white border border-gray-200/60 rounded-2xl shadow-sm overflow-hidden sticky top-6">
               <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-bold text-[#1D1D1F]">
+                  <h3 className="text-lg font-bold text-ink">
                     Pedido #{selectedOrder.id.split('-')[0].toUpperCase()}
                   </h3>
                   <p className="text-[13px] text-gray-500">
@@ -231,7 +231,7 @@ export const MyOrdersPage = () => {
                     {(selectedOrder.status === 'PENDING' || selectedOrder.status === 'VALIDATING' || selectedOrder.status === 'CONFIRMED') && (
                       <button
                         onClick={() => setIsAddProductModalOpen(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0066CC] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-accent bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                       >
                         <Plus className="w-3 h-3" />
                         Añadir Producto
@@ -254,7 +254,7 @@ export const MyOrdersPage = () => {
                                  >
                                    <Minus className="w-3 h-3" />
                                  </button>
-                                 <span className="w-6 text-center text-xs font-medium text-[#1D1D1F]">
+                                 <span className="w-6 text-center text-xs font-medium text-ink">
                                    {isUpdatingItem === item.id ? <Loader2 className="w-3 h-3 animate-spin mx-auto text-gray-400" /> : item.quantity}
                                  </span>
                                  <button
@@ -268,11 +268,11 @@ export const MyOrdersPage = () => {
                             ) : (
                               <span className="text-gray-500">{item.quantity}x</span>
                             )}
-                            <span className="text-[#1D1D1F]">{item.products.name}</span>
+                            <span className="text-ink">{item.products.name}</span>
                           </div>
 
                           <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
-                            <span className="text-[#1D1D1F] font-medium">
+                            <span className="text-ink font-medium">
                               {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.subtotal)}
                             </span>
                             {isEditable && (
@@ -297,7 +297,7 @@ export const MyOrdersPage = () => {
                     <span>Subtotal</span>
                     <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.total_amount)}</span>
                   </div>
-                  <div className="flex justify-between text-[16px] font-bold text-[#1D1D1F] pt-2 border-t border-gray-100">
+                  <div className="flex justify-between text-[16px] font-bold text-ink pt-2 border-t border-gray-100">
                     <span>Total General</span>
                     <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.total_amount)}</span>
                   </div>
@@ -311,19 +311,19 @@ export const MyOrdersPage = () => {
                   <div className="bg-gray-50 rounded-xl p-4 mb-4">
                     <div className="flex justify-between text-[13px] mb-2">
                       <span className="text-gray-500">Monto Pagado</span>
-                      <span className="font-medium text-[#1D1D1F]">
+                      <span className="font-medium text-ink">
                         {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.amount_paid || 0)}
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-2 overflow-hidden">
                       <div
-                        className="bg-[#0066CC] h-2 rounded-full transition-all duration-500"
+                        className="bg-accent h-2 rounded-full transition duration-500"
                         style={{ width: `${selectedOrder.total_amount > 0 ? Math.min(((selectedOrder.amount_paid || 0) / selectedOrder.total_amount) * 100, 100) : 100}%` }}
                       />
                     </div>
                     <div className="flex justify-between text-[13px] mt-2 border-t border-gray-200/60 pt-2">
                       <span className="text-gray-600 font-medium">Saldo Pendiente</span>
-                      <span className="font-bold text-[#1D1D1F]">
+                      <span className="font-bold text-ink">
                         {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
                           Math.max(selectedOrder.total_amount - (selectedOrder.amount_paid || 0), 0)
                         )}
@@ -338,11 +338,11 @@ export const MyOrdersPage = () => {
                       {selectedOrder.sales_order_payments.map((payment: any) => (
                         <div key={payment.id} className="flex justify-between items-center text-[13px] p-3 bg-white border border-gray-100 rounded-lg">
                           <div>
-                            <p className="font-medium text-[#1D1D1F]">{payment.is_manual_settlement ? 'Registro manual' : payment.payment_method === 'CASH' ? 'Efectivo' : 'Transferencia'}</p>
+                            <p className="font-medium text-ink">{payment.is_manual_settlement ? 'Registro manual' : payment.payment_method === 'CASH' ? 'Efectivo' : 'Transferencia'}</p>
                             <p className="text-gray-500">{format(new Date(payment.created_at), "d MMM, yyyy", { locale: es })}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-[#1D1D1F]">
+                            <p className="font-semibold text-ink">
                               {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(payment.amount)}
                             </p>
                             <span className={`text-[11px] font-medium ${
@@ -360,7 +360,7 @@ export const MyOrdersPage = () => {
                   {(selectedOrder.total_amount - (selectedOrder.amount_paid || 0)) > 0 && (
                     <button
                       onClick={() => setIsPaymentModalOpen(true)}
-                      className="w-full py-2.5 px-4 border border-[#0066CC] text-[#0066CC] font-medium text-[14px] rounded-xl hover:bg-[#0066CC]/5 transition-colors"
+                      className="w-full py-2.5 px-4 border border-accent text-accent font-medium text-[14px] rounded-xl hover:bg-accent/5 transition-colors"
                     >
                       Reportar Pago (Transferencia)
                     </button>

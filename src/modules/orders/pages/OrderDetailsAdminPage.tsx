@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ordersService } from '../services/orders.service';
+import { ordersService, type OrderStockStatus } from '../services/orders.service';
 import { statusConfig } from './OrdersPage';
-import { ArrowLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck, ArrowRightLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -26,6 +26,7 @@ export const OrderDetailsAdminPage = () => {
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
   const [deliveryReceipt, setDeliveryReceipt] = useState<Awaited<ReturnType<typeof ordersService.getDeliveryReceipt>>>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+  const [stockStatus, setStockStatus] = useState<Map<string, OrderStockStatus>>(new Map());
 
   // Form states
   const { data: warehouses } = useWarehouses();
@@ -87,6 +88,10 @@ export const OrderDetailsAdminPage = () => {
       if (showLoader) setIsLoading(true);
       const data = await ordersService.getOrderById(orderId);
       setOrder(data);
+      // Stock labels are a hint; the order still loads if they fail.
+      ordersService.getOrderStockStatus(orderId)
+        .then(rows => setStockStatus(new Map(rows.map(row => [row.product_id, row]))))
+        .catch(error => console.error('Error fetching order stock:', error));
       const receipt = await ordersService.getDeliveryReceipt(orderId);
       setDeliveryReceipt(receipt);
       setStatus(data.status);
@@ -297,12 +302,27 @@ export const OrderDetailsAdminPage = () => {
   if (isLoading || !order) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0066CC]" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
 
   const isShippedOrDelivered = order.status === 'SHIPPED' || order.status === 'DELIVERED' || order.status === 'CANCELLED';
+  const isAdminUser = currentUserProfile?.user_type === 'ADMIN';
+  const showStock = !isShippedOrDelivered && !order.inventory_posted_at;
+  const keyCodes = new Map<string, string>((order.sales_order_items || []).map((item: any) => [item.product_id, item.products?.code]));
+  const transfersNeeded = showStock
+    ? [...stockStatus.values()].filter(row => row.status === 'TRANSFER' && row.purchase_product_id)
+    : [];
+  const createTransfer = () => navigate('/inventory/transfers/new', { state: { prefill: {
+    destination_warehouse_id: order.warehouse_id || null,
+    notes: `Pedido #${order.id.slice(0, 8)}`,
+    items: transfersNeeded.map(row => ({
+      product_id: row.purchase_product_id,
+      destination_product_id: row.product_id,
+      quantity: Math.min(Number(row.missing), Number(row.purchase_available ?? 0))
+    }))
+  } } });
 
   return (
     <div className="space-y-6 max-w-5xl min-w-0 mx-auto">
@@ -315,17 +335,17 @@ export const OrderDetailsAdminPage = () => {
         </button>
         <div className="min-w-0 flex-1 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
           <div className="min-w-0">
-            <h2 className="text-[23px] sm:text-[28px] font-bold tracking-tight text-[#1D1D1F] break-words">
+            <h2 className="text-[23px] sm:text-[28px] font-bold tracking-tight text-ink break-words">
               Pedido #{order.id.split('-')[0].toUpperCase()}
             </h2>
-            <p className="text-[13px] sm:text-[15px] text-[#86868B] mt-1">
+            <p className="text-[13px] sm:text-[15px] text-muted mt-1">
               Realizado el {format(new Date(order.created_at), "d 'de' MMMM, yyyy HH:mm", { locale: es })}
             </p>
           </div>
           
           <div className="flex w-full lg:w-auto flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
             {order.inventory_posted_at && order.status !== 'CANCELLED' && (
-              <button className="w-full sm:w-auto px-4 py-2.5 text-[14px] font-medium text-[#E02424] bg-white border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 transition-colors shadow-sm disabled:opacity-50" disabled={isSaving}
+              <button className="w-full sm:w-auto px-4 py-2.5 text-[14px] font-medium text-red-600 bg-white border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 transition-colors shadow-sm disabled:opacity-50" disabled={isSaving}
                 onClick={async () => {
                   if (!window.confirm('¿Cancelar el pedido y reintegrar los productos al almacén? Los pagos registrados se conservan para conciliarlos.')) return;
                   setIsSaving(true);
@@ -350,7 +370,7 @@ export const OrderDetailsAdminPage = () => {
             {!isShippedOrDelivered && <button
               onClick={handleSave}
               disabled={isSaving || isShippedOrDelivered}
-              className="w-full sm:w-auto justify-center bg-[#0066CC] hover:bg-[#005bb5] text-white px-6 py-2.5 rounded-xl text-[14px] font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+              className="w-full sm:w-auto justify-center bg-accent hover:bg-accent-hover text-white px-6 py-2.5 rounded-xl text-[14px] font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Guardar Cambios
@@ -416,12 +436,12 @@ export const OrderDetailsAdminPage = () => {
 
       <div className="space-y-6">
         <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm">
-          <h3 className="font-semibold text-[#1D1D1F] mb-5">Gestión del Pedido</h3>
+          <h3 className="font-semibold text-ink mb-5">Gestión del Pedido</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="flex flex-col">
-              <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Almacén de salida</label>
-              <select value={warehouseId} disabled={!!order.inventory_posted_at || order.status === 'CANCELLED'} onChange={e => setWarehouseId(e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] transition-all disabled:opacity-50 text-[14px] text-[#1D1D1F]">
+              <label className="block text-[13px] font-medium text-ink mb-1.5">Almacén de salida</label>
+              <select value={warehouseId} disabled={!!order.inventory_posted_at || order.status === 'CANCELLED'} onChange={e => setWarehouseId(e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent transition disabled:opacity-50 text-[14px] text-ink">
                 <option value="">Selecciona el almacén</option>
                 {warehouses?.filter(w => (w.is_active && w.warehouse_role === 'SALES') || w.id === warehouseId).map(w => <option key={w.id} value={w.id} disabled={w.warehouse_role !== 'SALES'}>{w.name}{w.warehouse_role !== 'SALES' ? ' · no apto para venta' : ''}</option>)}
               </select>
@@ -436,7 +456,7 @@ export const OrderDetailsAdminPage = () => {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 disabled={isShippedOrDelivered}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] disabled:opacity-70 transition-all text-sm"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent disabled:opacity-70 transition text-sm"
               >
                 {Object.entries(statusConfig).filter(([key]) => key !== 'DELIVERED' || status === 'DELIVERED').map(([key, value]) => (
                   <option key={key} value={key}>{value.label}</option>
@@ -455,7 +475,7 @@ export const OrderDetailsAdminPage = () => {
                   value={estimatedDate}
                   onChange={(e) => setEstimatedDate(e.target.value)}
                   disabled={isShippedOrDelivered}
-                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] disabled:opacity-70 transition-all text-sm"
+                  className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent disabled:opacity-70 transition text-sm"
                 />
               </div>
             </div>
@@ -468,21 +488,21 @@ export const OrderDetailsAdminPage = () => {
                 value={adminComments}
                 onChange={(e) => setAdminComments(e.target.value)}
                 disabled={isShippedOrDelivered}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] disabled:opacity-70 transition-all text-sm h-16 resize-none"
+                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent disabled:opacity-70 transition text-sm h-16 resize-none"
                 placeholder="Notas para el cliente..."
               />
             </div>
           </div>
         </div>
           {order.warranty_return_id && <p className="p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm">Reposición por garantía · {order.warranty_return_id.slice(0,8)}. Su pago manual no representa una segunda venta en el reporte de ganancias.</p>}
-          {currentUserProfile?.user_type==='ADMIN' && order.status!=='CANCELLED' && <button disabled={isSaving} className="self-start px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0066CC] disabled:opacity-50" onClick={async()=>{
+          {currentUserProfile?.user_type==='ADMIN' && order.status!=='CANCELLED' && <button disabled={isSaving} className="self-start px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-accent disabled:opacity-50" onClick={async()=>{
             setIsSaving(true);try{await ordersService.markPaidManually(order.id);await fetchOrder(order.id);toast.success('Pedido marcado pagado manualmente');}catch(error){toast.error((error as Error).message);}finally{setIsSaving(false);}
           }}>Marcar pagado manualmente</button>}
           <OrderReturns order={order} />
           {deliveryReceipt && <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-[16px] font-semibold text-[#1D1D1F]">Firma de recibido</h3>
-            <p className="text-[13px] text-[#86868B] mt-2">Recibió {deliveryReceipt.signed_by_name} · {new Date(deliveryReceipt.received_at).toLocaleString('es-MX')}</p>
-            <button type="button" onClick={async () => { const tab = window.open('about:blank', '_blank'); if (tab) tab.opener = null; try { const url = await ordersService.getDeliverySignatureUrl(deliveryReceipt.signature_path); if (tab) tab.location.href = url; } catch (error) { tab?.close(); toast.error((error as Error).message); } }} className="mt-3 text-[13px] font-medium text-[#0066CC] hover:underline">Ver firma</button>
+            <h3 className="text-[16px] font-semibold text-ink">Firma de recibido</h3>
+            <p className="text-[13px] text-muted mt-2">Recibió {deliveryReceipt.signed_by_name} · {new Date(deliveryReceipt.received_at).toLocaleString('es-MX')}</p>
+            <button type="button" onClick={async () => { const tab = window.open('about:blank', '_blank'); if (tab) tab.opener = null; try { const url = await ordersService.getDeliverySignatureUrl(deliveryReceipt.signature_path); if (tab) tab.location.href = url; } catch (error) { tab?.close(); toast.error((error as Error).message); } }} className="mt-3 text-[13px] font-medium text-accent hover:underline">Ver firma</button>
           </div>}
           <DeliverySignatureModal isOpen={isSignatureModalOpen} onClose={() => setIsSignatureModalOpen(false)} onConfirm={handleMarkDelivered} saving={isSaving} />
           {currentUserProfile?.user_type === 'ADMIN' && order.requires_invoice && (
@@ -491,7 +511,7 @@ export const OrderDetailsAdminPage = () => {
           <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between gap-4">
             <div>
               <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Cliente</h3>
-              <p className="font-medium text-[#1D1D1F]">{order.customers?.name}</p>
+              <p className="font-medium text-ink">{order.customers?.name}</p>
               <p className="text-sm text-gray-600">{order.customers?.email}</p>
               {order.customers?.phone && <p className="text-sm text-gray-600">{order.customers?.phone}</p>}
             </div>
@@ -505,11 +525,11 @@ export const OrderDetailsAdminPage = () => {
 
           <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm">
             <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-              <h3 className="font-semibold text-[#1D1D1F]">Artículos del Pedido</h3>
+              <h3 className="font-semibold text-ink">Artículos del Pedido</h3>
               {!isShippedOrDelivered && (
                 <button
                   onClick={() => setIsAddProductModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#0066CC] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-accent bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Añadir Producto
@@ -517,6 +537,32 @@ export const OrderDetailsAdminPage = () => {
               )}
             </div>
             
+            {isAdminUser && transfersNeeded.length > 0 && (
+              <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-amber-900">Para surtir este pedido hay que traspasar</p>
+                    <ul className="mt-1 space-y-0.5 text-[13px] text-amber-900">
+                      {transfersNeeded.map(row => (
+                        <li key={row.product_id}>
+                          {row.purchase_code} → {keyCodes.get(row.product_id)} · {Math.min(Number(row.missing), Number(row.purchase_available ?? 0))} pzas
+                          {Number(row.purchase_available ?? 0) < Number(row.missing) && <span className="text-amber-700"> (solo hay {row.purchase_available} en el principal)</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={createTransfer}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors"
+                  >
+                    <ArrowRightLeft className="w-4 h-4" />
+                    Crear traspaso
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4 border-b border-gray-100 pb-4">
               {order.sales_order_items?.map((item: any) => (
                 <div key={item.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
@@ -530,7 +576,7 @@ export const OrderDetailsAdminPage = () => {
                          >
                            <Minus className="w-4 h-4" />
                          </button>
-                         <span className="w-8 text-center text-sm font-medium text-[#1D1D1F]">
+                         <span className="w-8 text-center text-sm font-medium text-ink">
                            {isUpdatingItem === item.id ? <Loader2 className="w-3 h-3 animate-spin mx-auto text-gray-400" /> : item.quantity}
                          </span>
                          <button 
@@ -548,15 +594,24 @@ export const OrderDetailsAdminPage = () => {
                     )}
                     
                     <div>
-                      <p className="text-[14px] font-medium text-[#1D1D1F]">{item.products?.name}</p>
-                      <p className="text-[12px] text-[#86868B]">{item.products?.code}</p>
+                      <p className="text-[14px] font-medium text-ink">{item.products?.name}</p>
+                      <p className="text-[12px] text-muted">{item.products?.code}</p>
+                      {showStock && (() => {
+                        const stock = stockStatus.get(item.product_id);
+                        if (!stock || stock.status === 'OK') return null;
+                        return (
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${stock.status === 'TRANSFER' ? 'bg-amber-50 text-amber-800' : 'bg-red-50 text-red-700'}`}>
+                            {stock.status === 'TRANSFER' ? 'Requiere traspaso' : 'Sin existencia'} · faltan {Number(stock.missing)}
+                          </span>
+                        );
+                      })()}
                       {!isShippedOrDelivered && ['ADMIN','AGENT'].includes(currentUserProfile?.user_type) && <OrderItemDiscount item={item} onSaved={()=>fetchOrder(id!)} />}
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
                     <div className="text-right">
-                      <p className="text-[14px] font-medium text-[#1D1D1F]">
+                      <p className="text-[14px] font-medium text-ink">
                         {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.subtotal)}
                       </p>
                       <p className="text-[11px] text-gray-500">
@@ -582,7 +637,7 @@ export const OrderDetailsAdminPage = () => {
                 <span>Subtotal</span>
                 <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}</span>
               </div>
-              <div className="flex justify-between text-lg font-bold text-[#1D1D1F] pt-2 border-t border-gray-100">
+              <div className="flex justify-between text-lg font-bold text-ink pt-2 border-t border-gray-100">
                 <span>Total General</span>
                 <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}</span>
               </div>
@@ -592,11 +647,11 @@ export const OrderDetailsAdminPage = () => {
           {/* Pagos Section */}
           <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm mt-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-semibold text-[#1D1D1F]">Estado de Pagos</h3>
+              <h3 className="font-semibold text-ink">Estado de Pagos</h3>
               {Math.max(order.total_amount - (order.amount_paid || 0), 0) > 0 && (
                 <button
                   onClick={() => setIsPaymentModalOpen(true)}
-                  className="px-4 py-2 bg-[#0066CC] hover:bg-[#005bb5] text-white text-sm font-medium rounded-lg transition-colors"
+                  className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   Registrar Pago
                 </button>
@@ -606,19 +661,19 @@ export const OrderDetailsAdminPage = () => {
             <div className="bg-gray-50 rounded-xl p-4 mb-6">
               <div className="flex justify-between text-[13px] mb-2">
                 <span className="text-gray-500">Monto Pagado</span>
-                <span className="font-medium text-[#1D1D1F]">
+                <span className="font-medium text-ink">
                   {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.amount_paid || 0)}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-2 overflow-hidden">
                 <div 
-                  className="bg-[#0066CC] h-2 rounded-full transition-all duration-500" 
+                  className="bg-accent h-2 rounded-full transition duration-500" 
                   style={{ width: `${order.total_amount > 0 ? Math.min(((order.amount_paid || 0) / order.total_amount) * 100, 100) : 100}%` }}
                 />
               </div>
               <div className="flex justify-between text-[13px] mt-2 border-t border-gray-200/60 pt-2">
                 <span className="text-gray-600 font-medium">Saldo Pendiente</span>
-                <span className="font-bold text-[#1D1D1F]">
+                <span className="font-bold text-ink">
                   {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
                     Math.max(order.total_amount - (order.amount_paid || 0), 0)
                   )}
@@ -675,7 +730,7 @@ export const OrderDetailsAdminPage = () => {
                     )}
 
                     {payment.status === 'APPROVED' && payment.payment_method === 'CASH' && !payment.is_manual_settlement && (
-                      <button onClick={() => handleDownloadReceipt(payment)} className="text-[13px] text-[#0066CC] hover:underline font-medium">
+                      <button onClick={() => handleDownloadReceipt(payment)} className="text-[13px] text-accent hover:underline font-medium">
                         Descargar Recibo
                       </button>
                     )}
@@ -699,7 +754,7 @@ export const OrderDetailsAdminPage = () => {
                   value="CASH"
                   checked={paymentMethod === 'CASH'}
                   onChange={() => setPaymentMethod('CASH')}
-                  className="text-[#0066CC] focus:ring-[#0066CC]"
+                  className="text-accent focus:ring-accent"
                 />
                 <span className="text-sm">Efectivo (Automático)</span>
               </label>
@@ -710,7 +765,7 @@ export const OrderDetailsAdminPage = () => {
                   value="TRANSFER"
                   checked={paymentMethod === 'TRANSFER'}
                   onChange={() => setPaymentMethod('TRANSFER')}
-                  className="text-[#0066CC] focus:ring-[#0066CC]"
+                  className="text-accent focus:ring-accent"
                 />
                 <span className="text-sm">Transferencia</span>
               </label>
@@ -735,7 +790,7 @@ export const OrderDetailsAdminPage = () => {
                 required
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
-                className="pl-8 w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC]"
+                className="pl-8 w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent"
               />
             </div>
             <p className="text-xs text-gray-500 mt-1">Saldo pendiente: ${Math.max(order.total_amount - (order.amount_paid || 0), 0).toFixed(2)}</p>
@@ -765,7 +820,7 @@ export const OrderDetailsAdminPage = () => {
             <button
               type="submit"
               disabled={isProcessingPayment}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#005bb5] disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover disabled:opacity-50"
             >
               {isProcessingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Registrar Pago'}
             </button>

@@ -22,7 +22,7 @@ export const RoutesPage = () => {
           {item.working_days?.map((day: string) => (
             <span
               key={day}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0066CC]/10 text-[10px] font-bold text-[#0066CC]"
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-accent/10 text-[10px] font-bold text-accent"
               title={day === 'X' ? 'Miércoles' : undefined}
             >
               {day === 'X' ? 'M' : day}
@@ -46,7 +46,7 @@ export const RoutesPage = () => {
         <button
           type="button"
           onClick={() => navigate(`/route-operations/routes/${item.id}`)}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-[#424245] transition-colors hover:bg-gray-50 hover:text-[#0066CC]"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-ink-2 transition-colors hover:bg-gray-50 hover:text-accent"
           title="Editar"
           aria-label="Editar ruta"
         >
@@ -61,12 +61,12 @@ export const RoutesPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Rutas</h2>
-          <p className="text-[15px] text-[#86868B]">Definición de rutas comerciales reutilizables</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">Rutas</h2>
+          <p className="text-[15px] text-muted">Definición de rutas comerciales reutilizables</p>
         </div>
         <button
           onClick={() => navigate('/route-operations/routes/new')}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#0066CC] px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-[#0055AA]"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-accent-hover"
         >
           <Plus className="h-4 w-4" />
           Nueva ruta

@@ -89,25 +89,25 @@ export const MarginsPage = () => {
   const query = tab === 'sales' ? sales : stock;
   return <div className="space-y-6">
     <div>
-      <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Costos y ganancias</h2>
-      <p className="text-[15px] text-[#86868B] mt-1 max-w-3xl">Ganancia bruta antes de gastos, comisiones e impuestos, descontando garantías. Se registra al enviar o entregar el pedido; las cancelaciones se excluyen.</p>
+      <h2 className="text-[28px] font-bold tracking-tight text-ink">Costos y ganancias</h2>
+      <p className="text-[15px] text-muted mt-1 max-w-3xl">Ganancia bruta antes de gastos, comisiones e impuestos, descontando garantías. Se registra al enviar o entregar el pedido; las cancelaciones se excluyen.</p>
     </div>
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div className="inline-flex self-start bg-gray-100/80 p-1 rounded-xl border border-gray-200/50">
-      <button className={`px-4 py-2 rounded-lg text-[13px] font-medium transition-all ${tab === 'sales' ? 'bg-white shadow-sm text-[#1D1D1F]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`} onClick={() => setTab('sales')}>Ventas y márgenes</button>
-      <button className={`px-4 py-2 rounded-lg text-[13px] font-medium transition-all ${tab === 'stock' ? 'bg-white shadow-sm text-[#1D1D1F]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`} onClick={() => setTab('stock')}>Costos del inventario</button>
+      <button className={`px-4 py-2 rounded-lg text-[13px] font-medium transition ${tab === 'sales' ? 'bg-white shadow-sm text-ink' : 'text-muted hover:text-ink'}`} onClick={() => setTab('sales')}>Ventas y márgenes</button>
+      <button className={`px-4 py-2 rounded-lg text-[13px] font-medium transition ${tab === 'stock' ? 'bg-white shadow-sm text-ink' : 'text-muted hover:text-ink'}`} onClick={() => setTab('stock')}>Costos del inventario</button>
       </div>
       <button className="px-4 py-2 text-[14px] font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 self-start sm:self-auto" onClick={() => { stock.refetch(); sales.refetch(); if (tab === 'stock') prices.refetch(); }}><RefreshCw className={`w-4 h-4 ${query.isFetching ? 'animate-spin' : ''}`} />Actualizar</button>
     </div>
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
-      <label className="block text-[13px] font-medium text-[#1D1D1F]">Almacén<select className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50 mt-1.5" value={warehouse} onChange={e => setWarehouse(e.target.value)}>
+      <label className="block text-[13px] font-medium text-ink">Almacén<select className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50 mt-1.5" value={warehouse} onChange={e => setWarehouse(e.target.value)}>
         <option value="">Todos</option>{warehouseNames.map(name => <option key={name}>{name}</option>)}
       </select></label>
-      <label className="block text-[13px] font-medium text-[#1D1D1F]">Producto<input className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50 mt-1.5" placeholder="Código o nombre" value={product} onChange={e => setProduct(e.target.value)} /></label>
+      <label className="block text-[13px] font-medium text-ink">Producto<input className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50 mt-1.5" placeholder="Código o nombre" value={product} onChange={e => setProduct(e.target.value)} /></label>
       {tab === 'sales' && <>
-        <label className="block text-[13px] font-medium text-[#1D1D1F]">Desde<input type="date" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50 mt-1.5" value={start} onChange={e => setStart(e.target.value)} /></label>
-        <label className="block text-[13px] font-medium text-[#1D1D1F]">Hasta<input type="date" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50 mt-1.5" value={end} onChange={e => setEnd(e.target.value)} /></label>
-        <label className="block text-[13px] font-medium text-[#1D1D1F]">Vendedor<select className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50 mt-1.5" value={agent} onChange={e => setAgent(e.target.value)}>
+        <label className="block text-[13px] font-medium text-ink">Desde<input type="date" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50 mt-1.5" value={start} onChange={e => setStart(e.target.value)} /></label>
+        <label className="block text-[13px] font-medium text-ink">Hasta<input type="date" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50 mt-1.5" value={end} onChange={e => setEnd(e.target.value)} /></label>
+        <label className="block text-[13px] font-medium text-ink">Vendedor<select className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50 mt-1.5" value={agent} onChange={e => setAgent(e.target.value)}>
           <option value="">Todos</option>{[...new Set((sales.data || []).map(r => r.agent_id))].map(id => <option key={id} value={id}>{agentName(id)}</option>)}
         </select></label>
       </>}
@@ -119,16 +119,16 @@ export const MarginsPage = () => {
           ['Margen almacén de venta', knownCosts ? formatCurrency(sum('warehouse_margin')) : 'Costos incompletos'],
           ['Margen interno acumulado', knownCosts ? formatCurrency(sum('upstream_margin')) : 'Costos incompletos'],
           ['Ganancia bruta total', knownCosts ? formatCurrency(sum('gross_profit')) : 'Costos incompletos']
-        ].map(([label, value]) => <div key={label} className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm"><p className="text-[12px] font-medium text-[#86868B]">{label}</p><p className="text-[24px] font-semibold tracking-tight text-[#1D1D1F] mt-2 break-words">{value}</p></div>)}
+        ].map(([label, value]) => <div key={label} className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm"><p className="text-[12px] font-medium text-muted">{label}</p><p className="text-[24px] font-semibold tracking-tight text-ink mt-2 break-words">{value}</p></div>)}
       </div>
       <p className="text-sm text-gray-500">Cobrado en los {orders.length} pedidos incluidos: {formatCurrency(orders.reduce((sum, row) => sum + (row.amount_paid || 0), 0))}. Pendiente: {formatCurrency(orders.reduce((sum, row) => sum + Math.max(0, row.total_amount - (row.amount_paid || 0)), 0))}. Al filtrar productos, la cobranza corresponde a los pedidos completos.</p>
       <Table data={filtered} columns={[
-        {header: 'Producto', cell: r => <div><p className="text-[13px] font-medium text-[#0066CC]">{r.code}</p><p className="text-[14px] text-[#1D1D1F] mt-0.5">{r.name}</p></div>},
+        {header: 'Producto', cell: r => <div><p className="text-[13px] font-medium text-accent">{r.code}</p><p className="text-[14px] text-ink mt-0.5">{r.name}</p></div>},
         {header: 'Almacén', accessorKey: 'warehouse_name'},
         {header: 'Vendedor', cell: r => agentName(r.agent_id)},
         {header: 'Cantidad', accessorKey: 'quantity', className: 'text-right font-semibold tabular-nums'},
         {header: 'Venta', className: 'text-right tabular-nums', cell: r => money(r.subtotal)},
-        {header: 'Garantías',className:'text-right tabular-nums',cell:r=><div>{r.returned_quantity} pieza(s)<p className="text-xs text-[#86868B]">{money(r.warranty_loss)}</p></div>},
+        {header: 'Garantías',className:'text-right tabular-nums',cell:r=><div>{r.returned_quantity} pieza(s)<p className="text-xs text-muted">{money(r.warranty_loss)}</p></div>},
         {header: 'Margen venta', className: 'text-right tabular-nums', cell: r => money(r.warehouse_margin)},
         {header: 'Margen interno', className: 'text-right tabular-nums', cell: r => money(r.upstream_margin)},
         {header: 'Ganancia bruta', className: 'text-right tabular-nums', cell: r => money(r.gross_profit)}
@@ -139,7 +139,7 @@ export const MarginsPage = () => {
       {!!stock.data?.filter(r => r.quantity > 0 && (r.average_cost == null || r.original_average_cost == null)).length && <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">Hay {stock.data.filter(r => r.quantity > 0 && (r.average_cost == null || r.original_average_cost == null)).length} existencias antiguas sin costo. Captura sus costos reales para poder traspasarlas o venderlas con una ganancia confiable.</p>}
       {prices.error && <p className="text-red-600 text-sm">No se pudieron consultar los precios de venta.</p>}
       <Table data={(stock.data || []).filter(r => (!warehouse || r.warehouse_name === warehouse) && matchingProduct(r))} columns={[
-        {header: 'Producto', cell: r => <div><p className="text-[13px] font-medium text-[#0066CC]">{r.code}</p><p className="text-[14px] text-[#1D1D1F] mt-0.5">{r.name}</p></div>},
+        {header: 'Producto', cell: r => <div><p className="text-[13px] font-medium text-accent">{r.code}</p><p className="text-[14px] text-ink mt-0.5">{r.name}</p></div>},
         {header: 'Almacén', accessorKey: 'warehouse_name'},
         {header: 'Existencia', accessorKey: 'quantity'},
         {header: 'Costo promedio', className: 'text-right tabular-nums', cell: r => money(r.average_cost)},
@@ -148,20 +148,20 @@ export const MarginsPage = () => {
         {header: 'Precios de venta', cell: r => <div className="text-xs space-y-1">
           {warehouses?.find(w => w.id === r.warehouse_id)?.warehouse_role === 'PURCHASE' ? <p>No aplica · se vende desde el secundario</p> : <>
             {prices.isLoading ? 'Cargando…' : (prices.data || []).filter(p => p.product_id === r.product_id).map(p => <p key={p.price_list_name}>{p.price_list_name}: {money(p.amount)}</p>)}
-            <Link className="text-[#0066CC] hover:underline font-medium" to={`/catalog/products/${r.product_id}`}>Configurar precios</Link>
+            <Link className="text-accent hover:underline font-medium" to={`/catalog/products/${r.product_id}`}>Configurar precios</Link>
           </>}
         </div>},
-        {header: 'Acciones', cell: r => <button className="text-[#0066CC] hover:underline font-medium" onClick={() => {setEditing(r); setCost(r.average_cost?.toString() || ''); setOriginalCost(r.original_average_cost?.toString() || '');}}>Configurar costos</button>}
+        {header: 'Acciones', cell: r => <button className="text-accent hover:underline font-medium" onClick={() => {setEditing(r); setCost(r.average_cost?.toString() || ''); setOriginalCost(r.original_average_cost?.toString() || '');}}>Configurar costos</button>}
       ]} />
     </>}
     <Modal isOpen={!!editing} onClose={() => setEditing(null)} title="Configurar costos actuales">
       <form className="space-y-5" onSubmit={e => {e.preventDefault(); saveCost();}}>
-        <p className="text-[14px] text-[#86868B] bg-gray-50 border border-gray-200/60 rounded-xl p-4">{editing?.code} · {editing?.warehouse_name}. Esta modificación afecta las salidas futuras y conserva los costos de ventas anteriores.</p>
-        <label className="block text-[13px] font-medium text-[#1D1D1F]">Costo promedio del almacén ($)<input required type="number" min="0" step="0.0001" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50 mt-1.5" value={cost} onChange={e => setCost(e.target.value)} /></label>
-        <label className="block text-[13px] font-medium text-[#1D1D1F]">Costo original promedio de compra ($)<input required type="number" min="0" step="0.0001" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50 mt-1.5" value={originalCost} onChange={e => setOriginalCost(e.target.value)} /></label>
+        <p className="text-[14px] text-muted bg-gray-50 border border-gray-200/60 rounded-xl p-4">{editing?.code} · {editing?.warehouse_name}. Esta modificación afecta las salidas futuras y conserva los costos de ventas anteriores.</p>
+        <label className="block text-[13px] font-medium text-ink">Costo promedio del almacén ($)<input required type="number" min="0" step="0.0001" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50 mt-1.5" value={cost} onChange={e => setCost(e.target.value)} /></label>
+        <label className="block text-[13px] font-medium text-ink">Costo original promedio de compra ($)<input required type="number" min="0" step="0.0001" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50 mt-1.5" value={originalCost} onChange={e => setOriginalCost(e.target.value)} /></label>
         <div className="pt-4 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100">
           <button type="button" disabled={saving} onClick={() => setEditing(null)} className="px-4 py-2 text-[14px] font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">Cancelar</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#0055FF] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{saving ? 'Guardando…' : 'Guardar costos'}</button>
+          <button type="submit" disabled={saving} className="px-4 py-2 text-[14px] font-medium text-white bg-accent rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{saving ? 'Guardando…' : 'Guardar costos'}</button>
         </div>
       </form>
     </Modal>

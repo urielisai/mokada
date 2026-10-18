@@ -21,7 +21,7 @@ export const CreditSelector = ({
   return (
     <div className="space-y-4 pt-2">
       <div>
-        <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">
+        <label className="block text-[13px] font-medium text-ink mb-1.5">
           Modalidad de Pago
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -30,8 +30,8 @@ export const CreditSelector = ({
             onClick={() => onPaymentTypeChange('CONTADO')}
             className={`flex h-11 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors ${
               paymentType === 'CONTADO'
-                ? 'border-[#0066CC] bg-[#0066CC]/5 font-semibold text-[#0066CC] ring-2 ring-[#0066CC]/15'
-                : 'border-gray-300 bg-white text-[#1D1D1F] hover:bg-gray-50'
+                ? 'border-accent bg-accent/5 font-semibold text-accent ring-2 ring-accent/15'
+                : 'border-gray-300 bg-white text-ink hover:bg-gray-50'
             }`}
           >
             <CreditCard className="h-4 w-4" />
@@ -43,8 +43,8 @@ export const CreditSelector = ({
             onClick={() => onPaymentTypeChange('CREDITO')}
             className={`flex h-11 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors ${
               paymentType === 'CREDITO'
-                ? 'border-[#0066CC] bg-[#0066CC]/5 font-semibold text-[#0066CC] ring-2 ring-[#0066CC]/15'
-                : 'border-gray-300 bg-white text-[#1D1D1F] hover:bg-gray-50'
+                ? 'border-accent bg-accent/5 font-semibold text-accent ring-2 ring-accent/15'
+                : 'border-gray-300 bg-white text-ink hover:bg-gray-50'
             }`}
           >
             <CalendarCheck className="h-4 w-4" />
@@ -54,8 +54,8 @@ export const CreditSelector = ({
       </div>
 
       {paymentType === 'CREDITO' && (
-        <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50/70 p-4 transition-all">
-          <label className="block text-[13px] font-semibold text-[#1D1D1F]">
+        <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50/70 p-4 transition">
+          <label className="block text-[13px] font-semibold text-ink">
             Plazo de Crédito
           </label>
           <div className="grid grid-cols-3 gap-2">
@@ -66,8 +66,8 @@ export const CreditSelector = ({
                 onClick={() => onCreditTermChange(term)}
                 className={`flex h-10 items-center justify-center rounded-lg border text-xs font-semibold transition-colors ${
                   creditTerm === term
-                    ? 'border-[#0066CC] bg-[#0066CC] text-white shadow-sm'
-                    : 'border-gray-300 bg-white text-[#1D1D1F] hover:bg-gray-100'
+                    ? 'border-accent bg-accent text-white shadow-sm'
+                    : 'border-gray-300 bg-white text-ink hover:bg-gray-100'
                 }`}
               >
                 {term} Días

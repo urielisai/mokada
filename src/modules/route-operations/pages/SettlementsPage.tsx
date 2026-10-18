@@ -37,7 +37,7 @@ export const SettlementsPage = () => {
     {
       header: 'Ruta',
       cell: (item) => (
-        <Link to={`/route-operations/trips/${item.route_trip_id}`} className="text-[#0066CC] font-medium hover:underline">
+        <Link to={`/route-operations/trips/${item.route_trip_id}`} className="text-accent font-medium hover:underline">
           {item.route_code} — {item.route_name}
         </Link>
       ),
@@ -76,7 +76,7 @@ export const SettlementsPage = () => {
             onClick={() => setConfirmTrip(item)}
             disabled={hasPending}
             title={hasPending ? 'Hay gastos pendientes de revisión' : 'Liquidar semana'}
-            className="text-[#0066CC] text-[13px] font-medium hover:underline disabled:text-gray-300 disabled:no-underline disabled:cursor-not-allowed"
+            className="text-accent text-[13px] font-medium hover:underline disabled:text-gray-300 disabled:no-underline disabled:cursor-not-allowed"
           >
             Liquidar
           </button>
@@ -88,8 +88,8 @@ export const SettlementsPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Conciliación Semanal</h2>
-        <p className="text-[15px] text-[#86868B]">Revisión y liquidación de viajes completados</p>
+        <h2 className="text-[28px] font-bold tracking-tight text-ink">Conciliación Semanal</h2>
+        <p className="text-[15px] text-muted">Revisión y liquidación de viajes completados</p>
       </div>
 
       <Table

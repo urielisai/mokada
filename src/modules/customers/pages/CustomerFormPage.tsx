@@ -287,10 +287,10 @@ export const CustomerFormPage = () => {
         <div className="flex min-w-0 items-start gap-3">
           <BackLink />
           <div className="min-w-0">
-            <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">
+            <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">
               {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
             </h2>
-            <p className="mt-1 text-[14px] text-[#86868B] sm:text-[15px]">
+            <p className="mt-1 text-[14px] text-muted sm:text-[15px]">
               {isEditing ? 'Contacto, información fiscal y sucursales' : 'Crea el usuario cliente automáticamente'}
             </p>
           </div>
@@ -300,7 +300,7 @@ export const CustomerFormPage = () => {
           type="button"
           onClick={() => void persistCustomer()}
           disabled={saveCustomer.isPending}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#0066CC] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           <Save className="h-4 w-4" />
           {saveCustomer.isPending ? 'Guardando...' : 'Guardar Cliente'}
@@ -338,10 +338,10 @@ export const CustomerFormPage = () => {
             type="button"
             disabled={tab.disabled}
             onClick={() => setActiveTab(tab.id)}
-            className={`h-9 min-w-[110px] flex-1 rounded-lg px-3 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`h-9 min-w-[110px] flex-1 rounded-lg px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
               activeTab === tab.id
-                ? 'bg-white text-[#1D1D1F] shadow-sm'
-                : 'text-[#86868B] hover:text-[#1D1D1F]'
+                ? 'bg-white text-ink shadow-sm'
+                : 'text-muted hover:text-ink'
             }`}
           >
             {tab.label}
@@ -356,12 +356,12 @@ export const CustomerFormPage = () => {
           className="rounded-2xl border border-gray-200/60 bg-white p-4 shadow-sm sm:p-6 md:p-8"
         >
           <div className="mb-5 flex min-w-0 items-start gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[#EEF4FF] text-[#1E5EFF]">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-accent/8 text-accent">
               <UserRound className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-base font-semibold text-[#1D1D1F]">Información general</h2>
-              <p className="mt-1 text-sm text-[#86868B]">Nombre, correo, teléfono y estado del cliente</p>
+              <h2 className="text-base font-semibold text-ink">Información general</h2>
+              <p className="mt-1 text-sm text-muted">Nombre, correo, teléfono y estado del cliente</p>
             </div>
           </div>
 
@@ -397,7 +397,7 @@ export const CustomerFormPage = () => {
               onChange={(value) => setForm((current) => ({ ...current, password: value }))}
               className="sm:col-span-2"
             />
-            {isEditing && <p className="-mt-2 text-xs text-[#86868B] sm:col-span-2">Déjala vacía para conservar la contraseña actual.</p>}
+            {isEditing && <p className="-mt-2 text-xs text-muted sm:col-span-2">Déjala vacía para conservar la contraseña actual.</p>}
           </div>
 
           <div className="mt-5 grid gap-2 sm:grid-cols-2">
@@ -570,7 +570,7 @@ export const CustomerFormPage = () => {
 const BackLink = () => (
   <Link
     to="/customers"
-    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#86868B] transition-colors hover:bg-gray-200/50 hover:text-[#1D1D1F]"
+    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-gray-200/50 hover:text-ink"
   >
     <ArrowLeft className="h-5 w-5" />
   </Link>
@@ -606,17 +606,17 @@ const FiscalProfileCard = ({
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h4 className="truncate text-sm font-semibold text-[#1D1D1F]">{profile.legal_name}</h4>
+          <h4 className="truncate text-sm font-semibold text-ink">{profile.legal_name}</h4>
           {profile.is_default && <SmallBadge label="Predeterminado" />}
           <StatusBadge status={profile.is_active ? 'ACTIVE' : 'INACTIVE'} />
         </div>
-        <p className="mt-1 text-[12px] font-medium text-[#0066CC]">{profile.rfc}</p>
-        <p className="mt-1 text-[12px] text-[#86868B]">
+        <p className="mt-1 text-[12px] font-medium text-accent">{profile.rfc}</p>
+        <p className="mt-1 text-[12px] text-muted">
           {fiscalPersonTypeLabels[profile.person_type]} - {getFiscalRegimeLabel(profile.tax_regime)} - CP {profile.fiscal_zip_code}
         </p>
-        <p className="mt-1 text-[12px] text-[#86868B]">{getCfdiUseLabel(profile.cfdi_use)}</p>
-        <p className="mt-1 truncate text-[12px] text-[#424245]">{profile.billing_email}</p>
-        {billingAddress && <p className="mt-1 line-clamp-2 text-[12px] text-[#424245]">{billingAddress}</p>}
+        <p className="mt-1 text-[12px] text-muted">{getCfdiUseLabel(profile.cfdi_use)}</p>
+        <p className="mt-1 truncate text-[12px] text-ink-2">{profile.billing_email}</p>
+        {billingAddress && <p className="mt-1 line-clamp-2 text-[12px] text-ink-2">{billingAddress}</p>}
       </div>
       <div className="flex justify-end gap-2">
         <IconButton title="Editar" onClick={onEdit}>
@@ -657,27 +657,27 @@ const BranchCard = ({
     <article className="rounded-lg border border-gray-200/70 bg-white p-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-3">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-[#F5F5F7]">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-canvas">
             {imageUrl ? (
               <img src={imageUrl} alt={branch.name} className="h-full w-full object-cover" />
             ) : (
-              <ImageIcon className="h-6 w-6 text-[#86868B]" />
+              <ImageIcon className="h-6 w-6 text-muted" />
             )}
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h4 className="truncate text-sm font-semibold text-[#1D1D1F]">{branch.name}</h4>
+              <h4 className="truncate text-sm font-semibold text-ink">{branch.name}</h4>
               {branch.is_main && <SmallBadge label="Principal" />}
               <StatusBadge status={branch.is_active ? 'ACTIVE' : 'INACTIVE'} />
             </div>
-            <p className="mt-1 text-[12px] text-[#424245]">{branch.manager_name || 'Sin encargado'}</p>
-            <p className="mt-1 text-[12px] text-[#86868B]">
+            <p className="mt-1 text-[12px] text-ink-2">{branch.manager_name || 'Sin encargado'}</p>
+            <p className="mt-1 text-[12px] text-muted">
               {branch.phone_primary}
               {branch.phone_secondary ? ` / ${branch.phone_secondary}` : ''}
             </p>
-            <p className="mt-1 line-clamp-2 text-[12px] text-[#424245]">{address || 'Dirección pendiente'}</p>
+            <p className="mt-1 line-clamp-2 text-[12px] text-ink-2">{address || 'Dirección pendiente'}</p>
             {route && (
-              <p className="mt-1 inline-flex max-w-full items-center gap-1.5 text-[12px] font-medium text-[#0066CC]">
+              <p className="mt-1 inline-flex max-w-full items-center gap-1.5 text-[12px] font-medium text-accent">
                 <Route className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">
                   {route.code} - {route.name}
@@ -850,7 +850,7 @@ const FiscalFormModal = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block min-w-0">
-            <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Tipo de persona</span>
+            <span className="mb-1.5 block text-[13px] font-medium text-ink">Tipo de persona</span>
             <select
               value={form.person_type}
               onChange={(event) =>
@@ -868,7 +868,7 @@ const FiscalFormModal = ({
                   };
                 })
               }
-              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
             >
               <option value="INDIVIDUAL">Persona física</option>
               <option value="LEGAL_ENTITY">Persona moral</option>
@@ -915,8 +915,8 @@ const FiscalFormModal = ({
 
         <div className="rounded-xl border border-gray-200 bg-white p-3">
           <div className="mb-3">
-            <h3 className="text-sm font-semibold text-[#1D1D1F]">Dirección de facturación</h3>
-            <p className="mt-0.5 text-[12px] text-[#86868B]">Captura el código postal para completar estado, municipio y colonia.</p>
+            <h3 className="text-sm font-semibold text-ink">Dirección de facturación</h3>
+            <p className="mt-0.5 text-[12px] text-muted">Captura el código postal para completar estado, municipio y colonia.</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="min-w-0 sm:col-span-2">
@@ -928,7 +928,7 @@ const FiscalFormModal = ({
                 maxLength={5}
                 onChange={handleFiscalZipCodeChange}
               />
-              {isBillingPostalLoading && <p className="mt-1 text-[12px] text-[#86868B]">Consultando código postal...</p>}
+              {isBillingPostalLoading && <p className="mt-1 text-[12px] text-muted">Consultando código postal...</p>}
               {billingPostalError && <p className="mt-1 text-[12px] text-red-600">{billingPostalError}</p>}
             </div>
             <TextInput label="Calle" value={form.billing_street || ''} required={false} maxLength={120} onChange={(value) => setForm((current) => ({ ...current, billing_street: value }))} />
@@ -938,12 +938,12 @@ const FiscalFormModal = ({
             <TextInput label="Municipio o alcaldía" value={form.billing_municipality || ''} required={false} maxLength={90} disabled={billingNeighborhoods.length > 0} onChange={(value) => setForm((current) => ({ ...current, billing_municipality: value }))} />
             {billingNeighborhoods.length ? (
               <label className="block min-w-0 sm:col-span-2">
-                <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Colonia</span>
+                <span className="mb-1.5 block text-[13px] font-medium text-ink">Colonia</span>
                 <select
                   value={form.billing_neighborhood || ''}
                   disabled={billingNeighborhoods.length === 1}
                   onChange={(event) => setForm((current) => ({ ...current, billing_neighborhood: event.target.value }))}
-                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 disabled:bg-gray-50 disabled:text-[#86868B]"
+                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 disabled:bg-gray-50 disabled:text-muted"
                 >
                   {billingNeighborhoods.map((neighborhood) => (
                     <option key={neighborhood} value={neighborhood}>
@@ -1035,9 +1035,9 @@ const BranchQrModal = ({
   return (
     <Modal isOpen onClose={onClose} title="QR de sucursal" size="lg">
       <div className="space-y-4">
-        <div className="rounded-lg border border-gray-200 bg-[#F5F5F7] p-3">
-          <p className="truncate text-sm font-semibold text-[#1D1D1F]">{customerName}</p>
-          <p className="mt-1 truncate text-[12px] text-[#86868B]">{routeLabel}</p>
+        <div className="rounded-lg border border-gray-200 bg-canvas p-3">
+          <p className="truncate text-sm font-semibold text-ink">{customerName}</p>
+          <p className="mt-1 truncate text-[12px] text-muted">{routeLabel}</p>
         </div>
         <div className="flex min-h-[300px] items-center justify-center rounded-lg border border-gray-200 bg-white p-4">
           {qrError ? (
@@ -1053,7 +1053,7 @@ const BranchQrModal = ({
             href={payload}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
           >
             <ExternalLink className="h-4 w-4" />
             Abrir enlace
@@ -1062,7 +1062,7 @@ const BranchQrModal = ({
             type="button"
             onClick={downloadQr}
             disabled={!qrUrl}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             <Download className="h-4 w-4" />
             Descargar QR
@@ -1091,18 +1091,18 @@ const RelatedSection = ({
   <div className="rounded-2xl border border-gray-200/60 bg-white p-4 shadow-sm sm:p-6">
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0066CC]/10 text-[#0066CC]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
           {icon}
         </div>
         <div className="min-w-0">
-          <h3 className="text-base font-semibold tracking-tight text-[#1D1D1F]">{title}</h3>
-          <p className="mt-0.5 text-[13px] text-[#86868B]">{description}</p>
+          <h3 className="text-base font-semibold tracking-tight text-ink">{title}</h3>
+          <p className="mt-0.5 text-[13px] text-muted">{description}</p>
         </div>
       </div>
       <button
         type="button"
         onClick={onAction}
-        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-[13px] font-semibold text-[#1D1D1F] transition-colors hover:bg-gray-50"
+        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-[13px] font-semibold text-ink transition-colors hover:bg-gray-50"
       >
         <Plus className="h-4 w-4" />
         {actionLabel}
@@ -1142,7 +1142,7 @@ const TextInput = ({
   disabled?: boolean;
 }) => (
   <label className={`block min-w-0 ${className}`}>
-    <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+    <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
     <input
       type={type}
       value={value}
@@ -1155,7 +1155,7 @@ const TextInput = ({
       inputMode={inputMode}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
-      className="h-10 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 disabled:bg-gray-50 disabled:text-[#86868B]"
+      className="h-10 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 disabled:bg-gray-50 disabled:text-muted"
     />
   </label>
 );
@@ -1174,9 +1174,9 @@ const CheckboxField = ({
       type="checkbox"
       checked={checked}
       onChange={(event) => onChange(event.target.checked)}
-      className="h-4 w-4 rounded border-gray-300 text-[#0066CC] focus:ring-[#0066CC]"
+      className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
     />
-    <span className="text-sm font-medium text-[#1D1D1F]">{label}</span>
+    <span className="text-sm font-medium text-ink">{label}</span>
   </label>
 );
 
@@ -1193,14 +1193,14 @@ const ModalActions = ({
     <button
       type="button"
       onClick={onClose}
-      className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
+      className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
     >
       Cancelar
     </button>
     <button
       type="submit"
       disabled={isPending}
-      className="h-10 rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+      className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
     >
       {isPending ? 'Guardando...' : submitLabel}
     </button>
@@ -1243,19 +1243,19 @@ const FormError = ({ message }: { message: string }) => (
 );
 
 const SmallBadge = ({ label }: { label: string }) => (
-  <span className="rounded-full bg-[#0066CC]/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#0066CC]">
+  <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-accent">
     {label}
   </span>
 );
 
 const LoadingBlock = ({ label }: { label: string }) => (
-  <div className="rounded-lg border border-gray-200 bg-[#F5F5F7] px-3 py-4 text-center text-sm text-[#86868B]">
+  <div className="rounded-lg border border-gray-200 bg-canvas px-3 py-4 text-center text-sm text-muted">
     {label}
   </div>
 );
 
 const InlineEmpty = ({ message }: { message: string }) => (
-  <div className="rounded-lg border border-dashed border-gray-300 bg-[#F5F5F7] px-3 py-5 text-center text-sm text-[#86868B]">
+  <div className="rounded-lg border border-dashed border-gray-300 bg-canvas px-3 py-5 text-center text-sm text-muted">
     {message}
   </div>
 );

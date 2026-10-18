@@ -179,8 +179,8 @@ export const RouteDebtsPage = () => {
       header: 'Cliente / Sucursal',
       cell: (item) => (
         <div>
-          <p className="font-semibold text-[#1D1D1F] text-sm">{item.customers?.name || 'Cliente'}</p>
-          <div className="flex items-center gap-1 text-[12px] text-[#86868B] mt-0.5">
+          <p className="font-semibold text-ink text-sm">{item.customers?.name || 'Cliente'}</p>
+          <div className="flex items-center gap-1 text-[12px] text-muted mt-0.5">
             <MapPin className="h-3.5 w-3.5 text-gray-400" />
             <span>{item.customer_branches?.name || 'Sucursal Principal'}</span>
           </div>
@@ -192,7 +192,7 @@ export const RouteDebtsPage = () => {
       cell: (item) => (
         <div>
           <span className="font-mono text-xs font-semibold text-gray-800">#{item.id.slice(0, 8)}</span>
-          <p className="text-[11px] text-[#86868B]">
+          <p className="text-[11px] text-muted">
             {item.payment_type === 'CREDITO' ? `Crédito ${item.credit_term_days || 15}d (Límite: ${item.due_date || 'N/D'})` : 'Contado'}
           </p>
         </div>
@@ -200,18 +200,18 @@ export const RouteDebtsPage = () => {
     },
     {
       header: 'Total',
-      cell: (item) => <span className="font-medium text-[#1D1D1F]">{formatCurrency(item.totalCost)}</span>,
+      cell: (item) => <span className="font-medium text-ink">{formatCurrency(item.totalCost)}</span>,
       className: 'text-right',
     },
     {
       header: 'Cobrado',
-      cell: (item) => <span className="font-medium text-[#1D1D1F]">{formatCurrency(item.amountPaid)}</span>,
+      cell: (item) => <span className="font-medium text-ink">{formatCurrency(item.amountPaid)}</span>,
       className: 'text-right',
     },
     {
       header: 'Saldo Pendiente',
       cell: (item) => (
-        <span className="font-semibold text-[#1D1D1F]">
+        <span className="font-semibold text-ink">
           {formatCurrency(item.remainingBalance)}
         </span>
       ),
@@ -229,7 +229,7 @@ export const RouteDebtsPage = () => {
             <button
               type="button"
               onClick={() => handleOpenPaymentModal(item)}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0066CC] px-3 text-xs font-semibold text-white transition-colors hover:bg-[#0057AD]"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-3 text-xs font-semibold text-white transition-colors hover:bg-accent-hover"
             >
               <DollarSign className="h-3.5 w-3.5" />
               Cobrar en Ruta
@@ -253,19 +253,19 @@ export const RouteDebtsPage = () => {
     <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">
+          <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">
             Cobranza de Ruta
           </h2>
-          <p className="text-[14px] text-[#86868B] sm:text-[15px]">
+          <p className="text-[14px] text-muted sm:text-[15px]">
             Gestión de adeudos y cobros de sucursales en la ruta asignada.
           </p>
         </div>
 
         <div className="flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
-          <Route className="h-4 w-4 text-[#0066CC]" />
+          <Route className="h-4 w-4 text-accent" />
           <div className="min-w-0">
-            <p className="text-[11px] text-[#86868B]">Ruta asignada de la semana</p>
-            <p className="text-sm font-semibold text-[#1D1D1F]">{isLoadingTrip ? 'Cargando...' : assignedTrip ? `${assignedTrip.routes?.code} - ${assignedTrip.routes?.name} · ${assignedTrip.week_start_date} al ${assignedTrip.week_end_date}` : tripError ? 'No se pudo consultar la ruta' : 'Sin ruta asignada esta semana'}</p>
+            <p className="text-[11px] text-muted">Ruta asignada de la semana</p>
+            <p className="text-sm font-semibold text-ink">{isLoadingTrip ? 'Cargando...' : assignedTrip ? `${assignedTrip.routes?.code} - ${assignedTrip.routes?.name} · ${assignedTrip.week_start_date} al ${assignedTrip.week_end_date}` : tripError ? 'No se pudo consultar la ruta' : 'Sin ruta asignada esta semana'}</p>
           </div>
         </div>
       </div>
@@ -274,42 +274,42 @@ export const RouteDebtsPage = () => {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Adeudo en Ruta
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <Wallet className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {formatCurrency(metrics.totalToCollect)}
           </p>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Vencido en Ruta
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <AlertTriangle className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {formatCurrency(metrics.overdueToCollect)}
           </p>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Total Cobrado
             </span>
-            <div className="p-2 text-[#1D1D1F]">
+            <div className="p-2 text-ink">
               <CheckCircle2 className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold tracking-tight text-[#1D1D1F]">
+          <p className="mt-3 text-2xl font-bold tracking-tight text-ink">
             {formatCurrency(metrics.totalCollected)}
           </p>
         </div>
@@ -322,7 +322,7 @@ export const RouteDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('PENDING')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'PENDING' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'PENDING' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Pendientes
@@ -331,7 +331,7 @@ export const RouteDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('OVERDUE')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'OVERDUE' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'OVERDUE' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Retrasados
@@ -340,7 +340,7 @@ export const RouteDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('PAID')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'PAID' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'PAID' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Pagados
@@ -349,15 +349,15 @@ export const RouteDebtsPage = () => {
             type="button"
             onClick={() => setActiveTab('ALL')}
             className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
-              activeTab === 'ALL' ? 'bg-[#0066CC] text-white shadow-sm' : 'text-[#86868B] hover:text-[#1D1D1F]'
+              activeTab === 'ALL' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-ink'
             }`}
           >
             Todos
           </button>
         </div>
 
-        <label className="flex h-11 w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 shadow-sm focus-within:border-[#0066CC] focus-within:ring-2 focus-within:ring-[#0066CC]/15 sm:w-72">
-          <Search className="h-4 w-4 text-[#86868B]" />
+        <label className="flex h-11 w-full items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 shadow-sm focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15 sm:w-72">
+          <Search className="h-4 w-4 text-muted" />
           <input
             type="text"
             placeholder="Buscar por cliente o sucursal..."
@@ -389,13 +389,13 @@ export const RouteDebtsPage = () => {
         >
           <form onSubmit={handleCollectPayment} className="space-y-4">
             <div className="rounded-lg border border-gray-200/60 bg-gray-50 p-3 text-xs space-y-1">
-              <p className="font-semibold text-[#1D1D1F]">
+              <p className="font-semibold text-ink">
                 Cliente: {selectedOrderForPayment.customers?.name || 'Cliente'}
               </p>
-              <p className="text-[#86868B]">
+              <p className="text-muted">
                 Sucursal: {selectedOrderForPayment.customer_branches?.name || 'Principal'}
               </p>
-              <p className="text-[#86868B]">
+              <p className="text-muted">
                 Pedido: #{selectedOrderForPayment.id.slice(0, 8)}
               </p>
             </div>
@@ -410,7 +410,7 @@ export const RouteDebtsPage = () => {
                     value="CASH"
                     checked={paymentMethod === 'CASH'}
                     onChange={() => setPaymentMethod('CASH')}
-                    className="text-[#0066CC] focus:ring-[#0066CC]"
+                    className="text-accent focus:ring-accent"
                   />
                   <span className="text-sm text-gray-700">Efectivo (Automático)</span>
                 </label>
@@ -421,7 +421,7 @@ export const RouteDebtsPage = () => {
                     value="TRANSFER"
                     checked={paymentMethod === 'TRANSFER'}
                     onChange={() => setPaymentMethod('TRANSFER')}
-                    className="text-[#0066CC] focus:ring-[#0066CC]"
+                    className="text-accent focus:ring-accent"
                   />
                   <span className="text-sm text-gray-700">Transferencia</span>
                 </label>
@@ -446,7 +446,7 @@ export const RouteDebtsPage = () => {
                   required
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="pl-8 w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-sm font-semibold text-[#1D1D1F]"
+                  className="pl-8 w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-sm font-semibold text-ink"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
@@ -481,7 +481,7 @@ export const RouteDebtsPage = () => {
               <button
                 type="submit"
                 disabled={isSubmittingPayment}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#005bb5] disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors"
               >
                 {isSubmittingPayment ? (
                   <>

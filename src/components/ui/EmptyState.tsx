@@ -14,12 +14,12 @@ export const EmptyState = ({
   action
 }: Props) => {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-gray-100 shadow-sm">
-      <div className="w-12 h-12 mb-4 rounded-full bg-gray-50 flex items-center justify-center">
-        {icon || <FolderSearch className="w-6 h-6 text-gray-400" />}
+    <div className="flex flex-col items-center justify-center rounded-2xl bg-white px-6 py-14 text-center shadow-sm ring-1 ring-black/[0.04] animate-fade-in">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
+        {icon || <FolderSearch className="h-7 w-7" strokeWidth={1.6} />}
       </div>
-      <h3 className="text-lg font-semibold text-[#1D1D1F] tracking-tight">{title}</h3>
-      <p className="mt-1 text-[13px] text-[#86868B] max-w-sm">{description}</p>
+      <h3 className="text-[17px] font-semibold text-ink">{title}</h3>
+      <p className="mt-1 max-w-sm text-[14px] leading-relaxed text-muted">{description}</p>
       {action && <div className="mt-6">{action}</div>}
     </div>
   );

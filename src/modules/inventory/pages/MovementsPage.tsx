@@ -63,7 +63,7 @@ export const MovementsPage = () => {
     },
     { 
       header: 'Valor unitario',
-      cell: (item) => <span>{item.unit_cost != null ? formatCurrency(item.unit_cost) : 'Sin costo'}<span className="block text-[11px] text-[#86868B]">{item.movement_type === 'TRANSFER_IN' ? 'Precio interno' : item.movement_type === 'PURCHASE' ? 'Compra' : 'Costo del almacén'}</span></span>,
+      cell: (item) => <span>{item.unit_cost != null ? formatCurrency(item.unit_cost) : 'Sin costo'}<span className="block text-[11px] text-muted">{item.movement_type === 'TRANSFER_IN' ? 'Precio interno' : item.movement_type === 'PURCHASE' ? 'Compra' : 'Costo del almacén'}</span></span>,
       className: 'text-right text-slate-500'
     }
   ];
@@ -72,8 +72,8 @@ export const MovementsPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Movimientos</h2>
-          <p className="text-[15px] text-[#86868B]">Compras en el principal, traspasos al secundario y salidas por venta</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">Movimientos</h2>
+          <p className="text-[15px] text-muted">Compras en el principal, traspasos al secundario y salidas por venta</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -84,7 +84,7 @@ export const MovementsPage = () => {
             <select
               value={selectedWarehouse}
               onChange={(e) => setSelectedWarehouse(e.target.value)}
-              className="pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[13px] text-gray-700 shadow-sm transition-all appearance-none cursor-pointer hover:bg-gray-50"
+              className="pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 text-[13px] text-gray-700 shadow-sm transition appearance-none cursor-pointer hover:bg-gray-50"
             >
               <option value="">Todos los almacenes</option>
               {warehouses?.map(w => (
@@ -95,7 +95,7 @@ export const MovementsPage = () => {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0055FF] transition-colors text-[14px] font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors text-[14px] font-medium"
           >
             <Plus className="w-4 h-4" />
             Nuevo Movimiento

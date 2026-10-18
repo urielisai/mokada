@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { usePresence } from '../../hooks/usePresence';
 
 interface Props {
   isOpen: boolean;
@@ -18,6 +19,8 @@ const modalSizeClasses: Record<string, string> = {
 };
 
 export const Modal = ({ isOpen, onClose, title, children, maxWidth, size = 'md' }: Props) => {
+  const { isMounted, state } = usePresence(isOpen);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -29,29 +32,40 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth, size = 'md' 
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isMounted) return null;
 
   const widthClass = maxWidth || modalSizeClasses[size] || size;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
-      <div 
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 ${isOpen ? '' : 'pointer-events-none'}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title || undefined}
+    >
+      <div
+        data-state={state}
+        className="overlay-scrim absolute inset-0 bg-black/30 backdrop-blur-[6px]"
         onClick={onClose}
       />
-      
-      <div className={`relative w-full min-w-0 max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] ${widthClass} bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all`}>
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-gray-100">
-          <h3 className="text-[17px] font-semibold text-[#1D1D1F]">{title}</h3>
+
+      <div
+        data-state={state}
+        className={`overlay-dialog relative w-full min-w-0 max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2rem)] ${widthClass} overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5`}
+      >
+        <div className={`flex items-center justify-between gap-3 px-5 sm:px-6 ${title ? 'pt-5 pb-3' : 'pt-4 pb-0'}`}>
+          <h3 className="text-[19px] font-semibold tracking-[-0.018em] text-ink">{title}</h3>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Cerrar"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-ink"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4 w-4" strokeWidth={2.4} />
           </button>
         </div>
-        
-        <div className="px-4 sm:px-6 py-4 max-h-[calc(100dvh-5rem)] sm:max-h-[calc(100dvh-6rem)] overflow-y-auto">
+
+        <div className="px-5 sm:px-6 pb-5 pt-2 max-h-[calc(100dvh-5rem)] sm:max-h-[calc(100dvh-6rem)] overflow-y-auto">
           {children}
         </div>
       </div>

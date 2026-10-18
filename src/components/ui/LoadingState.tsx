@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Spinner } from './Spinner';
 
 interface Props {
   message?: string;
@@ -7,8 +7,8 @@ interface Props {
 
 export const LoadingState = ({ message = 'Cargando...', className = '' }: Props) => {
   return (
-    <div className={`flex flex-col items-center justify-center p-8 text-[#86868B] min-h-[200px] bg-white rounded-2xl border border-gray-100 shadow-sm ${className}`}>
-      <Loader2 className="w-6 h-6 animate-spin text-[#0066CC] mb-3" />
+    <div className={`flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-2xl bg-white p-8 text-muted shadow-sm ring-1 ring-black/[0.04] animate-fade-in ${className}`}>
+      <Spinner className="h-6 w-6" label={message} />
       <p className="text-[13px]">{message}</p>
     </div>
   );

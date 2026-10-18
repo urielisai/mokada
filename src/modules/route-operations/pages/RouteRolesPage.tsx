@@ -64,8 +64,8 @@ export const RouteRolesPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Roles de Ruta</h2>
-        <p className="text-[15px] text-[#86868B]">Configura el orden de frecuencia (fija o quincenal) de las rutas asignadas a cada agente.</p>
+        <h2 className="text-[28px] font-bold tracking-tight text-ink">Roles de Ruta</h2>
+        <p className="text-[15px] text-muted">Configura el orden de frecuencia (fija o quincenal) de las rutas asignadas a cada agente.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -82,7 +82,7 @@ export const RouteRolesPage = () => {
                 key={agent.id}
                 onClick={() => setSelectedAgentId(agent.id)}
                 className={`w-full text-left px-4 py-3 text-sm transition-colors ${
-                  selectedAgentId === agent.id ? 'bg-[#0066CC]/5 border-l-2 border-[#0066CC]' : 'hover:bg-gray-50 border-l-2 border-transparent'
+                  selectedAgentId === agent.id ? 'bg-accent/5 border-l-2 border-accent' : 'hover:bg-gray-50 border-l-2 border-transparent'
                 }`}
               >
                 <div className="font-medium text-gray-900">{agent.first_name} {agent.last_name}</div>
@@ -103,7 +103,7 @@ export const RouteRolesPage = () => {
                 <button
                   onClick={handleSave}
                   disabled={saveMutation.isPending || agentRoutes.length === 0}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#0066CC] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#0055AA] disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
                 >
                   <Save className="h-4 w-4" />
                   {saveMutation.isPending ? 'Guardando...' : 'Guardar Orden'}
@@ -118,7 +118,7 @@ export const RouteRolesPage = () => {
                     onDragStart={(e) => handleDragStart(e, index)}
                     onDrop={(e) => handleDrop(e, index)}
                     onDragOver={handleDragOver}
-                    className={`flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all ${agentRoutes.length > 1 ? 'hover:border-[#0066CC] cursor-move' : ''}`}
+                    className={`flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition ${agentRoutes.length > 1 ? 'hover:border-accent cursor-move' : ''}`}
                   >
                     {agentRoutes.length > 1 && <GripVertical className="h-5 w-5 text-gray-400" />}
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600 shrink-0">

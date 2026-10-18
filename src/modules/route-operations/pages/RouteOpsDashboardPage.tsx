@@ -39,8 +39,8 @@ export const RouteOpsDashboardPage = () => {
       const isCurrency = payload[0].payload.valor !== undefined;
       return (
         <div className="bg-white border border-gray-200/60 shadow-lg rounded-xl p-3 text-[13px]">
-          <p className="font-semibold text-[#1D1D1F] mb-1">{label || payload[0].name}</p>
-          <p className="text-[#0066CC] font-medium">
+          <p className="font-semibold text-ink mb-1">{label || payload[0].name}</p>
+          <p className="text-accent font-medium">
             {isCurrency ? formatCurrency(payload[0].value) : `${payload[0].value} viajes`}
           </p>
         </div>
@@ -62,12 +62,12 @@ export const RouteOpsDashboardPage = () => {
       {/* Quick stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((card) => (
-          <Link key={card.label} to={card.link} className="group bg-white border border-gray-200/60 rounded-[20px] p-5 hover:shadow-md hover:border-gray-300 transition-all duration-200">
+          <Link key={card.label} to={card.link} className="group bg-white border border-gray-200/60 rounded-[20px] p-5 hover:shadow-md hover:border-gray-300 transition duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">{card.label}</h3>
-              <card.icon className="w-4 h-4 text-[#86868B]" />
+              <h3 className="text-[11px] font-semibold text-muted uppercase tracking-wider">{card.label}</h3>
+              <card.icon className="w-4 h-4 text-muted" />
             </div>
-            <p className="text-[28px] font-bold text-[#1D1D1F] tracking-tight">{card.value}</p>
+            <p className="text-[28px] font-bold text-ink tracking-tight">{card.value}</p>
           </Link>
         ))}
       </div>
@@ -78,8 +78,8 @@ export const RouteOpsDashboardPage = () => {
         {/* Gráfico 1: Estado de los viajes */}
         <div className="bg-white border border-gray-200/60 rounded-[24px] p-6 shadow-sm flex flex-col">
           <div className="flex items-center gap-2 mb-6">
-            <PieChartIcon className="w-4 h-4 text-[#86868B]" />
-            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Estado de los Viajes</h3>
+            <PieChartIcon className="w-4 h-4 text-muted" />
+            <h3 className="text-[14px] font-semibold text-ink">Estado de los Viajes</h3>
           </div>
           
           <div className="flex-1 min-h-[300px]">
@@ -104,7 +104,7 @@ export const RouteOpsDashboardPage = () => {
                   verticalAlign="bottom" 
                   height={36}
                   iconType="circle"
-                  formatter={(value) => <span className="text-[13px] text-[#1D1D1F] font-medium ml-1">{value}</span>}
+                  formatter={(value) => <span className="text-[13px] text-ink font-medium ml-1">{value}</span>}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -114,8 +114,8 @@ export const RouteOpsDashboardPage = () => {
         {/* Gráfico 2: Presupuesto vs Gastos */}
         <div className="bg-white border border-gray-200/60 rounded-[24px] p-6 shadow-sm flex flex-col">
           <div className="flex items-center gap-2 mb-6">
-            <BarChart2 className="w-4 h-4 text-[#86868B]" />
-            <h3 className="text-[14px] font-semibold text-[#1D1D1F]">Resumen Financiero</h3>
+            <BarChart2 className="w-4 h-4 text-muted" />
+            <h3 className="text-[14px] font-semibold text-ink">Resumen Financiero</h3>
           </div>
 
           <div className="flex-1 min-h-[300px]">
@@ -147,21 +147,21 @@ export const RouteOpsDashboardPage = () => {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Link to="/fleet/vehicles" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-[#0066CC]/30 transition-all">
-          <Truck className="w-5 h-5 text-[#0066CC]" />
-          <span className="text-[14px] font-medium text-[#1D1D1F]">Flotilla</span>
+        <Link to="/fleet/vehicles" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-accent/30 transition">
+          <Truck className="w-5 h-5 text-accent" />
+          <span className="text-[14px] font-medium text-ink">Flotilla</span>
         </Link>
-        <Link to="/route-operations/routes" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-[#0066CC]/30 transition-all">
-          <Route className="w-5 h-5 text-[#0066CC]" />
-          <span className="text-[14px] font-medium text-[#1D1D1F]">Rutas</span>
+        <Link to="/route-operations/routes" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-accent/30 transition">
+          <Route className="w-5 h-5 text-accent" />
+          <span className="text-[14px] font-medium text-ink">Rutas</span>
         </Link>
-        <Link to="/route-operations/trips" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-[#0066CC]/30 transition-all">
-          <Users className="w-5 h-5 text-[#0066CC]" />
-          <span className="text-[14px] font-medium text-[#1D1D1F]">Viajes</span>
+        <Link to="/route-operations/trips" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-accent/30 transition">
+          <Users className="w-5 h-5 text-accent" />
+          <span className="text-[14px] font-medium text-ink">Viajes</span>
         </Link>
-        <Link to="/route-operations/settlements" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-[#0066CC]/30 transition-all">
-          <ClipboardCheck className="w-5 h-5 text-[#0066CC]" />
-          <span className="text-[14px] font-medium text-[#1D1D1F]">Liquidaciones</span>
+        <Link to="/route-operations/settlements" className="flex items-center gap-3 bg-white border border-gray-200/60 rounded-xl p-4 hover:shadow-sm hover:border-accent/30 transition">
+          <ClipboardCheck className="w-5 h-5 text-accent" />
+          <span className="text-[14px] font-medium text-ink">Liquidaciones</span>
         </Link>
       </div>
     </div>

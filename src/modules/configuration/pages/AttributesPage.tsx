@@ -64,7 +64,7 @@ export const AttributesPage = () => {
         <div className="flex justify-end gap-2">
           <button
             onClick={() => handleEdit(item)}
-            className="p-1.5 text-slate-400 hover:text-[#0066CC] hover:bg-blue-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-accent hover:bg-blue-50 rounded-lg transition-colors"
             title="Editar atributo"
           >
             <Edit2 className="w-4 h-4" />
@@ -86,15 +86,15 @@ export const AttributesPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Atributos</h2>
-          <p className="text-[15px] text-[#86868B]">Características configurables para productos</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">Atributos</h2>
+          <p className="text-[15px] text-muted">Características configurables para productos</p>
         </div>
         <button
           onClick={() => {
             setSelectedAttribute(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0055FF] transition-colors text-[14px] font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors text-[14px] font-medium"
         >
           <Plus className="w-4 h-4" />
           Nuevo Atributo

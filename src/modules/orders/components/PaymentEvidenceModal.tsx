@@ -77,7 +77,7 @@ export const PaymentEvidenceModal = ({ isOpen, onClose, totalAmount, amountPaid,
               required
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="pl-8 w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC]"
+              className="pl-8 w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ export const PaymentEvidenceModal = ({ isOpen, onClose, totalAmount, amountPaid,
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#0055AA] disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-hover disabled:opacity-50"
           >
             {isSubmitting ? (
               <>

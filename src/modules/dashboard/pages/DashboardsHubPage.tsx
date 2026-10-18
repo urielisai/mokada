@@ -27,8 +27,8 @@ export const DashboardsHubPage = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Análisis y Métricas</h2>
-          <p className="text-[15px] text-[#86868B] mt-1">Control integral del rendimiento del negocio</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">Análisis y Métricas</h2>
+          <p className="text-[15px] text-muted mt-1">Control integral del rendimiento del negocio</p>
         </div>
       </div>
 
@@ -41,10 +41,10 @@ export const DashboardsHubPage = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium transition duration-200 ${
                 isActive
-                  ? 'bg-white text-[#1D1D1F] shadow-sm ring-1 ring-black/5'
-                  : 'text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5'
+                  ? 'bg-white text-ink shadow-sm ring-1 ring-black/5'
+                  : 'text-muted hover:text-ink hover:bg-black/5'
               }`}
             >
               <Icon className="w-4 h-4" />

@@ -27,7 +27,7 @@ export const UserAvatar = ({ firstName, lastName, avatarPath, className, imageCl
   return (
     <div
       className={cn(
-        'flex h-9 w-9 items-center justify-center rounded-full bg-[#0066CC]/10 text-[12px] font-semibold text-[#0066CC]',
+        'flex h-9 w-9 items-center justify-center rounded-full bg-accent/10 text-[12px] font-semibold text-accent',
         className,
       )}
     >

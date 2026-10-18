@@ -140,7 +140,7 @@ export const VehicleExpenseDetailPage = () => {
                         <p className="text-xs text-gray-500">{attachment.attachment_type === 'PHOTO' ? 'Imagen' : 'Comprobante'}</p>
                       </div>
                     </div>
-                    <a href={attachment.url} target="_blank" rel="noreferrer" className="shrink-0 text-sm font-medium text-[#0066CC] hover:underline">
+                    <a href={attachment.url} target="_blank" rel="noreferrer" className="shrink-0 text-sm font-medium text-accent hover:underline">
                       Ver archivo
                     </a>
                   </li>

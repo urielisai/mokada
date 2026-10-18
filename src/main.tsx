@@ -13,7 +13,24 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <RouterProvider router={router} />
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-center"
+          gutter={10}
+          toastOptions={{
+            className: 'material-popover',
+            style: {
+              borderRadius: '9999px',
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: '#1D1D1F',
+              background: 'rgb(255 255 255 / 0.86)',
+              boxShadow: '0 0 0 0.5px rgb(0 0 0 / 0.08), 0 12px 32px -8px rgb(0 0 0 / 0.18)',
+            },
+            success: { iconTheme: { primary: '#34C759', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#FF3B30', secondary: '#fff' } },
+          }}
+        />
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,

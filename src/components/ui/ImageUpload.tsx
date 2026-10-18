@@ -103,7 +103,7 @@ export const ImageUpload = ({ value, onChange, onClear, disabled = false, classN
         <div
           className={`w-full h-full min-h-[160px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-4 transition-colors cursor-pointer
             ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200' : ''}
-            ${isDragging ? 'border-[#0066CC] bg-[#0066CC]/5' : 'border-gray-300 hover:border-[#0066CC]/50 hover:bg-gray-50'}
+            ${isDragging ? 'border-accent bg-accent/5' : 'border-gray-300 hover:border-accent/50 hover:bg-gray-50'}
           `}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -114,10 +114,10 @@ export const ImageUpload = ({ value, onChange, onClear, disabled = false, classN
           <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3">
             <ImageIcon className="w-6 h-6 text-gray-400" />
           </div>
-          <p className="text-[14px] font-medium text-[#1D1D1F] text-center mb-1">
+          <p className="text-[14px] font-medium text-ink text-center mb-1">
             Sube o toma una foto
           </p>
-          <p className="text-[12px] text-[#86868B] text-center">
+          <p className="text-[12px] text-muted text-center">
             Haz clic o arrastra aquí
           </p>
         </div>

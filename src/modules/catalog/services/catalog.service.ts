@@ -2,11 +2,14 @@ import { supabase } from '../../../lib/supabase/client';
 import { storageService } from '../../../lib/supabase/storage';
 
 export const catalogService = {
-  async getProducts({ page = 1, pageSize = 25, search = '', brand = '', category = '' }) {
-    let query = supabase.from('product_search').select('*', { count: 'exact' });
+  // itemType: SALE = sale keys (ALM-02), PURCHASE = purchase codes (ALM-01, admin only via RLS).
+  async getProducts({ page = 1, pageSize = 25, search = '', brand = '', category = '', itemType = 'SALE', withCosts = false }) {
+    let query = supabase.from('product_search').select('*', { count: 'exact' }).eq('item_type', itemType);
     
     if (search) {
-      query = query.or(`code.ilike.%${search}%,name.ilike.%${search}%,barcode.ilike.%${search}%`);
+      // linked_codes lets admins find a sale key by its purchase code (and vice versa); it is empty for other roles.
+      const term = search.replace(/[,(){}"]/g, ' ').trim();
+      query = query.or(`code.ilike.%${term}%,name.ilike.%${term}%,barcode.ilike.%${term}%,linked_codes.cs.{"${term}"}`);
     } else {
       if (brand) {
         query = query.eq('brand', brand);
@@ -55,9 +58,33 @@ export const catalogService = {
           }
         });
       }
+
+      if (withCosts) {
+        // inventory_valuation only returns rows to admins.
+        const { data: costs } = await (supabase as any).from('inventory_valuation')
+          .select('product_id, average_cost')
+          .in('product_id', productIds);
+        const costByProduct = new Map<string, number>();
+        (costs || []).forEach((c: any) => {
+          if (c.average_cost != null && !costByProduct.has(c.product_id)) costByProduct.set(c.product_id, Number(c.average_cost));
+        });
+        data.forEach((d: any) => { d.cost = costByProduct.get(d.id) ?? null; });
+      }
     }
 
     return { data, count, nextPage };
+  },
+
+  // Sale keys to link from a purchase code.
+  async searchSaleProducts(query: string) {
+    let q = supabase.from('products').select('id, code, name').eq('item_type', 'SALE');
+    if (query) {
+      const term = query.replace(/[,()]/g, ' ').trim();
+      q = q.or(`code.ilike.%${term}%,name.ilike.%${term}%`);
+    }
+    const { data, error } = await q.order('code').limit(30);
+    if (error) throw error;
+    return data;
   },
 
   async getBrands() {
@@ -130,7 +157,19 @@ export const catalogService = {
       .eq('product_id', productId);
     if (fitError) throw fitError;
 
-    return { product, prices, inventory, fitments };
+    // Code <-> key links and costs are admin-only (RLS returns nothing to other roles).
+    const { data: links, error: linksError } = await (supabase as any)
+      .from('product_sale_links')
+      .select('id, is_default, purchase_product_id, sale_product_id, purchase:products!product_sale_links_purchase_product_id_fkey(id, code, name), sale:products!product_sale_links_sale_product_id_fkey(id, code, name)')
+      .or(`purchase_product_id.eq.${productId},sale_product_id.eq.${productId}`);
+    if (linksError) throw linksError;
+
+    const { data: costs } = await (supabase as any)
+      .from('inventory_valuation')
+      .select('warehouse_id, warehouse_name, average_cost, original_average_cost')
+      .eq('product_id', productId);
+
+    return { product, prices, inventory, fitments, links: links || [], costs: costs || [] };
   },
 
   async saveProductFull(payload: any) {
@@ -147,7 +186,9 @@ export const catalogService = {
       p_prices: payload.prices || null,
       p_inventory: payload.inventory || null,
       p_fitments: payload.fitments || null,
-      p_image_url: payload.image_url || null
+      p_image_url: payload.image_url || null,
+      p_item_type: payload.item_type || null,
+      p_sale_links: payload.sale_links ?? null
     });
     if (error) throw error;
     return data;

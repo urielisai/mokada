@@ -7,6 +7,11 @@ export type InventoryStock = Database['public']['Views']['inventory_available'][
   sale_prices: {price_list_id: string; name: string; amount: number}[];
 };
 
+export type SaleLink = {
+  purchase_product_id: string; sale_product_id: string; is_default: boolean;
+  sale: {id: string; code: string; name: string} | null;
+};
+
 async function readPages<T>(request: () => any): Promise<T[]> {
   const rows: T[] = [];
   for (let from = 0; ; from += 500) {
@@ -19,7 +24,7 @@ async function readPages<T>(request: () => any): Promise<T[]> {
 
 export const inventoryService = {
   async getInventoryProducts() {
-    return readPages<{id: string; code: string; name: string; image_url: string | null}>(() => supabase.from('products').select('id, code, name, image_url').eq('status', 'ACTIVE').order('id'));
+    return readPages<{id: string; code: string; name: string; image_url: string | null; item_type: string}>(() => supabase.from('products').select('id, code, name, image_url, item_type').eq('status', 'ACTIVE').order('id'));
   },
   async getStock() {
     const [stock, costs, prices, warehouses] = await Promise.all([
@@ -40,6 +45,13 @@ export const inventoryService = {
       warehouse_role: warehouseMap.get(row.warehouse_id!)?.warehouse_role || 'PURCHASE',
       default_price_list_id: warehouseMap.get(row.warehouse_id!)?.price_list_id || null,
       sale_prices: priceMap.get(row.product_id!) || []} satisfies InventoryStock));
+  },
+
+  // Purchase code -> sale key links (admin-only table).
+  async getSaleLinks() {
+    return readPages<SaleLink>(() => (supabase as any).from('product_sale_links')
+      .select('purchase_product_id, sale_product_id, is_default, sale:products!product_sale_links_sale_product_id_fkey(id, code, name)')
+      .order('id'));
   },
 
   async getMovements(warehouseId?: string) {
@@ -127,7 +139,7 @@ export const inventoryService = {
 
     const { data: items, error: itemsError } = await (supabase as any)
       .from('inventory_transfer_items')
-      .select('*, products(name, code, image_url)')
+      .select('*, products!inventory_transfer_items_product_id_fkey(name, code, image_url), destination:products!inventory_transfer_items_destination_product_id_fkey(id, name, code)')
       .eq('transfer_id', id);
     if (itemsError) throw itemsError;
 
@@ -139,7 +151,7 @@ export const inventoryService = {
     source_warehouse_id: string;
     destination_warehouse_id: string;
     notes?: string;
-    items: { product_id: string; quantity: number; unit_price?: number | null }[];
+    items: { product_id: string; destination_product_id?: string | null; quantity: number; unit_price?: number | null }[];
   }) {
     const {data, error} = await supabase.rpc('save_inventory_transfer', {p_payload: payload});
     if (error) throw error;
@@ -150,7 +162,7 @@ export const inventoryService = {
     source_warehouse_id: string;
     destination_warehouse_id: string;
     notes?: string;
-    items: { product_id: string; quantity: number; unit_price?: number | null }[];
+    items: { product_id: string; destination_product_id?: string | null; quantity: number; unit_price?: number | null }[];
   }) {
     const {data, error} = await supabase.rpc('save_inventory_transfer', {p_payload: payload, p_transfer_id: id});
     if (error) throw error;

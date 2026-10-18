@@ -72,7 +72,7 @@ export const TripDetailPage = () => {
   }, [trip?.route_id, trip?.week_start_date, trip?.week_end_date, trip?.agent?.auth_user_id]);
 
   if (isLoading) return <LoadingState message="Cargando viaje..." />;
-  if (!trip) return <div className="text-center py-12 text-[#86868B]">Viaje no encontrado</div>;
+  if (!trip) return <div className="text-center py-12 text-muted">Viaje no encontrado</div>;
 
   const cashPayments = payments.filter((p) => p.payment_method === 'CASH');
   const transferPayments = payments.filter((p) => p.payment_method === 'TRANSFER');
@@ -137,13 +137,13 @@ export const TripDetailPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link to="/route-operations/trips" className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <ArrowLeft className="w-5 h-5 text-[#86868B]" />
+            <ArrowLeft className="w-5 h-5 text-muted" />
           </Link>
           <div>
-            <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">
+            <h2 className="text-[28px] font-bold tracking-tight text-ink">
               {trip.routes?.code} — {trip.routes?.name}
             </h2>
-            <p className="text-[15px] text-[#86868B]">
+            <p className="text-[15px] text-muted">
               {startDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} – {endDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
@@ -153,7 +153,7 @@ export const TripDetailPage = () => {
           <button
             type="button"
             onClick={handleOpenPdfReport}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0066CC] px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#0055AA] shadow-sm"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover shadow-sm"
           >
             <FileText className="w-4 h-4" />
             Ver / Imprimir PDF
@@ -165,33 +165,33 @@ export const TripDetailPage = () => {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5">
-          <div className="flex items-center gap-2 text-[#86868B] mb-2">
+          <div className="flex items-center gap-2 text-muted mb-2">
             <User className="w-4 h-4" /> <span className="text-[12px] font-medium uppercase tracking-wide">Agente</span>
           </div>
-          <p className="text-[17px] font-semibold text-[#1D1D1F]">{trip.agent?.first_name} {trip.agent?.last_name}</p>
+          <p className="text-[17px] font-semibold text-ink">{trip.agent?.first_name} {trip.agent?.last_name}</p>
         </div>
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5">
-          <div className="flex items-center gap-2 text-[#86868B] mb-2">
+          <div className="flex items-center gap-2 text-muted mb-2">
             <Truck className="w-4 h-4" /> <span className="text-[12px] font-medium uppercase tracking-wide">Unidad</span>
           </div>
-          <p className="text-[17px] font-semibold text-[#1D1D1F]">{trip.vehicle?.internal_code || '—'}</p>
-          <p className="text-[13px] text-[#86868B]">{trip.vehicle?.brand} {trip.vehicle?.model}</p>
+          <p className="text-[17px] font-semibold text-ink">{trip.vehicle?.internal_code || '—'}</p>
+          <p className="text-[13px] text-muted">{trip.vehicle?.brand} {trip.vehicle?.model}</p>
         </div>
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5">
-          <div className="flex items-center gap-2 text-[#86868B] mb-2">
+          <div className="flex items-center gap-2 text-muted mb-2">
             <DollarSign className="w-4 h-4" /> <span className="text-[12px] font-medium uppercase tracking-wide">Presupuesto</span>
           </div>
-          <p className="text-[17px] font-semibold text-[#1D1D1F]">{formatCurrency(budget)}</p>
-          <p className="text-[13px] text-[#86868B]">Gastado: {formatCurrency(totalExpenses)}</p>
+          <p className="text-[17px] font-semibold text-ink">{formatCurrency(budget)}</p>
+          <p className="text-[13px] text-muted">Gastado: {formatCurrency(totalExpenses)}</p>
         </div>
         <div className="bg-white border border-gray-200/60 rounded-2xl p-5">
-          <div className="flex items-center gap-2 text-[#86868B] mb-2">
+          <div className="flex items-center gap-2 text-muted mb-2">
             <CalendarDays className="w-4 h-4" /> <span className="text-[12px] font-medium uppercase tracking-wide">Saldo Viáticos</span>
           </div>
           <p className={`text-[17px] font-semibold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {balance >= 0 ? '+' : ''}{formatCurrency(Math.abs(balance))}
           </p>
-          <p className="text-[13px] text-[#86868B]">{balance > 0 ? 'Agente devuelve' : balance < 0 ? 'Empresa reembolsa' : 'Balanceado'}</p>
+          <p className="text-[13px] text-muted">{balance > 0 ? 'Agente devuelve' : balance < 0 ? 'Empresa reembolsa' : 'Balanceado'}</p>
         </div>
       </div>
 
@@ -199,10 +199,10 @@ export const TripDetailPage = () => {
       <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div>
-            <h3 className="text-[17px] font-bold text-[#1D1D1F] flex items-center gap-2">
-              <Banknote className="w-5 h-5 text-[#0066CC]" /> Liquidación y Efectivo en Mano
+            <h3 className="text-[17px] font-bold text-ink flex items-center gap-2">
+              <Banknote className="w-5 h-5 text-accent" /> Liquidación y Efectivo en Mano
             </h3>
-            <p className="text-[13px] text-[#86868B] mt-0.5">
+            <p className="text-[13px] text-muted mt-0.5">
               Cálculo de cobros en ruta, gastos de viáticos y efectivo a entregar en caja.
             </p>
           </div>
@@ -210,34 +210,34 @@ export const TripDetailPage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
           <div className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#86868B]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
               Efectivo Cobrado
             </span>
-            <p className="mt-1 text-xl font-bold text-[#1D1D1F]">
+            <p className="mt-1 text-xl font-bold text-ink">
               {formatCurrency(totalCashCollected)}
             </p>
-            <span className="text-[11px] text-[#86868B]">
+            <span className="text-[11px] text-muted">
               {cashPayments.length} cobro(s) en efectivo
             </span>
           </div>
 
           <div className={`rounded-xl border ${balance >= 0 ? 'border-gray-100 bg-gray-50/70' : 'border-red-100 bg-red-50/70'} p-4`}>
-            <span className={`text-[11px] font-semibold uppercase tracking-wider ${balance >= 0 ? 'text-[#86868B]' : 'text-red-600'}`}>
+            <span className={`text-[11px] font-semibold uppercase tracking-wider ${balance >= 0 ? 'text-muted' : 'text-red-600'}`}>
               Gastos de Ruta
             </span>
-            <p className="mt-1 text-xl font-bold text-[#1D1D1F]">
+            <p className="mt-1 text-xl font-bold text-ink">
               {formatCurrency(totalExpenses)}
             </p>
-            <span className={`text-[11px] ${balance >= 0 ? 'text-[#86868B]' : 'text-red-600'}`}>
+            <span className={`text-[11px] ${balance >= 0 ? 'text-muted' : 'text-red-600'}`}>
               {balance >= 0 ? 'Viáticos rest.: ' : 'Excedente: '}{formatCurrency(Math.abs(balance))}
             </span>
           </div>
 
           <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-4">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0066CC]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-accent">
               Efectivo a Entregar en Caja
             </span>
-            <p className="mt-1 text-2xl font-bold text-[#0066CC]">
+            <p className="mt-1 text-2xl font-bold text-accent">
               {formatCurrency(netCashToDeliver)}
             </p>
             <span className="text-[11px] text-blue-800">
@@ -263,18 +263,18 @@ export const TripDetailPage = () => {
       {/* Stops / Itinerary */}
       {trip.stops && trip.stops.length > 0 && (
         <div className="bg-white border border-gray-200/60 rounded-2xl p-6">
-          <h3 className="text-[17px] font-semibold text-[#1D1D1F] mb-4 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-[#0066CC]" /> Itinerario
+          <h3 className="text-[17px] font-semibold text-ink mb-4 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-accent" /> Itinerario
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {trip.stops.map((stop: any, idx: number) => (
               <div key={stop.id} className="flex items-center gap-3 bg-gray-50/50 border border-gray-100 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#0066CC]/10 text-[#0066CC] text-[12px] font-bold shrink-0">
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-accent/10 text-accent text-[12px] font-bold shrink-0">
                   {idx + 1}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-medium text-[#1D1D1F] truncate">{stop.client_branches?.name || 'Parada'}</p>
-                  <p className="text-[11px] text-[#86868B] truncate">
+                  <p className="text-[13px] font-medium text-ink truncate">{stop.client_branches?.name || 'Parada'}</p>
+                  <p className="text-[11px] text-muted truncate">
                     {stop.client_branches?.city}{stop.client_branches?.city && stop.client_branches?.state ? ', ' : ''}{stop.client_branches?.state}
                   </p>
                 </div>
@@ -292,22 +292,22 @@ export const TripDetailPage = () => {
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left"
         >
           <div className="flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-[#0066CC]" />
-            <h3 className="text-[17px] font-semibold text-[#1D1D1F]">Cobros de la Ruta</h3>
-            <span className="text-xs bg-blue-50 text-[#0066CC] font-semibold px-2.5 py-0.5 rounded-full ml-1">
+            <Wallet className="w-5 h-5 text-accent" />
+            <h3 className="text-[17px] font-semibold text-ink">Cobros de la Ruta</h3>
+            <span className="text-xs bg-blue-50 text-accent font-semibold px-2.5 py-0.5 rounded-full ml-1">
               {payments.length}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <span className="text-[11px] text-[#86868B] block">Total cobrado</span>
-              <span className="text-[14px] font-bold text-[#1D1D1F]">{formatCurrency(totalCollected)}</span>
+              <span className="text-[11px] text-muted block">Total cobrado</span>
+              <span className="text-[14px] font-bold text-ink">{formatCurrency(totalCollected)}</span>
             </div>
             {isPaymentsOpen ? (
-              <ChevronUp className="w-5 h-5 text-[#86868B]" />
+              <ChevronUp className="w-5 h-5 text-muted" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-[#86868B]" />
+              <ChevronDown className="w-5 h-5 text-muted" />
             )}
           </div>
         </button>
@@ -315,29 +315,29 @@ export const TripDetailPage = () => {
         {isPaymentsOpen && (
           <div className="border-t border-gray-100">
             {isLoadingPayments ? (
-              <div className="px-6 py-8 text-center text-[#86868B]">Cargando cobros del viaje...</div>
+              <div className="px-6 py-8 text-center text-muted">Cargando cobros del viaje...</div>
             ) : payments && payments.length > 0 ? (
               <div className="divide-y divide-gray-100">
                 {payments.map((pmt: any) => (
                   <div key={pmt.id} className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] flex items-center justify-center text-[#86868B] shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-canvas flex items-center justify-center text-muted shrink-0">
                         {pmt.payment_method === 'CASH' ? (
-                          <Banknote className="w-5 h-5 text-[#1D1D1F]" />
+                          <Banknote className="w-5 h-5 text-ink" />
                         ) : (
-                          <Building2 className="w-5 h-5 text-[#0066CC]" />
+                          <Building2 className="w-5 h-5 text-accent" />
                         )}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-[14px] font-semibold text-[#1D1D1F]">
+                          <p className="text-[14px] font-semibold text-ink">
                             {pmt.sales_orders?.customers?.name || 'Cliente'}
                           </p>
-                          <span className="text-[12px] text-[#86868B]">
+                          <span className="text-[12px] text-muted">
                             ({pmt.sales_orders?.customer_branches?.name || 'Sucursal Principal'})
                           </span>
                         </div>
-                        <p className="text-[12px] text-[#86868B] mt-0.5">
+                        <p className="text-[12px] text-muted mt-0.5">
                           Pedido #{pmt.sales_orders?.id?.slice(0, 8) || pmt.sales_order_id?.slice(0, 8)} · {pmt.payment_method === 'CASH' ? 'Efectivo' : 'Transferencia'} · {formatRoutePaymentDate(pmt.created_at)}
                         </p>
                         {pmt.evidence_path && (
@@ -345,7 +345,7 @@ export const TripDetailPage = () => {
                             href={supabase.storage.from('payment-evidence').getPublicUrl(pmt.evidence_path).data.publicUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[12px] text-[#0066CC] hover:underline inline-block mt-0.5"
+                            className="text-[12px] text-accent hover:underline inline-block mt-0.5"
                           >
                             Ver comprobante
                           </a>
@@ -355,7 +355,7 @@ export const TripDetailPage = () => {
 
                     <div className="flex items-center justify-between sm:justify-end gap-4">
                       <div className="text-right">
-                        <p className="text-[15px] font-bold text-[#1D1D1F]">
+                        <p className="text-[15px] font-bold text-ink">
                           {formatCurrency(Number(pmt.amount))}
                         </p>
                         <StatusBadge status={pmt.status} className="text-[10px]" />
@@ -365,7 +365,7 @@ export const TripDetailPage = () => {
                 ))}
               </div>
             ) : (
-              <div className="px-6 py-8 text-center text-[#86868B]">
+              <div className="px-6 py-8 text-center text-muted">
                 No hay cobros registrados en esta semana de ruta.
               </div>
             )}
@@ -381,8 +381,8 @@ export const TripDetailPage = () => {
           className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors text-left"
         >
           <div className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-[#0066CC]" />
-            <h3 className="text-[17px] font-semibold text-[#1D1D1F]">Gastos registrados</h3>
+            <DollarSign className="w-5 h-5 text-accent" />
+            <h3 className="text-[17px] font-semibold text-ink">Gastos registrados</h3>
             <span className="text-xs bg-gray-100 text-gray-700 font-semibold px-2.5 py-0.5 rounded-full ml-1">
               {expenses?.length || 0}
             </span>
@@ -390,13 +390,13 @@ export const TripDetailPage = () => {
 
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <span className="text-[11px] text-[#86868B] block">Total gastado</span>
-              <span className="text-[14px] font-bold text-[#1D1D1F]">{formatCurrency(totalExpenses)}</span>
+              <span className="text-[11px] text-muted block">Total gastado</span>
+              <span className="text-[14px] font-bold text-ink">{formatCurrency(totalExpenses)}</span>
             </div>
             {isExpensesOpen ? (
-              <ChevronUp className="w-5 h-5 text-[#86868B]" />
+              <ChevronUp className="w-5 h-5 text-muted" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-[#86868B]" />
+              <ChevronDown className="w-5 h-5 text-muted" />
             )}
           </div>
         </button>
@@ -406,7 +406,7 @@ export const TripDetailPage = () => {
             {expenses && expenses.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-[13px] text-left min-w-[900px]">
-                  <thead className="bg-white border-b border-gray-200/60 text-[#86868B] font-semibold">
+                  <thead className="bg-white border-b border-gray-200/60 text-muted font-semibold">
                     <tr>
                       <th className="px-5 py-3.5">Fecha</th>
                       <th className="px-5 py-3.5">Categoría</th>
@@ -421,7 +421,7 @@ export const TripDetailPage = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {expenses.map((exp: any) => (
-                      <tr key={exp.id} className="hover:bg-[#F5F5F7]/50 transition-colors">
+                      <tr key={exp.id} className="hover:bg-canvas/50 transition-colors">
                         <td className="px-5 py-3.5 whitespace-nowrap">{new Date(exp.expense_date + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</td>
                         <td className="px-5 py-3.5 font-medium whitespace-nowrap">{exp.expense_categories?.name}</td>
                         <td className="px-5 py-3.5 whitespace-nowrap">{exp.place_name || exp.city || '—'}</td>
@@ -432,7 +432,7 @@ export const TripDetailPage = () => {
                           {exp.expense_attachments?.length > 0 && (
                             <button 
                               onClick={() => handleViewEvidence(exp.expense_attachments[0].storage_path)}
-                              className="inline-flex items-center gap-1 text-[#0066CC] hover:underline"
+                              className="inline-flex items-center gap-1 text-accent hover:underline"
                             >
                               <Paperclip className="w-3.5 h-3.5" /> {exp.expense_attachments.length}
                             </button>
@@ -453,7 +453,7 @@ export const TripDetailPage = () => {
                 </table>
               </div>
             ) : (
-              <div className="px-6 py-8 text-center text-[#86868B]">No hay gastos registrados para este viaje.</div>
+              <div className="px-6 py-8 text-center text-muted">No hay gastos registrados para este viaje.</div>
             )}
           </div>
         )}

@@ -2,9 +2,11 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 
 interface Props {
   warehouses: any[];
+  itemType: 'SALE' | 'PURCHASE';
 }
 
-export const ProductInventoryTab = ({ warehouses }: Props) => {
+// Purchase codes only live in purchase warehouses and sale keys in sales warehouses.
+export const ProductInventoryTab = ({ warehouses, itemType }: Props) => {
   const { control, register } = useFormContext();
   const { fields } = useFieldArray({
     control,
@@ -15,25 +17,27 @@ export const ProductInventoryTab = ({ warehouses }: Props) => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-[16px] font-semibold text-[#1D1D1F] mb-1">Topes de Inventario</h3>
-        <p className="text-[14px] text-[#86868B] mb-6">Define el stock mínimo y máximo permitido por almacén para las alertas de reabastecimiento. La cantidad inicial se carga vía Movimientos de Inventario.</p>
+        <h3 className="text-[16px] font-semibold text-ink mb-1">Topes de Inventario</h3>
+        <p className="text-[14px] text-muted mb-6">Define el stock mínimo y máximo permitido por almacén para las alertas de reabastecimiento. La cantidad inicial se carga vía Movimientos de Inventario.</p>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200/60 shadow-sm">
         <table className="min-w-full divide-y divide-gray-200/60">
-          <thead className="bg-[#F5F5F7]">
+          <thead className="bg-canvas">
             <tr>
-              <th className="px-6 py-3 text-left text-[12px] font-semibold text-[#86868B] uppercase tracking-wider">Almacén</th>
-              <th className="px-6 py-3 text-left text-[12px] font-semibold text-[#86868B] uppercase tracking-wider w-40">Mínimo</th>
-              <th className="px-6 py-3 text-left text-[12px] font-semibold text-[#86868B] uppercase tracking-wider w-40">Máximo</th>
+              <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted uppercase tracking-wider">Almacén</th>
+              <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted uppercase tracking-wider w-40">Mínimo</th>
+              <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted uppercase tracking-wider w-40">Máximo</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200/60">
             {fields.map((field: any, index) => {
-              const whName = warehouses.find(w => w.id === field.warehouse_id)?.name || 'Almacén';
+              const warehouse = warehouses.find(w => w.id === field.warehouse_id);
+              if (warehouse && (warehouse.warehouse_role === 'PURCHASE') !== (itemType === 'PURCHASE')) return null;
+              const whName = warehouse?.name || 'Almacén';
               return (
-                <tr key={field._local_id} className="hover:bg-[#F5F5F7]/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-[14px] font-medium text-[#1D1D1F]">
+                <tr key={field._local_id} className="hover:bg-canvas/50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-[14px] font-medium text-ink">
                     {whName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -43,7 +47,7 @@ export const ProductInventoryTab = ({ warehouses }: Props) => {
                       step="0.01"
                       min="0"
                       {...register(`inventory.${index}.minimum_stock`, { valueAsNumber: true })}
-                      className="w-full px-3 py-1.5 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all"
+                      className="w-full px-3 py-1.5 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition"
                       placeholder="0"
                     />
                   </td>
@@ -53,7 +57,7 @@ export const ProductInventoryTab = ({ warehouses }: Props) => {
                       step="0.01"
                       min="0"
                       {...register(`inventory.${index}.maximum_stock`, { valueAsNumber: true })}
-                      className="w-full px-3 py-1.5 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all"
+                      className="w-full px-3 py-1.5 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition"
                       placeholder="Ilimitado"
                     />
                   </td>
@@ -62,7 +66,7 @@ export const ProductInventoryTab = ({ warehouses }: Props) => {
             })}
             {fields.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-[#86868B] text-[14px]">
+                <td colSpan={3} className="px-6 py-8 text-center text-muted text-[14px]">
                   No hay almacenes configurados.
                 </td>
               </tr>

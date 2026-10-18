@@ -166,23 +166,25 @@ export const Sidebar = ({ isOpen, isDesktopOpen, onClose, onDesktopToggle }: Sid
 
   return (
     <>
-      {isOpen && (
-        <button
-          type="button"
-          aria-label="Cerrar menu"
-          className="fixed inset-0 z-30 bg-black/30 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+      <button
+        type="button"
+        aria-label="Cerrar menu"
+        tabIndex={isOpen ? 0 : -1}
+        aria-hidden={!isOpen}
+        className={`fixed inset-0 z-30 bg-black/25 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden ${
+          isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+        onClick={onClose}
+      />
 
       <aside
         id="main-sidebar"
         onMouseLeave={() => setTooltip(null)}
-        className={`fixed inset-y-0 left-0 z-40 flex h-full w-[260px] shrink-0 flex-col border-r border-gray-200/50 bg-[#F5F5F7] transition-[transform,width] duration-200 lg:static lg:translate-x-0 ${isDesktopOpen ? 'lg:w-[260px]' : 'lg:w-[68px]'} ${
+        className={`material-sidebar fixed inset-y-0 left-0 z-40 flex h-full w-[264px] shrink-0 flex-col shadow-[0.5px_0_0_rgb(0_0_0/0.08)] transition-[translate,width] duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] max-lg:shadow-2xl lg:static lg:translate-x-0 ${isDesktopOpen ? 'lg:w-[264px]' : 'lg:w-[72px]'} ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className={`flex h-[3.25rem] items-center justify-between px-6 ${isDesktopOpen ? '' : 'lg:justify-center lg:px-2'}`}>
+        <div className={`flex h-[3.25rem] shrink-0 items-center justify-between px-5 ${isDesktopOpen ? '' : 'lg:justify-center lg:px-2'}`}>
           <div className="flex items-center gap-2">
             <img src={logo} alt="Mokada" className={`h-6 w-auto ${isDesktopOpen ? '' : 'lg:hidden'}`} />
           </div>
@@ -193,27 +195,27 @@ export const Sidebar = ({ isOpen, isDesktopOpen, onClose, onDesktopToggle }: Sid
             aria-expanded={isDesktopOpen}
             aria-label={isDesktopOpen ? 'Comprimir menú lateral' : 'Expandir menú lateral'}
             title={isDesktopOpen ? 'Comprimir menú' : 'Expandir menú'}
-            className="hidden h-8 w-8 items-center justify-center rounded-lg text-[#424245] transition-colors hover:bg-black/5 lg:flex"
+            className="hidden h-8 w-8 items-center justify-center rounded-full text-ink-2 hover:bg-black/[0.06] lg:flex"
           >
             <Menu className="h-[18px] w-[18px]" />
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#86868B] transition-colors hover:bg-black/5 hover:text-[#1D1D1F] lg:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.05] text-muted hover:bg-black/[0.08] hover:text-ink lg:hidden"
             title="Cerrar menu"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-2" onScroll={() => setTooltip(null)}>
-          <nav className={`space-y-4 ${isDesktopOpen ? '' : 'lg:space-y-2'}`}>
+        <div className="flex-1 overflow-y-auto pb-6 pt-1" onScroll={() => setTooltip(null)}>
+          <nav className={`space-y-5 ${isDesktopOpen ? '' : 'lg:space-y-2'}`}>
             {sections.map((section, idx) => (
-              <div key={`${section.label || section.path}-${idx}`} className={`px-3 ${isDesktopOpen ? '' : `lg:px-2 ${idx > 0 ? 'lg:border-t lg:border-gray-200/60 lg:pt-2' : ''}`}`}>
+              <div key={`${section.label || section.path}-${idx}`} className={`px-3 ${isDesktopOpen ? '' : `lg:px-2 ${idx > 0 ? 'lg:border-t lg:border-black/[0.06] lg:pt-2' : ''}`}`}>
                 {section.items ? (
                   <>
-                    <h3 className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#86868B] ${isDesktopOpen ? '' : 'lg:sr-only'}`}>
+                    <h3 className={`px-3 pb-1 text-[11px] font-semibold tracking-[0.01em] text-gray-500 ${isDesktopOpen ? '' : 'lg:sr-only'}`}>
                       {section.label}
                     </h3>
                     <div className="space-y-0.5">
@@ -233,7 +235,7 @@ export const Sidebar = ({ isOpen, isDesktopOpen, onClose, onDesktopToggle }: Sid
       {!isDesktopOpen && tooltip && createPortal(
         <div
           role="tooltip"
-          className="pointer-events-none fixed z-50 -translate-y-1/2 rounded-lg bg-[#1D1D1F] px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-lg"
+          className="material-dark pointer-events-none fixed z-50 -translate-y-1/2 animate-pop-in rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-lg"
           style={{ left: tooltip.left, top: tooltip.top }}
         >
           {tooltip.label}
@@ -255,7 +257,7 @@ const NavItem = ({ item, isDesktopOpen, onNavigate, onTooltip, onTooltipHide }: 
 
   if (item.disabled) {
     return (
-      <div className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] text-gray-400">
+      <div className="flex items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-gray-400">
         <Icon className="h-4 w-4" />
         {item.label}
       </div>
@@ -275,13 +277,22 @@ const NavItem = ({ item, isDesktopOpen, onNavigate, onTooltip, onTooltipHide }: 
       onFocus={(event) => onTooltip(item.label, event.currentTarget)}
       onBlur={onTooltipHide}
       className={({ isActive }) =>
-        `flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[13px] transition-colors ${isDesktopOpen ? '' : 'lg:h-10 lg:justify-center lg:px-0'} ${
-          isActive ? 'bg-[#0066CC] font-medium text-white shadow-sm' : 'text-[#1D1D1F] hover:bg-black/5'
+        `group flex items-center gap-2.5 rounded-[9px] px-3 py-[7px] text-[13px] ${isDesktopOpen ? '' : 'lg:h-10 lg:justify-center lg:px-0'} ${
+          isActive
+            ? 'bg-white font-medium text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06),0_0_0_0.5px_rgb(0_0_0/0.06)]'
+            : 'text-ink-2 hover:bg-black/[0.05] hover:text-ink'
         }`
       }
     >
-      <Icon className="h-4 w-4 shrink-0" />
-      <span className={isDesktopOpen ? '' : 'lg:sr-only'}>{item.label}</span>
+      {({ isActive }) => (
+        <>
+          <Icon
+            className={`h-[17px] w-[17px] shrink-0 transition-colors ${isActive ? 'text-accent' : 'text-gray-500 group-hover:text-ink-2'}`}
+            strokeWidth={1.9}
+          />
+          <span className={`truncate ${isDesktopOpen ? '' : 'lg:sr-only'}`}>{item.label}</span>
+        </>
+      )}
     </NavLink>
   );
 };

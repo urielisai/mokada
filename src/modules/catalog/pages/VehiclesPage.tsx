@@ -39,7 +39,7 @@ export const VehiclesPage = () => {
         <div className="flex justify-end">
           <button 
             onClick={() => handleEdit(item)}
-            className="p-2 text-gray-400 hover:text-[#0066CC] hover:bg-[#0066CC]/10 rounded-lg transition-colors"
+            className="p-2 text-gray-400 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -52,13 +52,13 @@ export const VehiclesPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Vehículos</h2>
-          <p className="text-[15px] text-[#86868B]">Catálogo de aplicaciones y compatibilidad</p>
+          <h2 className="text-[28px] font-bold tracking-tight text-ink">Vehículos</h2>
+          <p className="text-[15px] text-muted">Catálogo de aplicaciones y compatibilidad</p>
         </div>
 
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0055FF] transition-colors text-[14px] font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-hover transition-colors text-[14px] font-medium"
         >
           <Plus className="w-4 h-4" />
           Nuevo Vehículo

@@ -8,7 +8,7 @@ export const ProtectedRoute = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F5F7] p-6">
+      <div className="min-h-screen bg-canvas p-6">
         <LoadingState message="Validando sesion..." className="min-h-[calc(100vh-3rem)]" />
       </div>
     );

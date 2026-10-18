@@ -133,13 +133,13 @@ export const ProfilePage = () => {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">Mi perfil</h2>
-          <p className="text-[14px] text-[#86868B] sm:text-[15px]">Actualiza tu información personal.</p>
+          <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">Mi perfil</h2>
+          <p className="text-[14px] text-muted sm:text-[15px]">Actualiza tu información personal.</p>
         </div>
         <button
           type="button"
           onClick={() => setIsPasswordDialogOpen(true)}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
         >
           <KeyRound className="h-4 w-4" />
           Cambiar contraseña
@@ -149,7 +149,7 @@ export const ProfilePage = () => {
       <form onSubmit={handleSubmit} className="space-y-5">
         <section className="rounded-lg border border-gray-200/70 bg-white p-5 shadow-sm">
           <div className="flex flex-col items-center text-center">
-            <div className="group relative h-24 w-24 overflow-hidden rounded-full bg-[#0066CC]/10">
+            <div className="group relative h-24 w-24 overflow-hidden rounded-full bg-accent/10">
               <UserAvatar
                 firstName={firstName}
                 lastName={lastName}
@@ -180,21 +180,21 @@ export const ProfilePage = () => {
                 className="sr-only"
               />
             </div>
-            <p className="mt-4 max-w-full truncate text-base font-semibold text-[#1D1D1F]">
+            <p className="mt-4 max-w-full truncate text-base font-semibold text-ink">
               {firstName || lastName ? `${firstName} ${lastName}` : 'Usuario'}
             </p>
-            <p className="mt-0.5 max-w-full truncate text-[13px] text-[#86868B]">{profile?.email}</p>
+            <p className="mt-0.5 max-w-full truncate text-[13px] text-muted">{profile?.email}</p>
           </div>
         </section>
 
         <section className="rounded-lg border border-gray-200/70 bg-white p-5 shadow-sm">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0066CC]/10 text-[#0066CC]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
               <UserRound className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-[#1D1D1F]">Información personal</h3>
-              <p className="text-[13px] text-[#86868B]">Estos datos se muestran dentro del sistema.</p>
+              <h3 className="text-base font-semibold text-ink">Información personal</h3>
+              <p className="text-[13px] text-muted">Estos datos se muestran dentro del sistema.</p>
             </div>
           </div>
 
@@ -203,11 +203,11 @@ export const ProfilePage = () => {
             <TextInput label="Apellidos" value={lastName} onChange={setLastName} autoComplete="family-name" />
             <TextInput label="Teléfono" value={phone} onChange={setPhone} autoComplete="tel" required={false} />
             <label className="block">
-              <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Correo</span>
+              <span className="mb-1.5 block text-[13px] font-medium text-ink">Correo</span>
               <input
                 value={profile?.email || ''}
                 disabled
-                className="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-[#86868B] outline-none"
+                className="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-muted outline-none"
               />
             </label>
           </div>
@@ -229,7 +229,7 @@ export const ProfilePage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               <Save className="h-4 w-4" />
               {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
@@ -257,13 +257,13 @@ interface TextInputProps {
 const TextInput = ({ label, value, onChange, autoComplete, required = true }: TextInputProps) => {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
       <input
         value={value}
         required={required}
         autoComplete={autoComplete}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+        className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
       />
     </label>
   );
@@ -313,25 +313,25 @@ const PasswordChangeDialog = ({ onClose, onUpdatePassword }: PasswordChangeDialo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 p-0 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/30 p-0 backdrop-blur-[6px] animate-fade-in sm:items-center sm:p-4">
       <form
         onSubmit={handleSubmit}
-        className="flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-white shadow-2xl sm:h-auto sm:max-h-[calc(100vh-2rem)] sm:rounded-lg"
+        className="flex h-[100dvh] w-full max-w-md flex-col overflow-hidden bg-white shadow-2xl sm:h-auto sm:max-h-[calc(100vh-2rem)] sm:rounded-3xl sm:animate-pop-in"
       >
         <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3 sm:px-5 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#0066CC]/10 text-[#0066CC] sm:h-10 sm:w-10">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent sm:h-10 sm:w-10">
               <KeyRound className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-base font-semibold text-[#1D1D1F]">Cambiar contraseña</h3>
-              <p className="truncate text-[12px] text-[#86868B]">Usa 8 caracteres o más.</p>
+              <h3 className="truncate text-base font-semibold text-ink">Cambiar contraseña</h3>
+              <p className="truncate text-[12px] text-muted">Usa 8 caracteres o más.</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#86868B] transition-colors hover:bg-gray-100 hover:text-[#1D1D1F]"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-gray-100 hover:text-ink"
             title="Cerrar"
           >
             <X className="h-4 w-4" />
@@ -378,14 +378,14 @@ const PasswordChangeDialog = ({ onClose, onUpdatePassword }: PasswordChangeDialo
           <button
             type="button"
             onClick={onClose}
-            className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
+            className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="h-10 rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {isSubmitting ? 'Guardando...' : 'Guardar'}
           </button>
@@ -405,12 +405,12 @@ interface PasswordFieldProps {
 const PasswordField = ({ label, value, onChange, autoComplete }: PasswordFieldProps) => {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
       <input
         type="password"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 sm:h-11"
+        className="h-10 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 sm:h-11"
         autoComplete={autoComplete}
         required
       />
@@ -425,23 +425,23 @@ interface MediaPreviewDialogProps {
 
 const MediaPreviewDialog = ({ preview, onClose }: MediaPreviewDialogProps) => {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 px-3 py-4">
-      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 px-3 py-4 backdrop-blur-[6px] animate-fade-in">
+      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-pop-in">
         <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold text-[#1D1D1F]">{preview.title}</h3>
-            <p className="text-[12px] text-[#86868B]">Imagen</p>
+            <h3 className="truncate text-sm font-semibold text-ink">{preview.title}</h3>
+            <p className="text-[12px] text-muted">Imagen</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#86868B] transition-colors hover:bg-gray-100 hover:text-[#1D1D1F]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-gray-100 hover:text-ink"
             title="Cerrar"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="min-h-[320px] flex-1 bg-[#F5F5F7] p-3">
+        <div className="min-h-[320px] flex-1 bg-canvas p-3">
           <img src={preview.url} alt="" className="mx-auto max-h-[calc(100vh-9rem)] w-auto max-w-full rounded-lg object-contain" />
         </div>
       </div>

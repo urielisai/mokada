@@ -86,6 +86,13 @@ export const useTransfers = () => {
   });
 };
 
+export const useSaleLinks = () => {
+  return useQuery({
+    queryKey: [...inventoryKeys.all, 'sale_links'],
+    queryFn: inventoryService.getSaleLinks,
+  });
+};
+
 export const useTransferFull = (id: string | null) => {
   return useQuery({
     queryKey: ['inventory_transfers', id],

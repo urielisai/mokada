@@ -50,21 +50,21 @@ export const BrandFormModal = ({ isOpen, onClose, brand }: Props) => {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Código</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Código</label>
           <input
             type="text"
             {...register('code')}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px]"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px]"
             placeholder="Opcional"
           />
         </div>
 
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Nombre *</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Nombre *</label>
           <input
             type="text"
             {...register('name', { required: 'El nombre es obligatorio' })}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px]"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px]"
             placeholder="Ej: Bosch"
           />
           {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message?.toString()}</p>}
@@ -75,9 +75,9 @@ export const BrandFormModal = ({ isOpen, onClose, brand }: Props) => {
             type="checkbox"
             id="is_active"
             {...register('is_active')}
-            className="rounded border-gray-300 text-[#0066CC] focus:ring-[#0066CC]"
+            className="rounded border-gray-300 text-accent focus:ring-accent"
           />
-          <label htmlFor="is_active" className="text-[14px] text-[#1D1D1F]">
+          <label htmlFor="is_active" className="text-[14px] text-ink">
             Marca Activa
           </label>
         </div>
@@ -93,7 +93,7 @@ export const BrandFormModal = ({ isOpen, onClose, brand }: Props) => {
           <button
             type="submit"
             disabled={isPending}
-            className="px-4 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#0055FF] transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-[14px] font-medium text-white bg-accent rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50"
           >
             {isPending ? 'Guardando...' : 'Guardar Marca'}
           </button>

@@ -86,7 +86,16 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
                   {!field.value ? (
                     <SearchSelect
                       label="Producto *"
-                      options={products.map((p: any) => ({
+                      options={products
+                        // Entries only go to the purchase warehouse, which only holds purchase codes.
+                        // Exits list whatever has stock there, so leftover sale keys in the
+                        // purchase warehouse can still be moved out.
+                        .filter((p: any) => {
+                          if (incoming) return p.item_type === 'PURCHASE';
+                          if (!warehouseId) return true;
+                          return stock?.some(row => row.product_id === p.id && row.warehouse_id === warehouseId && Number(row.quantity) > 0) ?? false;
+                        })
+                        .map((p: any) => ({
                         value: p.id,
                         label: `[${p.code}] ${p.name}`,
                         keywords: p.code
@@ -98,7 +107,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
                     />
                   ) : (
                     <div className="p-4 bg-gray-50 border border-gray-200/60 rounded-xl relative group">
-                      <label className="block text-[13px] font-medium text-[#1D1D1F] mb-3">Producto Seleccionado</label>
+                      <label className="block text-[13px] font-medium text-ink mb-3">Producto Seleccionado</label>
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 flex items-center justify-center shrink-0 bg-white border border-gray-200/60 rounded-lg overflow-hidden shadow-sm">
                           {imageUrl ? (
@@ -108,16 +117,16 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
                           )}
                         </div>
                         <div className="flex-1 mt-0.5">
-                          <span className="text-[12px] font-medium text-[#0066CC] block mb-0.5">
+                          <span className="text-[12px] font-medium text-accent block mb-0.5">
                             {selectedProduct?.code}
                           </span>
-                          <h4 className="text-[14px] font-semibold text-[#1D1D1F] line-clamp-2 pr-4">
+                          <h4 className="text-[14px] font-semibold text-ink line-clamp-2 pr-4">
                             {selectedProduct?.name}
                           </h4>
                           <button
                             type="button"
                             onClick={() => field.onChange('')}
-                            className="mt-2 text-[12px] text-[#0066CC] hover:underline font-medium"
+                            className="mt-2 text-[12px] text-accent hover:underline font-medium"
                           >
                             Cambiar producto
                           </button>
@@ -157,10 +166,10 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
         {movementType !== 'ADJUSTMENT_OUT' && selectedStock && (selectedStock.quantity ?? 0)>0 && (selectedStock.average_cost == null || selectedStock.original_average_cost == null) && <p className="text-[12px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">Hay existencias anteriores sin costo. Configura su costo promedio antes de agregar esta entrada para poder calcular el nuevo promedio.</p>}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Tipo de Movimiento *</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5">Tipo de Movimiento *</label>
             <select
               {...register('movement_type', { required: true })}
-              className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px]"
+              className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px]"
             >
               <option value="PURCHASE">Compra (+)</option>
               <option value="INITIAL_STOCK">Stock Inicial (+)</option>
@@ -170,14 +179,14 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Cantidad *</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5">Cantidad *</label>
             <input
               type="number"
               step="0.01"
               min="0.01"
               max={movementType === 'ADJUSTMENT_OUT' ? selectedStock?.available_quantity ?? 0 : undefined}
               {...register('quantity', { required: 'La cantidad es obligatoria', min: 0.01, validate: value => movementType !== 'ADJUSTMENT_OUT' || Number(value) <= (selectedStock?.available_quantity ?? 0) || 'La cantidad supera el disponible' })}
-              className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px]"
+              className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px]"
               placeholder="0.00"
             />
             {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity.message?.toString()}</p>}
@@ -186,19 +195,19 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
 
         {incoming && (
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">{movementType === 'PURCHASE' ? 'Costo de compra por unidad' : 'Costo de la entrada por unidad'} ($) *</label>
-            <input type="number" min="0" step="0.0001" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] transition-all disabled:opacity-50"
+            <label className="block text-[13px] font-medium text-ink mb-1.5">{movementType === 'PURCHASE' ? 'Costo de compra por unidad' : 'Costo de la entrada por unidad'} ($) *</label>
+            <input type="number" min="0" step="0.0001" className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition disabled:opacity-50"
               {...register('unit_cost', { required: 'Captura el costo', min: 0 })} />
             {errors.unit_cost && <p className="text-red-500 text-xs">{String(errors.unit_cost.message)}</p>}
-            <p className="text-[12px] text-[#86868B] mt-2">Este costo pertenece al almacén de compras. El precio interno se captura después, al traspasar al almacén de ventas.</p>
+            <p className="text-[12px] text-muted mt-2">Este costo pertenece al almacén de compras. El precio interno se captura después, al traspasar al almacén de ventas.</p>
           </div>
         )}
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Notas / Referencia</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Notas / Referencia</label>
           <textarea
             {...register('notes')}
             rows={2}
-            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] text-[14px] resize-none"
+            className="w-full px-3 py-2 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] resize-none"
             placeholder="Motivo del ajuste..."
           />
         </div>
@@ -214,7 +223,7 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
           <button
             type="submit"
               disabled={isPending || loadingStock || loadingProducts || !!stockError || !!productsError}
-            className="px-4 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#0055FF] transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-[14px] font-medium text-white bg-accent rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50"
           >
             {isPending ? 'Guardando...' : 'Aplicar Movimiento'}
           </button>

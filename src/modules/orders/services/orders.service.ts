@@ -28,6 +28,17 @@ export interface CreateOrderParams {
   }[];
 }
 
+export interface OrderStockStatus {
+  product_id: string;
+  quantity: number;
+  sales_available: number;
+  missing: number;
+  status: 'OK' | 'TRANSFER' | 'NO_STOCK';
+  purchase_product_id: string | null;
+  purchase_code: string | null;
+  purchase_available: number | null;
+}
+
 export const ordersService = {
   async markPaidManually(orderId:string) {
     const {error}=await supabase.rpc('mark_order_paid_manually',{p_order_id:orderId});
@@ -92,6 +103,14 @@ export const ordersService = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Per product: OK, TRANSFER (stock only in the purchase warehouse) or NO_STOCK.
+  // purchase_* fields are only filled for admins.
+  async getOrderStockStatus(orderId: string): Promise<OrderStockStatus[]> {
+    const { data, error } = await (supabase.rpc as any)('get_order_stock_status', { p_order_id: orderId });
+    if (error) throw error;
+    return data || [];
   },
 
   async getOrderById(id: string) {

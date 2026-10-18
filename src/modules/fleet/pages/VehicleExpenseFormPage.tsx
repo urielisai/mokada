@@ -106,7 +106,7 @@ export const VehicleExpenseFormPage = () => {
             </label>
             <select
               {...register('vehicle_id', { required: 'El vehículo es requerido' })}
-              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-2 focus:ring-[#0066CC]/20 ${errors.vehicle_id ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0066CC]'}`}
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-4 focus:ring-accent/15 ${errors.vehicle_id ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-accent'}`}
             >
               <option value="">Selecciona un vehículo...</option>
               {vehicles.map(v => (
@@ -122,7 +122,7 @@ export const VehicleExpenseFormPage = () => {
             </label>
             <select
               {...register('expense_category_id', { required: 'La categoría es requerida' })}
-              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-2 focus:ring-[#0066CC]/20 ${errors.expense_category_id ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0066CC]'}`}
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-4 focus:ring-accent/15 ${errors.expense_category_id ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-accent'}`}
             >
               <option value="">Selecciona una categoría...</option>
               {categories.map(c => (
@@ -141,7 +141,7 @@ export const VehicleExpenseFormPage = () => {
               step="0.01"
               placeholder="0.00"
               {...register('amount', { required: 'El monto es requerido', min: { value: 0.1, message: 'El monto debe ser mayor a 0' } })}
-              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-2 focus:ring-[#0066CC]/20 ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0066CC]'}`}
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-4 focus:ring-accent/15 ${errors.amount ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-accent'}`}
             />
             {errors.amount && <p className="text-xs text-red-500">{errors.amount.message as string}</p>}
           </div>
@@ -153,7 +153,7 @@ export const VehicleExpenseFormPage = () => {
             <input
               type="date"
               {...register('expense_date', { required: 'La fecha es requerida' })}
-              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-2 focus:ring-[#0066CC]/20 ${errors.expense_date ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0066CC]'}`}
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-4 focus:ring-accent/15 ${errors.expense_date ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-accent'}`}
             />
             {errors.expense_date && <p className="text-xs text-red-500">{errors.expense_date.message as string}</p>}
           </div>
@@ -166,7 +166,7 @@ export const VehicleExpenseFormPage = () => {
               type="text"
               placeholder="Ej. Taller Mecánico Los Hermanos"
               {...register('merchant_name')}
-              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-2 focus:ring-[#0066CC]/20 ${errors.merchant_name ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0066CC]'}`}
+              className={`w-full rounded-lg border bg-white px-4 py-2.5 outline-none transition-colors focus:ring-4 focus:ring-accent/15 ${errors.merchant_name ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-accent'}`}
             />
             {errors.merchant_name && <p className="text-xs text-red-500">{errors.merchant_name.message as string}</p>}
           </div>
@@ -177,7 +177,7 @@ export const VehicleExpenseFormPage = () => {
               {...register('description')}
               rows={3}
               placeholder="Describe el trabajo realizado o las piezas compradas..."
-              className="w-full rounded-lg border border-gray-300 bg-white p-4 outline-none transition-colors focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/20 resize-none"
+              className="w-full rounded-lg border border-gray-300 bg-white p-4 outline-none transition-colors focus:border-accent focus:ring-4 focus:ring-accent/15 resize-none"
             />
           </div>
         </div>
@@ -185,10 +185,10 @@ export const VehicleExpenseFormPage = () => {
         {/* Evidence Upload */}
         <div className="space-y-3 pt-4 border-t border-gray-100">
           <label className="text-sm font-medium text-gray-700">Evidencias y Comprobantes</label>
-          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center transition-colors hover:border-[#0066CC]/50 hover:bg-[#0066CC]/5">
+          <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center transition-colors hover:border-accent/50 hover:bg-accent/5">
             <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
             <div className="text-sm text-gray-600">
-              <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-semibold text-[#0066CC] focus-within:outline-none focus-within:ring-2 focus-within:ring-[#0066CC] focus-within:ring-offset-2 hover:text-[#0057AD]">
+              <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-semibold text-accent focus-within:outline-none focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 hover:text-accent">
                 <span>Sube archivos</span>
                 <input id="file-upload" type="file" multiple className="sr-only" onChange={handleFileChange} accept="image/*,.pdf" />
               </label>
@@ -234,7 +234,7 @@ export const VehicleExpenseFormPage = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 rounded-lg bg-[#0066CC] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:opacity-70"
+            className="flex items-center gap-2 rounded-lg bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-70"
           >
             {isSubmitting ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

@@ -44,10 +44,10 @@ export const ConfigurationPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">
+        <h2 className="text-[28px] font-bold tracking-tight text-ink">
           Configuración del Sistema
         </h2>
-        <p className="text-[15px] text-[#86868B] mt-1">
+        <p className="text-[15px] text-muted mt-1">
           Administra los catálogos base, preferencias y seguridad de tu cuenta.
         </p>
       </div>
@@ -59,21 +59,21 @@ export const ConfigurationPage = () => {
             <Link
               key={module.path}
               to={module.path}
-              className="group block bg-white border border-gray-200/60 rounded-2xl p-6 transition-all duration-200 hover:shadow-md hover:border-[#0066CC]/30"
+              className="group block bg-white border border-gray-200/60 rounded-2xl p-6 transition duration-200 hover:shadow-md hover:border-accent/30"
             >
               <div className="flex items-start justify-between">
-                <div className="p-2 text-[#1D1D1F] transition-transform group-hover:scale-110 duration-300">
+                <div className="p-2 text-ink transition-transform group-hover:scale-110 duration-300">
                   <Icon className="w-5 h-5" />
                 </div>
-                <div className="p-2 text-gray-300 group-hover:text-[#0066CC] transition-colors">
+                <div className="p-2 text-gray-300 group-hover:text-accent transition-colors">
                   <ChevronRight className="w-5 h-5" />
                 </div>
               </div>
               <div className="mt-5">
-                <h3 className="text-[17px] font-semibold text-[#1D1D1F] group-hover:text-[#0066CC] transition-colors">
+                <h3 className="text-[17px] font-semibold text-ink group-hover:text-accent transition-colors">
                   {module.title}
                 </h3>
-                <p className="text-[14px] text-[#86868B] mt-1.5 leading-relaxed">
+                <p className="text-[14px] text-muted mt-1.5 leading-relaxed">
                   {module.description}
                 </p>
               </div>

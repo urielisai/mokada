@@ -74,24 +74,24 @@ export const AttributeFormModal = ({ isOpen, onClose, attribute }: AttributeForm
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Código *</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5">Código *</label>
             <input
               type="text"
               {...register('code', { required: 'El código es obligatorio' })}
               placeholder="Ej: COLOR, VOLTAJE"
-              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all uppercase"
+              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition uppercase"
               disabled={isPending}
             />
             {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code.message?.toString()}</p>}
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Nombre *</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5">Nombre *</label>
             <input
               type="text"
               {...register('name', { required: 'El nombre es obligatorio' })}
               placeholder="Ej: Color, Voltaje"
-              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all"
+              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition"
               disabled={isPending}
             />
             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message?.toString()}</p>}
@@ -100,10 +100,10 @@ export const AttributeFormModal = ({ isOpen, onClose, attribute }: AttributeForm
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Tipo de Dato *</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5">Tipo de Dato *</label>
             <select
               {...register('data_type')}
-              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all"
+              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition"
               disabled={isPending}
             >
               <option value="TEXT">Texto (Text)</option>
@@ -113,23 +113,23 @@ export const AttributeFormModal = ({ isOpen, onClose, attribute }: AttributeForm
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Unidad (Opcional)</label>
+            <label className="block text-[13px] font-medium text-ink mb-1.5">Unidad (Opcional)</label>
             <input
               type="text"
               {...register('unit')}
               placeholder="Ej: V, W, cm"
-              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all"
+              className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition"
               disabled={isPending}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">Descripción (Opcional)</label>
+          <label className="block text-[13px] font-medium text-ink mb-1.5">Descripción (Opcional)</label>
           <textarea
             {...register('description')}
             rows={2}
-            className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#0066CC] focus:ring-1 focus:ring-[#0066CC] text-[14px] transition-all resize-none"
+            className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/15 text-[14px] transition resize-none"
             disabled={isPending}
           />
         </div>
@@ -139,10 +139,10 @@ export const AttributeFormModal = ({ isOpen, onClose, attribute }: AttributeForm
             type="checkbox"
             id="is_active"
             {...register('is_active')}
-            className="w-4 h-4 text-[#0066CC] border-gray-300 rounded focus:ring-[#0066CC]"
+            className="w-4 h-4 text-accent border-gray-300 rounded focus:ring-accent"
             disabled={isPending}
           />
-          <label htmlFor="is_active" className="text-[13px] font-medium text-[#1D1D1F]">
+          <label htmlFor="is_active" className="text-[13px] font-medium text-ink">
             Atributo activo
           </label>
         </div>
@@ -151,14 +151,14 @@ export const AttributeFormModal = ({ isOpen, onClose, attribute }: AttributeForm
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-[14px] font-medium text-ink bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
             disabled={isPending}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-[14px] font-medium text-white bg-[#0066CC] rounded-lg hover:bg-[#0055FF] disabled:opacity-50"
+            className="px-4 py-2 text-[14px] font-medium text-white bg-accent rounded-lg hover:bg-accent-hover disabled:opacity-50"
             disabled={isPending}
           >
             {isPending ? 'Guardando...' : 'Guardar Atributo'}

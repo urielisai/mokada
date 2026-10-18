@@ -374,14 +374,14 @@ export const CustomerBranchFormModal = ({
   return (
     <Modal isOpen onClose={onClose} title={branch ? 'Editar sucursal' : 'Nueva sucursal'} size="xl">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="rounded-xl border border-gray-200 bg-[#F5F5F7] p-3">
+        <div className="rounded-xl border border-gray-200 bg-canvas p-3">
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <h3 className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#1D1D1F]">
-                <MapPin className="h-4 w-4 text-[#0066CC]" />
+              <h3 className="inline-flex items-center gap-2 text-[14px] font-semibold text-ink">
+                <MapPin className="h-4 w-4 text-accent" />
                 Ubicación
               </h3>
-              <p className="mt-0.5 text-[12px] text-[#86868B]">
+              <p className="mt-0.5 text-[12px] text-muted">
                 Usa tu ubicación actual o captura las coordenadas manualmente.
               </p>
             </div>
@@ -389,7 +389,7 @@ export const CustomerBranchFormModal = ({
               type="button"
               onClick={useCurrentLocation}
               disabled={isLocating}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-[13px] font-semibold text-[#1D1D1F] transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:text-gray-400"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-[13px] font-semibold text-ink transition-colors hover:bg-gray-50 disabled:cursor-wait disabled:text-gray-400"
             >
               <LocateFixed className="h-4 w-4" />
               {isLocating ? 'Tomando ubicación...' : 'Tomar ubicación actual'}
@@ -410,7 +410,7 @@ export const CustomerBranchFormModal = ({
                 className="h-56 w-full border-0"
                 loading="lazy"
               />
-              <div className="flex flex-col gap-2 border-t border-gray-100 px-3 py-2 text-[12px] text-[#86868B] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 border-t border-gray-100 px-3 py-2 text-[12px] text-muted sm:flex-row sm:items-center sm:justify-between">
                 <span>
                   {latitude.toFixed(7)}, {longitude.toFixed(7)}
                 </span>
@@ -418,7 +418,7 @@ export const CustomerBranchFormModal = ({
                   href={`https://www.google.com/maps?q=${latitude},${longitude}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 font-medium text-[#0066CC] hover:underline"
+                  className="inline-flex items-center gap-1.5 font-medium text-accent hover:underline"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Abrir mapa
@@ -426,7 +426,7 @@ export const CustomerBranchFormModal = ({
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-5 text-center text-[13px] text-[#86868B]">
+            <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-5 text-center text-[13px] text-muted">
               Aún no hay coordenadas para mostrar el mapa.
             </div>
           )}
@@ -506,7 +506,7 @@ export const CustomerBranchFormModal = ({
           <TextInput label="Número interior" value={form.interior_number || ''} required={false} maxLength={20} onChange={(value) => setForm((current) => ({ ...current, interior_number: value }))} />
           <div className="min-w-0">
             <TextInput label="Código postal" value={form.postal_code || ''} inputMode="numeric" pattern="[0-9]{5}" maxLength={5} required={false} onChange={handlePostalCodeChange} />
-            {isPostalLookupLoading && <p className="mt-1 text-[12px] text-[#86868B]">Consultando código postal...</p>}
+            {isPostalLookupLoading && <p className="mt-1 text-[12px] text-muted">Consultando código postal...</p>}
             {postalLookupError && <p className="mt-1 text-[12px] text-red-600">{postalLookupError}</p>}
           </div>
           <TextInput label="Estado" value={form.state || ''} required={false} maxLength={90} disabled={hasPostalData} onChange={(value) => setForm((current) => ({ ...current, state: value }))} />
@@ -533,19 +533,19 @@ export const CustomerBranchFormModal = ({
                   onChange={handlePostalCodeChange}
                 />
               )}
-              {isZipCodeLookupLoading && <p className="mt-1 text-[12px] text-[#86868B]">Buscando códigos postales...</p>}
+              {isZipCodeLookupLoading && <p className="mt-1 text-[12px] text-muted">Buscando códigos postales...</p>}
               {zipCodeLookupError && <p className="mt-1 text-[12px] text-red-600">{zipCodeLookupError}</p>}
             </div>
           )}
 
           <label className="block min-w-0 sm:col-span-2">
-            <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Referencias de ubicación</span>
+            <span className="mb-1.5 block text-[13px] font-medium text-ink">Referencias de ubicación</span>
             <textarea
               value={form.location_references || ''}
               maxLength={240}
               onChange={(event) => setForm((current) => ({ ...current, location_references: event.target.value }))}
               rows={3}
-              className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+              className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
             />
           </label>
         </div>
@@ -569,7 +569,7 @@ export const CustomerBranchFormModal = ({
 
       {imagePreviewUrl && (
         <Modal isOpen onClose={() => setImagePreviewUrl('')} title="Foto de la sucursal" size="lg">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-[#F5F5F7]">
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-canvas">
             <img src={imagePreviewUrl} alt="Foto de la sucursal" className="max-h-[72vh] w-full object-contain" />
           </div>
         </Modal>
@@ -649,16 +649,16 @@ const EditableBranchImage = ({
   };
 
   return (
-    <div className="group relative h-[220px] w-full overflow-hidden rounded-2xl border border-gray-200/70 bg-[#F5F5F7] sm:h-[240px]">
+    <div className="group relative h-[220px] w-full overflow-hidden rounded-2xl border border-gray-200/70 bg-canvas sm:h-[240px]">
       {imageUrl ? (
         <img src={imageUrl} alt="Foto de la sucursal" className="h-full w-full object-cover" />
       ) : (
         <div className="flex h-full flex-col items-center justify-center px-4 text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
-            <ImageIcon className="h-6 w-6 text-[#86868B]" />
+            <ImageIcon className="h-6 w-6 text-muted" />
           </div>
-          <p className="text-[14px] font-medium text-[#1D1D1F]">Foto del lugar</p>
-          <p className="mt-1 text-[12px] text-[#86868B]">Toca para subir o tomar una foto</p>
+          <p className="text-[14px] font-medium text-ink">Foto del lugar</p>
+          <p className="mt-1 text-[12px] text-muted">Toca para subir o tomar una foto</p>
         </div>
       )}
 
@@ -715,7 +715,7 @@ const TextInput = ({
   readOnly?: boolean;
 }) => (
   <label className={`block min-w-0 ${className}`}>
-    <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+    <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
     <input
       type={type}
       value={value}
@@ -729,7 +729,7 @@ const TextInput = ({
       disabled={disabled}
       readOnly={readOnly}
       onChange={(event) => onChange(event.target.value)}
-      className="h-10 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 disabled:bg-gray-50 disabled:text-[#86868B] read-only:bg-gray-50 read-only:text-[#86868B]"
+      className="h-10 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 disabled:bg-gray-50 disabled:text-muted read-only:bg-gray-50 read-only:text-muted"
     />
   </label>
 );
@@ -750,12 +750,12 @@ const SelectInput = ({
   onChange: (value: string) => void;
 }) => (
   <label className="block min-w-0">
-    <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+    <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
     <select
       value={value}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
-      className="h-10 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 disabled:bg-gray-50 disabled:text-[#86868B]"
+      className="h-10 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 disabled:bg-gray-50 disabled:text-muted"
     >
       {placeholder && (
         <option value="" disabled>
@@ -785,9 +785,9 @@ const CheckboxField = ({
       type="checkbox"
       checked={checked}
       onChange={(event) => onChange(event.target.checked)}
-      className="h-4 w-4 rounded border-gray-300 text-[#0066CC] focus:ring-[#0066CC]"
+      className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
     />
-    <span className="text-sm font-medium text-[#1D1D1F]">{label}</span>
+    <span className="text-sm font-medium text-ink">{label}</span>
   </label>
 );
 
@@ -804,14 +804,14 @@ const ModalActions = ({
     <button
       type="button"
       onClick={onClose}
-      className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
+      className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
     >
       Cancelar
     </button>
     <button
       type="submit"
       disabled={isPending}
-      className="h-10 rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+      className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
     >
       {isPending ? 'Guardando...' : submitLabel}
     </button>

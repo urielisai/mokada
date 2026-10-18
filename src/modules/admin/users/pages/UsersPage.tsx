@@ -349,23 +349,23 @@ export const UsersPage = () => {
       <div className="space-y-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-2">
-            <div className="h-8 w-32 animate-pulse rounded-lg bg-gray-200" />
-            <div className="h-4 w-64 animate-pulse rounded-lg bg-gray-200" />
+            <div className="h-8 w-32 skeleton rounded-lg bg-gray-200" />
+            <div className="h-4 w-64 skeleton rounded-lg bg-gray-200" />
           </div>
-          <div className="h-10 w-36 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-10 w-36 skeleton rounded-lg bg-gray-200" />
         </div>
         
         <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="h-11 w-full flex-1 animate-pulse rounded-lg bg-gray-200" />
-          <div className="h-11 w-full sm:w-40 animate-pulse rounded-lg bg-gray-200" />
-          <div className="h-11 w-full sm:w-40 animate-pulse rounded-lg bg-gray-200" />
+          <div className="h-11 w-full flex-1 skeleton rounded-lg bg-gray-200" />
+          <div className="h-11 w-full sm:w-40 skeleton rounded-lg bg-gray-200" />
+          <div className="h-11 w-full sm:w-40 skeleton rounded-lg bg-gray-200" />
         </div>
 
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-200 bg-gray-50/50 p-4">
             <div className="flex justify-between gap-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+                <div key={i} className="h-4 w-24 skeleton rounded bg-gray-200" />
               ))}
             </div>
           </div>
@@ -373,15 +373,15 @@ export const UsersPage = () => {
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center justify-between gap-4 p-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-gray-200" />
+                  <div className="h-10 w-10 shrink-0 skeleton rounded-full bg-gray-200" />
                   <div className="space-y-2">
-                    <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
-                    <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
+                    <div className="h-4 w-32 skeleton rounded bg-gray-200" />
+                    <div className="h-3 w-24 skeleton rounded bg-gray-200" />
                   </div>
                 </div>
-                <div className="h-6 w-20 animate-pulse rounded-full bg-gray-200" />
-                <div className="hidden h-4 w-24 animate-pulse rounded bg-gray-200 md:block" />
-                <div className="hidden h-8 w-8 animate-pulse rounded-lg bg-gray-200 sm:block" />
+                <div className="h-6 w-20 skeleton rounded-full bg-gray-200" />
+                <div className="hidden h-4 w-24 skeleton rounded bg-gray-200 md:block" />
+                <div className="hidden h-8 w-8 skeleton rounded-lg bg-gray-200 sm:block" />
               </div>
             ))}
           </div>
@@ -399,14 +399,14 @@ export const UsersPage = () => {
     <div className="space-y-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <h2 className="text-[26px] font-bold tracking-tight text-[#1D1D1F] sm:text-[28px]">Usuarios</h2>
-          <p className="text-[14px] text-[#86868B] sm:text-[15px]">Acceso, perfil, documentos y estado operativo.</p>
+          <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">Usuarios</h2>
+          <p className="text-[14px] text-muted sm:text-[15px]">Acceso, perfil, documentos y estado operativo.</p>
         </div>
         <div className="grid gap-2 sm:flex">
           <button
             type="button"
             onClick={openCreateForm}
-            className="flex items-center justify-center gap-2 rounded-lg bg-[#0066CC] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD]"
+            className="flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
           >
             <Plus className="h-4 w-4" />
             Nuevo usuario
@@ -416,8 +416,8 @@ export const UsersPage = () => {
 
 
       <div className="grid gap-3 rounded-lg border border-gray-200/70 bg-white p-3 shadow-sm lg:grid-cols-[minmax(0,1fr)_180px_180px]">
-        <label className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 px-3 focus-within:border-[#0066CC] focus-within:ring-2 focus-within:ring-[#0066CC]/15">
-          <Search className="h-4 w-4 text-[#86868B]" />
+        <label className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 px-3 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15">
+          <Search className="h-4 w-4 text-muted" />
           <input
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
@@ -428,7 +428,7 @@ export const UsersPage = () => {
         <select
           value={typeFilter}
           onChange={(event) => setTypeFilter(event.target.value as UserType | 'ALL')}
-          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
         >
           <option value="ALL">Todos los tipos</option>
           <option value="CUSTOMER">Clientes</option>
@@ -438,7 +438,7 @@ export const UsersPage = () => {
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as 'ALL' | 'ACTIVE' | 'INACTIVE')}
-          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+          className="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
         >
           <option value="ALL">Todos los estados</option>
           <option value="ACTIVE">Activos</option>
@@ -461,7 +461,7 @@ export const UsersPage = () => {
             <button
               type="button"
               onClick={openCreateForm}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#0066CC] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD]"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
             >
               <Plus className="h-4 w-4" />
               Nuevo usuario
@@ -472,7 +472,7 @@ export const UsersPage = () => {
         <>
           <div className="hidden w-full overflow-x-auto rounded-lg border border-gray-200/70 bg-white shadow-sm lg:block">
             <table className="w-full text-left text-[13px]">
-              <thead className="border-b border-gray-200/70 text-[#86868B]">
+              <thead className="border-b border-gray-200/70 text-muted">
                 <tr>
                   <th className="px-5 py-3.5 font-semibold">Usuario</th>
                   <th className="px-5 py-3.5 font-semibold">Tipo</th>
@@ -485,19 +485,19 @@ export const UsersPage = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="transition-colors hover:bg-[#F5F5F7]/50">
+                  <tr key={user.id} className="transition-colors hover:bg-canvas/50">
                     <td className="px-5 py-3.5">
                       <UserIdentity user={user} onAvatarClick={() => openAvatarPreview(user)} />
                     </td>
                     <td className="px-5 py-3.5">
                       <UserTypeBadge userType={user.user_type} />
                     </td>
-                    <td className="px-5 py-3.5 text-[#424245]">
+                    <td className="px-5 py-3.5 text-ink-2">
                       {formatAgentFunctions(user.agent_functions)}
                     </td>
-                    <td className="px-5 py-3.5 text-[#424245]">
+                    <td className="px-5 py-3.5 text-ink-2">
                       <p>{user.phone || '-'}</p>
-                      <p className="mt-0.5 text-[12px] text-[#86868B]">{user.email}</p>
+                      <p className="mt-0.5 text-[12px] text-muted">{user.email}</p>
                     </td>
                     <td className="px-5 py-3.5">
                       <MediaActions
@@ -588,7 +588,7 @@ const formatAgentFunctions = (functions: AgentFunction[] | null | undefined) => 
 const UserIdentity = ({ user, onAvatarClick }: { user: ManagedUserProfile; onAvatarClick: () => void }) => {
   return (
     <div className="flex min-w-0 items-center gap-2.5 sm:min-w-[220px] sm:gap-3">
-      <button type="button" onClick={onAvatarClick} className="rounded-full focus:outline-none focus:ring-2 focus:ring-[#0066CC]/30">
+      <button type="button" onClick={onAvatarClick} className="rounded-full focus:outline-none focus:ring-4 focus:ring-accent/15">
         <UserAvatar
           firstName={user.first_name}
           lastName={user.last_name}
@@ -598,8 +598,8 @@ const UserIdentity = ({ user, onAvatarClick }: { user: ManagedUserProfile; onAva
         />
       </button>
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-[#1D1D1F] sm:text-[13px]">{`${user.first_name} ${user.last_name}`}</p>
-        <p className="truncate text-[12px] text-[#86868B]">{user.email}</p>
+        <p className="truncate text-sm font-medium text-ink sm:text-[13px]">{`${user.first_name} ${user.last_name}`}</p>
+        <p className="truncate text-[12px] text-muted">{user.email}</p>
       </div>
     </div>
   );
@@ -623,7 +623,7 @@ const MediaActions = ({ user, loadingPreviewPath, onDocumentPreview }: MediaActi
   const hasFiles = Boolean(user.identity_document_path);
 
   if (!hasFiles) {
-    return <span className="text-[12px] text-[#86868B]">Sin archivos</span>;
+    return <span className="text-[12px] text-muted">Sin archivos</span>;
   }
 
   return (
@@ -653,7 +653,7 @@ const MediaButton = ({ label, icon, disabled, onClick }: MediaButtonProps) => {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 text-[11px] font-medium text-[#424245] transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300 sm:h-8 sm:px-2.5 sm:text-[12px]"
+      className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 text-[11px] font-medium text-ink-2 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300 sm:h-8 sm:px-2.5 sm:text-[12px]"
     >
       {icon}
       {label}
@@ -674,7 +674,7 @@ const RowActions = ({ user, isPending, onEdit, onToggle }: RowActionsProps) => {
       <button
         type="button"
         onClick={onEdit}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-[#424245] transition-colors hover:bg-gray-50"
+        className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-ink-2 transition-colors hover:bg-gray-50"
         title="Editar"
       >
         <Pencil className="h-4 w-4" />
@@ -682,7 +682,7 @@ const RowActions = ({ user, isPending, onEdit, onToggle }: RowActionsProps) => {
       <button
         type="button"
         onClick={onToggle}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-[#424245] transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+        className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-ink-2 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
         title={user.is_active ? 'Desactivar' : 'Activar'}
         disabled={isPending}
       >
@@ -718,17 +718,17 @@ const UserCard = ({
         <StatusBadge status={user.is_active ? 'ACTIVE' : 'INACTIVE'} />
       </div>
 
-      <div className="mt-3 grid gap-2 text-[12px] text-[#424245]">
+      <div className="mt-3 grid gap-2 text-[12px] text-ink-2">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[#86868B]">Tipo</span>
+          <span className="text-muted">Tipo</span>
           <UserTypeBadge userType={user.user_type} />
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[#86868B]">Funciones</span>
+          <span className="text-muted">Funciones</span>
           <span className="min-w-0 truncate text-right">{formatAgentFunctions(user.agent_functions)}</span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[#86868B]">Telefono</span>
+          <span className="text-muted">Telefono</span>
           <span>{user.phone || '-'}</span>
         </div>
       </div>
@@ -824,7 +824,7 @@ const EditableUserAvatar = ({
   };
 
   return (
-    <div className="group relative h-20 w-20 overflow-hidden rounded-full bg-[#0066CC]/10">
+    <div className="group relative h-20 w-20 overflow-hidden rounded-full bg-accent/10">
       {avatarUrl ? (
         <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full object-cover" />
       ) : (
@@ -894,27 +894,27 @@ const UserFormDialog = ({
   onDocumentPreview,
 }: UserFormDialogProps) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center overflow-x-hidden bg-black/30 p-0 sm:items-center sm:px-4 sm:py-6">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center overflow-x-hidden bg-black/30 p-0 backdrop-blur-[6px] animate-fade-in sm:items-center sm:px-4 sm:py-6">
       <form
         onSubmit={onSubmit}
-        className="flex h-[100dvh] w-full max-w-full flex-col overflow-hidden bg-white shadow-xl sm:h-auto sm:max-h-[calc(100vh-1.5rem)] sm:max-w-4xl sm:rounded-lg sm:border sm:border-gray-200"
+        className="flex h-[100dvh] w-full max-w-full flex-col overflow-hidden bg-white shadow-xl sm:h-auto sm:max-h-[calc(100vh-1.5rem)] sm:max-w-4xl sm:rounded-3xl sm:ring-1 sm:ring-black/5 sm:animate-pop-in"
       >
         <div className="flex items-center justify-between border-b border-gray-200 bg-white px-3 py-3 sm:px-6 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#0066CC]/10 text-[#0066CC] sm:h-10 sm:w-10">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent sm:h-10 sm:w-10">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <h3 className="truncate text-base font-semibold tracking-tight sm:text-lg">
                 {isEditing ? 'Editar usuario' : 'Nuevo usuario'}
               </h3>
-              <p className="truncate text-[13px] text-[#86868B]">Perfil operativo, archivos y acceso.</p>
+              <p className="truncate text-[13px] text-muted">Perfil operativo, archivos y acceso.</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#86868B] transition-colors hover:bg-gray-100 hover:text-[#1D1D1F]"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-gray-100 hover:text-ink"
             title="Cerrar"
           >
             <X className="h-4 w-4" />
@@ -923,7 +923,7 @@ const UserFormDialog = ({
 
         <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
           <div className="min-w-0 space-y-4 px-3 py-4 sm:px-6 sm:py-5">
-            <div className="rounded-lg border border-gray-200 bg-[#F5F5F7] p-4">
+            <div className="rounded-lg border border-gray-200 bg-canvas p-4">
               <div className="flex flex-col items-center text-center">
               <EditableUserAvatar
                 firstName={form.first_name}
@@ -934,10 +934,10 @@ const UserFormDialog = ({
                 onFileChange={(event) => onFileChange(event, 'avatarFile')}
                 onPreview={onAvatarPreview}
               />
-              <p className="mt-3 max-w-full truncate text-sm font-semibold text-[#1D1D1F]">
+              <p className="mt-3 max-w-full truncate text-sm font-semibold text-ink">
                 {form.first_name || form.last_name ? `${form.first_name} ${form.last_name}` : 'Usuario'}
               </p>
-              <p className="mt-0.5 max-w-full truncate text-[12px] text-[#86868B]">{form.email || 'sin correo'}</p>
+              <p className="mt-0.5 max-w-full truncate text-[12px] text-muted">{form.email || 'sin correo'}</p>
               </div>
             </div>
 
@@ -979,18 +979,18 @@ const UserFormDialog = ({
               onChange={(value) => onChange((current) => ({ ...current, phone: value }))}
             />
               <label className="block min-w-0">
-              <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Tipo</span>
+              <span className="mb-1.5 block text-[13px] font-medium text-ink">Tipo</span>
               {isEditing && form.user_type === 'CUSTOMER' ? (
                 <input
                   value="Cliente"
                   disabled
-                  className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-[#86868B] outline-none sm:h-11"
+                  className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-muted outline-none sm:h-11"
                 />
               ) : (
                 <select
                   value={form.user_type}
                   onChange={(event) => onUserTypeChange(event.target.value as UserType)}
-                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 sm:h-11"
+                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 sm:h-11"
                 >
                   <option value="AGENT">Agente</option>
                   <option value="ADMIN">Administrador</option>
@@ -1019,7 +1019,7 @@ const UserFormDialog = ({
                 <button
                   type="button"
                   onClick={onDocumentPreview}
-                  className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-[12px] font-medium text-[#424245] transition-colors hover:bg-gray-50"
+                  className="inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-[12px] font-medium text-ink-2 transition-colors hover:bg-gray-50"
                 >
                   <FileText className="h-4 w-4" />
                   Ver documento
@@ -1032,9 +1032,9 @@ const UserFormDialog = ({
                 type="checkbox"
                 checked={form.is_active}
                 onChange={(event) => onChange((current) => ({ ...current, is_active: event.target.checked }))}
-                className="h-4 w-4 rounded border-gray-300 text-[#0066CC] focus:ring-[#0066CC]"
+                className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
               />
-              <span className="text-sm font-medium text-[#1D1D1F]">Usuario activo</span>
+              <span className="text-sm font-medium text-ink">Usuario activo</span>
               </label>
           </div>
           </div>
@@ -1050,14 +1050,14 @@ const UserFormDialog = ({
           <button
             type="button"
             onClick={onClose}
-            className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
+            className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={isPending}
-            className="h-10 rounded-lg bg-[#0066CC] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="h-10 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {isPending ? 'Guardando...' : 'Guardar usuario'}
           </button>
@@ -1112,36 +1112,36 @@ const AgentFunctionPicker = ({ values, onChange }: AgentFunctionPickerProps) => 
 
   return (
     <div ref={pickerRef} className="relative block min-w-0">
-      <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">Funciones</span>
+      <span className="mb-1.5 block text-[13px] font-medium text-ink">Funciones</span>
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className={`flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-lg border bg-white px-3 text-left text-sm outline-none transition-colors hover:bg-gray-50 focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 sm:h-11 ${
-          isOpen ? 'border-[#0066CC] ring-2 ring-[#0066CC]/15' : 'border-gray-300'
+        className={`flex h-10 w-full min-w-0 items-center justify-between gap-2 rounded-lg border bg-white px-3 text-left text-sm outline-none transition-colors hover:bg-gray-50 focus:border-accent focus:ring-4 focus:ring-accent/15 sm:h-11 ${
+          isOpen ? 'border-accent ring-2 ring-accent/15' : 'border-gray-300'
         }`}
       >
         <span className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
           {!selectedFunctions.length ? (
-            <span className="truncate text-[#86868B]">Selecciona funciones</span>
+            <span className="truncate text-muted">Selecciona funciones</span>
           ) : (
             <>
               {selectedFunctions.slice(0, 2).map((agentFunction) => (
                 <span
                   key={agentFunction}
-                  className="max-w-[105px] truncate rounded-md bg-[#0066CC]/10 px-2 py-0.5 text-[12px] font-medium text-[#0066CC]"
+                  className="max-w-[105px] truncate rounded-md bg-accent/10 px-2 py-0.5 text-[12px] font-medium text-accent"
                 >
                   {agentFunctionLabels[agentFunction]}
                 </span>
               ))}
               {selectedFunctions.length > 2 && (
-                <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[12px] font-medium text-[#424245]">
+                <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[12px] font-medium text-ink-2">
                   +{selectedFunctions.length - 2}
                 </span>
               )}
             </>
           )}
         </span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-[#86868B] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 shrink-0 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
@@ -1155,7 +1155,7 @@ const AgentFunctionPicker = ({ values, onChange }: AgentFunctionPickerProps) => 
                 type="button"
                 onClick={() => toggleFunction(agentFunction)}
                 className={`flex h-8 w-full items-center justify-between gap-2 rounded-md px-2 text-left text-[13px] transition-colors ${
-                  isChecked ? 'bg-[#0066CC]/10 text-[#0066CC]' : 'text-[#1D1D1F] hover:bg-[#F5F5F7]'
+                  isChecked ? 'bg-accent/10 text-accent' : 'text-ink hover:bg-canvas'
                 }`}
               >
                 <span className="truncate">{agentFunctionLabels[agentFunction]}</span>
@@ -1180,7 +1180,7 @@ const TextInput = ({
 }: TextInputProps) => {
   return (
     <label className="block min-w-0">
-      <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
       <input
         type={type}
         value={value}
@@ -1188,7 +1188,7 @@ const TextInput = ({
         placeholder={placeholder}
         required={required}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15 sm:h-11"
+        className="h-10 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 sm:h-11"
       />
     </label>
   );
@@ -1207,16 +1207,16 @@ const FileInput = ({ label, accept, file, existingPath, onChange }: FileInputPro
 
   return (
     <label className="block min-w-0">
-      <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
       <span className="flex h-10 min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-2.5 text-sm transition-colors hover:bg-gray-50 sm:h-11">
-        <span className="shrink-0 rounded-md bg-gray-100 px-2.5 py-1.5 text-[12px] font-medium text-[#1D1D1F]">
+        <span className="shrink-0 rounded-md bg-gray-100 px-2.5 py-1.5 text-[12px] font-medium text-ink">
           Seleccionar
         </span>
-        <span className="min-w-0 flex-1 truncate text-[12px] text-[#86868B]">{displayName}</span>
+        <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{displayName}</span>
         <input type="file" accept={accept} onChange={onChange} className="sr-only" />
       </span>
       {(file || existingPath) && (
-        <span className="mt-1.5 block max-w-full truncate text-[12px] text-[#86868B]">
+        <span className="mt-1.5 block max-w-full truncate text-[12px] text-muted">
           {displayName}
         </span>
       )}
@@ -1231,24 +1231,24 @@ interface MediaViewerProps {
 
 const MediaViewer = ({ preview, onClose }: MediaViewerProps) => {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 px-3 py-4">
-      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 px-3 py-4 backdrop-blur-[6px] animate-fade-in">
+      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl animate-pop-in">
         <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold text-[#1D1D1F]">{preview.title}</h3>
-            <p className="text-[12px] text-[#86868B]">{preview.kind === 'pdf' ? 'PDF' : preview.kind === 'image' ? 'Imagen' : 'Archivo'}</p>
+            <h3 className="truncate text-sm font-semibold text-ink">{preview.title}</h3>
+            <p className="text-[12px] text-muted">{preview.kind === 'pdf' ? 'PDF' : preview.kind === 'image' ? 'Imagen' : 'Archivo'}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#86868B] transition-colors hover:bg-gray-100 hover:text-[#1D1D1F]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-gray-100 hover:text-ink"
             title="Cerrar"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="min-h-[320px] flex-1 bg-[#F5F5F7] p-3">
+        <div className="min-h-[320px] flex-1 bg-canvas p-3">
           {preview.kind === 'image' && (
             <img src={preview.url} alt="" className="mx-auto max-h-[calc(100vh-9rem)] w-auto max-w-full rounded-lg object-contain" />
           )}
@@ -1257,8 +1257,8 @@ const MediaViewer = ({ preview, onClose }: MediaViewerProps) => {
           )}
           {preview.kind === 'file' && (
             <div className="flex min-h-[320px] flex-col items-center justify-center text-center">
-              <FileText className="mb-3 h-10 w-10 text-[#86868B]" />
-              <p className="text-sm font-medium text-[#1D1D1F]">Vista previa no disponible.</p>
+              <FileText className="mb-3 h-10 w-10 text-muted" />
+              <p className="text-sm font-medium text-ink">Vista previa no disponible.</p>
             </div>
           )}
         </div>

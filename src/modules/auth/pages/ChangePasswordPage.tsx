@@ -46,8 +46,8 @@ export const ChangePasswordPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-[28px] font-bold tracking-tight text-[#1D1D1F]">Cambiar contrasena</h2>
-        <p className="text-[15px] text-[#86868B]">Actualiza la clave de acceso de tu cuenta.</p>
+        <h2 className="text-[28px] font-bold tracking-tight text-ink">Cambiar contrasena</h2>
+        <p className="text-[15px] text-muted">Actualiza la clave de acceso de tu cuenta.</p>
       </div>
 
       <form
@@ -55,12 +55,12 @@ export const ChangePasswordPage = () => {
         className="max-w-xl rounded-lg border border-gray-200/70 bg-white p-6 shadow-sm"
       >
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0066CC]/10 text-[#0066CC]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
             <KeyRound className="h-5 w-5" />
           </div>
           <div>
             <h3 className="text-base font-semibold">Seguridad</h3>
-            <p className="text-[13px] text-[#86868B]">Usa una contrasena de 8 caracteres o mas.</p>
+            <p className="text-[13px] text-muted">Usa una contrasena de 8 caracteres o mas.</p>
           </div>
         </div>
 
@@ -102,14 +102,14 @@ export const ChangePasswordPage = () => {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-[#1D1D1F] transition-colors hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-lg bg-[#0066CC] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0057AD] disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {isSubmitting ? 'Guardando...' : 'Guardar'}
           </button>
@@ -129,12 +129,12 @@ interface PasswordFieldProps {
 const PasswordField = ({ label, value, onChange, autoComplete }: PasswordFieldProps) => {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[13px] font-medium text-[#1D1D1F]">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
       <input
         type="password"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/15"
+        className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
         autoComplete={autoComplete}
         required
       />

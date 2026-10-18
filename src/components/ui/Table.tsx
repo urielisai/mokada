@@ -35,20 +35,20 @@ export function Table<T>({
   }
 
   return (
-    <div className="w-full overflow-x-auto border border-gray-200/60 rounded-2xl bg-white shadow-sm">
+    <div className="w-full overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] animate-fade-in">
       <table className="w-full text-[13px] text-left">
-        <thead className="bg-white border-b border-gray-200/60 text-[#86868B] font-semibold">
+        <thead className="border-b border-gray-200/70 text-[12px] font-medium text-muted">
           <tr>
             {columns.map((col, idx) => (
-              <th key={col.id || String(col.accessorKey || idx)} className={`px-5 py-3.5 whitespace-nowrap ${col.className || ''}`}>
+              <th key={col.id || String(col.accessorKey || idx)} className={`px-5 py-3 whitespace-nowrap ${col.className || ''}`}>
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-100 text-ink">
           {data.map((row, rowIndex) => (
-            <tr key={rowIndex} className="hover:bg-[#F5F5F7]/50 transition-colors">
+            <tr key={rowIndex} className="transition-colors duration-150 hover:bg-gray-50">
               {columns.map((col, colIndex) => (
                 <td key={col.id || String(col.accessorKey || colIndex)} className={`px-5 py-3.5 ${col.className || ''}`}>
                   {col.cell ? col.cell(row) : col.accessorKey ? (row[col.accessorKey] as React.ReactNode) : null}

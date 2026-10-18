@@ -83,14 +83,14 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
             placeholder="Buscar por código, nombre o código de barras..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0066CC]/20 focus:border-[#0066CC] transition-all bg-gray-50/50"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent transition bg-gray-50/50"
           />
         </div>
 
         <div className="min-h-[300px] max-h-[500px] overflow-y-auto pr-2">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-[300px] text-gray-500">
-              <Loader2 className="w-8 h-8 animate-spin mb-4 text-[#0066CC]" />
+              <Loader2 className="w-8 h-8 animate-spin mb-4 text-accent" />
               <p>Buscando productos...</p>
             </div>
           ) : products.length === 0 ? (
@@ -105,7 +105,7 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
                 const price = Number(product.public_price) || 0;
 
                 return (
-                  <div key={product.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:border-[#0066CC]/30 hover:shadow-sm transition-all group">
+                  <div key={product.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:border-accent/30 hover:shadow-sm transition group">
                     <div className="flex items-center gap-3">
                       {product.image_url ? (
                         <img src={catalogService.getProductImageUrl(product.image_url) || ''} alt={product.name} className="w-12 h-12 object-cover rounded-lg border border-gray-100" />
@@ -115,7 +115,7 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-[#1D1D1F] text-sm">{product.name}</p>
+                        <p className="font-medium text-ink text-sm">{product.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[11px] font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                             {product.code}
@@ -129,7 +129,7 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
                     <button
                       onClick={() => handleAddProduct(product)}
                       disabled={isAdding === product.id || price <= 0}
-                      className="p-2 text-gray-400 hover:text-[#0066CC] hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                      className="p-2 text-gray-400 hover:text-accent hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
                     >
                       {isAdding === product.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                     </button>
