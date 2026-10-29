@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ordersService, type OrderStockStatus } from '../services/orders.service';
 import { statusConfig } from './OrdersPage';
-import { ArrowLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck, FileText } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
