@@ -119,6 +119,7 @@ export const ordersService = {
       .select(`
         *,
         customers (name, email, phone),
+        customer_branches (name, street, municipality, state, phone_primary),
         sales_order_items (
           *,
           products (name, code)

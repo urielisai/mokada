@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ordersService, type OrderStockStatus } from '../services/orders.service';
 import { statusConfig } from './OrdersPage';
-import { ArrowLeft, ArrowRightLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck, FileText } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck, FileText, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { generateReceiptPdf, generateConsolidatedReceiptPdf } from '../utils/generateReceiptPdf';
+import { generateWarehouseOrderPdf } from '../utils/generateWarehouseOrderPdf';
 import { supabase } from '../../../lib/supabase/client';
 import { useWarehouses } from '../../inventory/hooks/useInventory';
 import { Modal } from '../../../components/ui/Modal';
@@ -348,6 +349,37 @@ export const OrderDetailsAdminPage = () => {
     });
   };
 
+  const handlePrintWarehouseOrder = () => {
+    if (!order) return;
+    const selectedWarehouse = warehouses?.find(w => w.id === (warehouseId || order.warehouse_id));
+    const currentStatusKey = (status || order.status) as keyof typeof statusConfig;
+    const statusLabel = statusConfig[currentStatusKey]?.label || order.status;
+    const branch = Array.isArray(order.customer_branches) ? order.customer_branches[0] : order.customer_branches;
+    const effectiveEstimatedDate = estimatedDate || order.estimated_delivery_date;
+
+    generateWarehouseOrderPdf({
+      orderId: order.id,
+      orderDate: format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es }),
+      printedAt: format(new Date(), "dd/MM/yyyy HH:mm", { locale: es }),
+      statusLabel,
+      warehouseName: selectedWarehouse?.name || 'Por asignar',
+      estimatedDeliveryDate: effectiveEstimatedDate
+        ? format(new Date(`${effectiveEstimatedDate}T00:00:00`), "d 'de' MMMM, yyyy", { locale: es })
+        : undefined,
+      customerName: order.customers?.name || 'Cliente',
+      customerPhone: order.customers?.phone || branch?.phone_primary || undefined,
+      branchName: branch?.name || undefined,
+      shippingAddress: order.shipping_address || undefined,
+      comments: adminComments || order.admin_comments || undefined,
+      isWarrantyReplacement: !!order.warranty_return_id,
+      items: (order.sales_order_items || []).map((item: any) => ({
+        code: item.products?.code || 'S/C',
+        name: item.products?.name || 'Producto',
+        quantity: Number(item.quantity) || 0,
+      })),
+    });
+  };
+
   if (isLoading || !order) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -393,6 +425,14 @@ export const OrderDetailsAdminPage = () => {
           </div>
           
           <div className="flex w-full lg:w-auto flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={handlePrintWarehouseOrder}
+              className="w-full sm:w-auto justify-center px-4 py-2.5 text-[14px] font-medium text-ink bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2"
+            >
+              <Printer className="w-4 h-4 text-accent" />
+              Imprimir pedido (Almacén)
+            </button>
             {order.inventory_posted_at && order.status !== 'CANCELLED' && (
               <button className="w-full sm:w-auto px-4 py-2.5 text-[14px] font-medium text-red-600 bg-white border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 transition-colors shadow-sm disabled:opacity-50" disabled={isSaving}
                 onClick={async () => {
@@ -575,15 +615,25 @@ export const OrderDetailsAdminPage = () => {
           <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm">
             <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
               <h3 className="font-semibold text-ink">Artículos del Pedido</h3>
-              {!isShippedOrDelivered && (
+              <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setIsAddProductModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-accent bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  type="button"
+                  onClick={handlePrintWarehouseOrder}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-ink bg-gray-100 hover:bg-gray-200/70 rounded-lg transition-colors"
                 >
-                  <Plus className="w-4 h-4" />
-                  Añadir Producto
+                  <Printer className="w-4 h-4 text-gray-600" />
+                  Imprimir para almacén
                 </button>
-              )}
+                {!isShippedOrDelivered && (
+                  <button
+                    onClick={() => setIsAddProductModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-accent bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Añadir Producto
+                  </button>
+                )}
+              </div>
             </div>
             
             {isAdminUser && transfersNeeded.length > 0 && (
