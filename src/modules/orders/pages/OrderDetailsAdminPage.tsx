@@ -356,12 +356,17 @@ export const OrderDetailsAdminPage = () => {
     const statusLabel = statusConfig[currentStatusKey]?.label || order.status;
     const branch = Array.isArray(order.customer_branches) ? order.customer_branches[0] : order.customer_branches;
     const effectiveEstimatedDate = estimatedDate || order.estimated_delivery_date;
+    const paymentTypeLabel =
+      order.payment_type === 'CREDITO'
+        ? `Crédito (${order.credit_term_days || 15} días)`
+        : 'Contado';
 
     generateWarehouseOrderPdf({
       orderId: order.id,
       orderDate: format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es }),
       printedAt: format(new Date(), "dd/MM/yyyy HH:mm", { locale: es }),
       statusLabel,
+      paymentTypeLabel,
       warehouseName: selectedWarehouse?.name || 'Por asignar',
       estimatedDeliveryDate: effectiveEstimatedDate
         ? format(new Date(`${effectiveEstimatedDate}T00:00:00`), "d 'de' MMMM, yyyy", { locale: es })
@@ -372,10 +377,13 @@ export const OrderDetailsAdminPage = () => {
       shippingAddress: order.shipping_address || undefined,
       comments: adminComments || order.admin_comments || undefined,
       isWarrantyReplacement: !!order.warranty_return_id,
+      totalAmount: Number(order.total_amount) || 0,
       items: (order.sales_order_items || []).map((item: any) => ({
         code: item.products?.code || 'S/C',
         name: item.products?.name || 'Producto',
         quantity: Number(item.quantity) || 0,
+        unitPrice: Number(item.unit_price) || 0,
+        subtotal: Number(item.subtotal) || 0,
       })),
     });
   };

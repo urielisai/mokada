@@ -5,6 +5,8 @@ export interface WarehouseOrderItem {
   code: string;
   name: string;
   quantity: number;
+  unitPrice: number;
+  subtotal: number;
 }
 
 export interface WarehouseOrderPdfData {
@@ -12,6 +14,7 @@ export interface WarehouseOrderPdfData {
   orderDate: string;
   printedAt: string;
   statusLabel: string;
+  paymentTypeLabel?: string;
   warehouseName?: string;
   estimatedDeliveryDate?: string;
   customerName: string;
@@ -20,8 +23,12 @@ export interface WarehouseOrderPdfData {
   shippingAddress?: string;
   comments?: string;
   isWarrantyReplacement?: boolean;
+  totalAmount: number;
   items: WarehouseOrderItem[];
 }
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(amount || 0));
 
 export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   const doc = new jsPDF();
@@ -32,6 +39,10 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   const folio = data.orderId.split('-')[0].toUpperCase();
   const totalSkus = data.items.length;
   const totalUnits = data.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const computedTotal =
+    data.totalAmount != null
+      ? Number(data.totalAmount)
+      : data.items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
 
   // Header Left: Brand & Document Title
   doc.setFont('helvetica', 'bold');
@@ -59,7 +70,12 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 85);
   doc.text(`Fecha de pedido: ${data.orderDate}`, pageWidth - margin, 24, { align: 'right' });
-  doc.text(`Estado: ${data.statusLabel}`, pageWidth - margin, 29, { align: 'right' });
+  doc.text(
+    `Estado: ${data.statusLabel}${data.paymentTypeLabel ? `  •  Pago: ${data.paymentTypeLabel}` : ''}`,
+    pageWidth - margin,
+    29,
+    { align: 'right' }
+  );
 
   // Divider line
   doc.setDrawColor(210, 210, 215);
@@ -74,7 +90,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
 
   const addressText = data.shippingAddress || 'No especificada';
   const addressLines = doc.splitTextToSize(addressText, colMaxWidth);
-  const infoBoxHeight = Math.max(34, 24 + addressLines.length * 4.5);
+  const infoBoxHeight = Math.max(36, 25 + addressLines.length * 4.5);
 
   doc.setFillColor(248, 249, 250);
   doc.setDrawColor(225, 227, 230);
@@ -124,7 +140,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(110, 110, 115);
-  doc.text('DATOS DE SURTIDO', colRightX, rightY);
+  doc.text('DATOS DE SURTIDO Y RESUMEN', colRightX, rightY);
 
   rightY += 5;
   doc.setFont('helvetica', 'bold');
@@ -146,11 +162,15 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setFont('helvetica', 'normal');
   doc.text(data.printedAt, colRightX + 33, rightY);
 
-  rightY += 6;
+  rightY += 5.5;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9.5);
+  doc.setFontSize(9);
   doc.setTextColor(0, 102, 204);
-  doc.text(`Total a surtir: ${totalSkus} código(s)  |  ${totalUnits} pieza(s)`, colRightX, rightY);
+  doc.text(
+    `A surtir: ${totalSkus} código(s)  |  ${totalUnits} pieza(s)  |  Total: ${formatCurrency(computedTotal)}`,
+    colRightX,
+    rightY
+  );
 
   let currentY = infoStartY + infoBoxHeight + 5;
 
@@ -186,21 +206,25 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   autoTable(doc, {
     startY: currentY + 5,
     margin: { left: margin, right: margin, bottom: 45 },
-    head: [['#', 'Código / SKU', 'Descripción del Producto', 'Cant.', 'Surtido', 'Observaciones']],
+    head: [['#', 'Código / SKU', 'Descripción del Producto', 'Cant.', 'Precio Unit.', 'Subtotal', 'Surtido', 'Observaciones']],
     body: data.items.map((item, idx) => [
       (idx + 1).toString(),
       item.code || 'S/C',
       item.name || 'Producto sin nombre',
       item.quantity.toString(),
+      formatCurrency(item.unitPrice),
+      formatCurrency(item.subtotal),
       '[     ]',
       '',
     ]),
     foot: [
       [
         '',
-        `Total códigos: ${totalSkus}`,
-        'TOTAL DE PIEZAS A SURTIR',
-        totalUnits.toString(),
+        `Códigos: ${totalSkus}`,
+        'TOTAL DEL PEDIDO',
+        `${totalUnits} pzas`,
+        '',
+        formatCurrency(computedTotal),
         '',
         '',
       ],
@@ -210,41 +234,55 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
       fillColor: [29, 29, 31],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 9,
+      fontSize: 8.5,
       halign: 'left',
     },
     footStyles: {
       fillColor: [240, 242, 245],
       textColor: [20, 20, 22],
       fontStyle: 'bold',
-      fontSize: 9.5,
+      fontSize: 9,
     },
     styles: {
-      fontSize: 9.5,
-      cellPadding: 3.2,
+      fontSize: 8.5,
+      cellPadding: 2.8,
       valign: 'middle',
       textColor: [25, 25, 28],
       lineColor: [210, 212, 216],
       lineWidth: 0.25,
     },
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 36, fontStyle: 'bold' },
+      0: { cellWidth: 8, halign: 'center' },
+      1: { cellWidth: 28, fontStyle: 'bold' },
       2: { cellWidth: 'auto' },
-      3: { cellWidth: 20, halign: 'center', fontStyle: 'bold', fontSize: 11 },
-      4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-      5: { cellWidth: 36 },
+      3: { cellWidth: 15, halign: 'center', fontStyle: 'bold', fontSize: 10 },
+      4: { cellWidth: 23, halign: 'right' },
+      5: { cellWidth: 24, halign: 'right', fontStyle: 'bold' },
+      6: { cellWidth: 16, halign: 'center', fontStyle: 'bold' },
+      7: { cellWidth: 26 },
     },
     didParseCell: (hookData) => {
-      if (hookData.section === 'head' && (hookData.column.index === 0 || hookData.column.index === 3 || hookData.column.index === 4)) {
-        hookData.cell.styles.halign = 'center';
+      if (hookData.section === 'head') {
+        if ([0, 3, 6].includes(hookData.column.index)) {
+          hookData.cell.styles.halign = 'center';
+        }
+        if ([4, 5].includes(hookData.column.index)) {
+          hookData.cell.styles.halign = 'right';
+        }
       }
-      if (hookData.section === 'foot' && hookData.column.index === 2) {
-        hookData.cell.styles.halign = 'right';
-      }
-      if (hookData.section === 'foot' && hookData.column.index === 3) {
-        hookData.cell.styles.halign = 'center';
-        hookData.cell.styles.fontSize = 11;
+      if (hookData.section === 'foot') {
+        if (hookData.column.index === 2) {
+          hookData.cell.styles.halign = 'right';
+        }
+        if (hookData.column.index === 3) {
+          hookData.cell.styles.halign = 'center';
+          hookData.cell.styles.fontSize = 9.5;
+        }
+        if (hookData.column.index === 5) {
+          hookData.cell.styles.halign = 'right';
+          hookData.cell.styles.fontSize = 10;
+          hookData.cell.styles.textColor = [0, 102, 204];
+        }
       }
     },
   });
@@ -303,4 +341,3 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   const blobUrl = doc.output('bloburl');
   window.open(blobUrl, '_blank');
 };
-
