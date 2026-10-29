@@ -13,6 +13,7 @@ import { useWarehouses } from '../../inventory/hooks/useInventory';
 import { configService } from '../../configuration/services/config.service';
 import { supabase } from '../../../lib/supabase/client';
 import { CreditSelector } from '../components/CreditSelector';
+import { calculateOrderTaxBreakdown } from '../utils/orderTax';
 
 export const CheckoutPage = () => {
   const { items, clearCart } = useCartStore();
@@ -382,17 +383,29 @@ export const CheckoutPage = () => {
           <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm sticky top-6">
             <h3 className="text-lg font-semibold text-ink mb-6">Resumen</h3>
             
-            <div className="space-y-3 pb-6 border-b border-gray-100">
-              <div className="flex justify-between items-center text-[14px] text-gray-600">
-                <span>Subtotal ({items.length} prod.)</span>
-                <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(orderTotal)}</span>
-              </div>
-            </div>
+            {(() => {
+              const tax = calculateOrderTaxBreakdown(orderTotal);
+              const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+              return (
+                <>
+                  <div className="space-y-3 pb-6 border-b border-gray-100">
+                    <div className="flex justify-between items-center text-[14px] text-gray-600">
+                      <span>Subtotal ({items.length} prod.)</span>
+                      <span>{fmt.format(tax.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[14px] text-gray-600">
+                      <span>IVA (16%)</span>
+                      <span>{fmt.format(tax.iva)}</span>
+                    </div>
+                  </div>
 
-            <div className="flex justify-between items-center py-4 text-lg font-bold text-ink">
-              <span>Total</span>
-              <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(orderTotal)}</span>
-            </div>
+                  <div className="flex justify-between items-center py-4 text-lg font-bold text-ink">
+                    <span>Total</span>
+                    <span>{fmt.format(tax.total)}</span>
+                  </div>
+                </>
+              );
+            })()}
 
             <button
               onClick={handleConfirmOrder}

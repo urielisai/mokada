@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PaymentEvidenceModal } from '../components/PaymentEvidenceModal';
 import { AddProductToOrderModal } from '../components/AddProductToOrderModal';
+import { calculateOrderTaxBreakdown } from '../utils/orderTax';
 import toast from 'react-hot-toast';
 
 const statusConfig = {
@@ -292,16 +293,26 @@ export const MyOrdersPage = () => {
                 </div>
 
                 {/* Totales */}
-                <div className="border-t border-gray-100 pt-4 space-y-2">
-                  <div className="flex justify-between text-[14px] text-gray-600">
-                    <span>Subtotal</span>
-                    <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.total_amount)}</span>
-                  </div>
-                  <div className="flex justify-between text-[16px] font-bold text-ink pt-2 border-t border-gray-100">
-                    <span>Total General</span>
-                    <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.total_amount)}</span>
-                  </div>
-                </div>
+                {(() => {
+                  const tax = calculateOrderTaxBreakdown(selectedOrder.total_amount);
+                  const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+                  return (
+                    <div className="border-t border-gray-100 pt-4 space-y-2">
+                      <div className="flex justify-between text-[14px] text-gray-600">
+                        <span>Subtotal (sin IVA)</span>
+                        <span>{fmt.format(tax.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-[14px] text-gray-600">
+                        <span>IVA (16%)</span>
+                        <span>{fmt.format(tax.iva)}</span>
+                      </div>
+                      <div className="flex justify-between text-[16px] font-bold text-ink pt-2 border-t border-gray-100">
+                        <span>Total General</span>
+                        <span>{fmt.format(tax.total)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Sección de Pagos */}
                 <div className="border-t border-gray-100 pt-6">

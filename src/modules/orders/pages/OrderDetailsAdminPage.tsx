@@ -8,6 +8,7 @@ import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { generateReceiptPdf, generateConsolidatedReceiptPdf } from '../utils/generateReceiptPdf';
 import { generateWarehouseOrderPdf } from '../utils/generateWarehouseOrderPdf';
+import { calculateOrderTaxBreakdown } from '../utils/orderTax';
 import { supabase } from '../../../lib/supabase/client';
 import { useWarehouses } from '../../inventory/hooks/useInventory';
 import { Modal } from '../../../components/ui/Modal';
@@ -739,16 +740,26 @@ export const OrderDetailsAdminPage = () => {
               ))}
             </div>
             
-            <div className="pt-4 space-y-2 max-w-xs ml-auto">
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Subtotal</span>
-                <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold text-ink pt-2 border-t border-gray-100">
-                <span>Total General</span>
-                <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}</span>
-              </div>
-            </div>
+            {(() => {
+              const tax = calculateOrderTaxBreakdown(order.total_amount);
+              const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+              return (
+                <div className="pt-4 space-y-2 max-w-xs ml-auto">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Subtotal (sin IVA)</span>
+                    <span>{fmt.format(tax.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>IVA (16%)</span>
+                    <span>{fmt.format(tax.iva)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold text-ink pt-2 border-t border-gray-100">
+                    <span>Total General</span>
+                    <span>{fmt.format(tax.total)}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           
           {/* Pagos Section */}

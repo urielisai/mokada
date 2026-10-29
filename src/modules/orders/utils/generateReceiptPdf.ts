@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { calculateOrderTaxBreakdown } from './orderTax';
 
 interface ReceiptItem {
   name: string;
@@ -111,9 +112,18 @@ export const generateReceiptPdf = (data: ReceiptData) => {
   const labelX = 130;
   const valueX = 190;
   let currentY = finalY + 8;
+  const tax = calculateOrderTaxBreakdown(data.totalOrderAmount);
+
+  doc.text('Subtotal (sin IVA):', labelX, currentY);
+  doc.text(`$${tax.subtotal.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
+
+  doc.text('IVA (16%):', labelX, currentY);
+  doc.text(`$${tax.iva.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
 
   doc.text('Total del Pedido:', labelX, currentY);
-  doc.text(`$${data.totalOrderAmount.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  doc.text(`$${tax.total.toFixed(2)}`, valueX, currentY, { align: 'right' });
   currentY += 6;
 
   doc.text('Total Pagado Anteriormente:', labelX, currentY);
@@ -231,9 +241,18 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
   const labelX = 130;
   const valueX = 190;
   let currentY = finalY + 8;
+  const tax = calculateOrderTaxBreakdown(data.totalOrderAmount);
+
+  doc.text('Subtotal (sin IVA):', labelX, currentY);
+  doc.text(`$${tax.subtotal.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
+
+  doc.text('IVA (16%):', labelX, currentY);
+  doc.text(`$${tax.iva.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
 
   doc.text('Total del Pedido:', labelX, currentY);
-  doc.text(`$${data.totalOrderAmount.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  doc.text(`$${tax.total.toFixed(2)}`, valueX, currentY, { align: 'right' });
   currentY += 6;
 
   doc.setFont('helvetica', 'bold');
