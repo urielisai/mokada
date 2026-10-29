@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ordersService, type OrderStockStatus } from '../services/orders.service';
 import { statusConfig } from './OrdersPage';
-import { ArrowLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Calendar, Plus, Minus, Trash2, ShieldCheck, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { generateReceiptPdf } from '../utils/generateReceiptPdf';
+import { generateReceiptPdf, generateConsolidatedReceiptPdf } from '../utils/generateReceiptPdf';
 import { supabase } from '../../../lib/supabase/client';
 import { useWarehouses } from '../../inventory/hooks/useInventory';
 import { Modal } from '../../../components/ui/Modal';
@@ -279,22 +279,71 @@ export const OrderDetailsAdminPage = () => {
     }
   };
 
+  const getPaymentMethodLabel = (payment: any) => {
+    if (payment.is_manual_settlement) return 'Registro manual';
+    if (payment.payment_method === 'CASH') return 'Efectivo';
+    if (payment.payment_method === 'TRANSFER') return 'Transferencia';
+    return 'Tarjeta';
+  };
+
   const handleDownloadReceipt = (payment: any) => {
+    const sortedApproved = [...(order.sales_order_payments || [])]
+      .filter((p: any) => p.status === 'APPROVED')
+      .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    let previouslyPaid = 0;
+    for (const p of sortedApproved) {
+      if (p.id === payment.id) break;
+      previouslyPaid += Number(p.amount) || 0;
+    }
+
+    const currentAmount = Number(payment.amount) || 0;
+
     generateReceiptPdf({
       orderId: order.id,
       customerName: order.customers?.name || 'Cliente',
       agentName: currentUserProfile?.name || 'Agente Mokada',
-      paymentMethod: 'Efectivo',
-      amountPaidNow: payment.amount,
+      paymentMethod: getPaymentMethodLabel(payment),
+      amountPaidNow: currentAmount,
       totalOrderAmount: order.total_amount,
-      totalPreviouslyPaid: order.amount_paid - payment.amount, // roughly correct for display
-      remainingBalance: Math.max(order.total_amount - order.amount_paid, 0),
+      totalPreviouslyPaid: previouslyPaid,
+      remainingBalance: Math.max(order.total_amount - (previouslyPaid + currentAmount), 0),
       date: format(new Date(payment.created_at), "dd/MM/yyyy HH:mm"),
       items: order.sales_order_items.map((item: any) => ({
         name: item.products?.name,
         quantity: item.quantity,
         unitPrice: item.unit_price,
         subtotal: item.subtotal
+      }))
+    });
+  };
+
+  const handleDownloadAllPaymentsReceipt = () => {
+    const sortedPayments = [...(order.sales_order_payments || [])].sort(
+      (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+
+    const totalPaid = Number(order.amount_paid) || 0;
+
+    generateConsolidatedReceiptPdf({
+      orderId: order.id,
+      customerName: order.customers?.name || 'Cliente',
+      agentName: currentUserProfile?.name || 'Agente Mokada',
+      date: format(new Date(), "dd/MM/yyyy HH:mm"),
+      totalOrderAmount: order.total_amount,
+      totalPaid,
+      remainingBalance: Math.max(order.total_amount - totalPaid, 0),
+      items: (order.sales_order_items || []).map((item: any) => ({
+        name: item.products?.name,
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+        subtotal: item.subtotal
+      })),
+      payments: sortedPayments.map((payment: any) => ({
+        date: format(new Date(payment.created_at), "dd/MM/yyyy HH:mm"),
+        method: getPaymentMethodLabel(payment),
+        status: payment.status === 'APPROVED' ? 'Aprobado' : payment.status === 'REJECTED' ? 'Rechazado' : 'Pendiente',
+        amount: Number(payment.amount) || 0
       }))
     });
   };
@@ -646,16 +695,27 @@ export const OrderDetailsAdminPage = () => {
           
           {/* Pagos Section */}
           <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm mt-6">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
               <h3 className="font-semibold text-ink">Estado de Pagos</h3>
-              {Math.max(order.total_amount - (order.amount_paid || 0), 0) > 0 && (
-                <button
-                  onClick={() => setIsPaymentModalOpen(true)}
-                  className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  Registrar Pago
-                </button>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {order.sales_order_payments?.length > 0 && (
+                  <button
+                    onClick={handleDownloadAllPaymentsReceipt}
+                    className="px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-ink text-sm font-medium rounded-lg transition-colors flex items-center gap-2 shadow-sm"
+                  >
+                    <FileText className="w-4 h-4 text-accent" />
+                    Descargar Recibo General
+                  </button>
+                )}
+                {Math.max(order.total_amount - (order.amount_paid || 0), 0) > 0 && (
+                  <button
+                    onClick={() => setIsPaymentModalOpen(true)}
+                    className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Registrar Pago
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 mb-6">
@@ -729,7 +789,7 @@ export const OrderDetailsAdminPage = () => {
                       </div>
                     )}
 
-                    {payment.status === 'APPROVED' && payment.payment_method === 'CASH' && !payment.is_manual_settlement && (
+                    {payment.status === 'APPROVED' && (
                       <button onClick={() => handleDownloadReceipt(payment)} className="text-[13px] text-accent hover:underline font-medium">
                         Descargar Recibo
                       </button>
