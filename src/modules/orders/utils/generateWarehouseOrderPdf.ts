@@ -1,6 +1,5 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { calculateOrderTaxBreakdown } from './orderTax';
 
 export interface WarehouseOrderItem {
   code: string;
@@ -44,7 +43,6 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
     data.totalAmount != null
       ? Number(data.totalAmount)
       : data.items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
-  const tax = calculateOrderTaxBreakdown(computedTotal);
 
   // Header Left: Brand & Document Title
   doc.setFont('helvetica', 'bold');
@@ -169,7 +167,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setFontSize(9);
   doc.setTextColor(0, 102, 204);
   doc.text(
-    `A surtir: ${totalSkus} código(s)  |  ${totalUnits} pieza(s)  |  Total: ${formatCurrency(tax.total)}`,
+    `A surtir: ${totalSkus} código(s)  |  ${totalUnits} pieza(s)  |  Total: ${formatCurrency(computedTotal)}`,
     colRightX,
     rightY
   );
@@ -208,7 +206,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   autoTable(doc, {
     startY: currentY + 5,
     margin: { left: margin, right: margin, bottom: 45 },
-    head: [['#', 'Código / SKU', 'Descripción del Producto', 'Cant.', 'Precio Unit.', 'Importe', 'Surtido', 'Observaciones']],
+    head: [['#', 'Código / SKU', 'Descripción del Producto', 'Cant.', 'Precio Unit.', 'Subtotal', 'Surtido', 'Observaciones']],
     body: data.items.map((item, idx) => [
       (idx + 1).toString(),
       item.code || 'S/C',
@@ -223,30 +221,10 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
       [
         '',
         `Códigos: ${totalSkus}`,
-        'Subtotal (sin IVA)',
+        'TOTAL DEL PEDIDO',
         `${totalUnits} pzas`,
         '',
-        formatCurrency(tax.subtotal),
-        '',
-        '',
-      ],
-      [
-        '',
-        '',
-        'IVA (16%)',
-        '',
-        '',
-        formatCurrency(tax.iva),
-        '',
-        '',
-      ],
-      [
-        '',
-        '',
-        'TOTAL GENERAL',
-        '',
-        '',
-        formatCurrency(tax.total),
+        formatCurrency(computedTotal),
         '',
         '',
       ],
@@ -260,10 +238,10 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
       halign: 'left',
     },
     footStyles: {
-      fillColor: [248, 249, 250],
-      textColor: [50, 50, 55],
+      fillColor: [240, 242, 245],
+      textColor: [20, 20, 22],
       fontStyle: 'bold',
-      fontSize: 8.5,
+      fontSize: 9,
     },
     styles: {
       fontSize: 8.5,
@@ -298,19 +276,12 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
         }
         if (hookData.column.index === 3) {
           hookData.cell.styles.halign = 'center';
-          hookData.cell.styles.fontSize = 9;
+          hookData.cell.styles.fontSize = 9.5;
         }
         if (hookData.column.index === 5) {
           hookData.cell.styles.halign = 'right';
-        }
-        if (hookData.row.index === 2) {
-          hookData.cell.styles.fillColor = [238, 242, 246];
-          hookData.cell.styles.textColor = [20, 20, 22];
-          hookData.cell.styles.fontSize = 9.5;
-          if (hookData.column.index === 5) {
-            hookData.cell.styles.fontSize = 10;
-            hookData.cell.styles.textColor = [0, 102, 204];
-          }
+          hookData.cell.styles.fontSize = 10;
+          hookData.cell.styles.textColor = [0, 102, 204];
         }
       }
     },

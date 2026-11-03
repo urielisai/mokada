@@ -44,6 +44,7 @@ import { MyOrdersPage } from '../../modules/orders/pages/MyOrdersPage';
 import { MyDebtsPage } from '../../modules/orders/pages/MyDebtsPage';
 import { OrdersPage } from '../../modules/orders/pages/OrdersPage';
 import { WarrantyOrdersPage } from '../../modules/orders/pages/WarrantyOrdersPage';
+import { InvoiceRequestsAdminPage } from '../../modules/orders/pages/InvoiceRequestsAdminPage';
 import { OrderDetailsAdminPage } from '../../modules/orders/pages/OrderDetailsAdminPage';
 import { MarginsPage } from '../../modules/inventory/pages/MarginsPage';
 import { AdminDebtsPage } from '../../modules/admin/debts/pages/AdminDebtsPage';
@@ -146,6 +147,7 @@ export const router = createBrowserRouter([
               { index: true, element: <OrdersPage /> },
               { path: 'checkout', element: <CheckoutPage /> },
               { path: 'warranties', element: <AdminRoute><WarrantyOrdersPage /></AdminRoute> },
+              { path: 'invoicing', element: <AdminRoute><InvoiceRequestsAdminPage /></AdminRoute> },
               { path: 'paid', element: <OrdersPage initialPaymentFilter="PAID" /> },
               { path: ':id', element: <OrderDetailsAdminPage /> },
             ]

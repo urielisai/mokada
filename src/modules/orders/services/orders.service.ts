@@ -539,6 +539,51 @@ export const ordersService = {
     if (error) throw error;
     return data;
   },
+
+  async getAllInvoiceRequests() {
+    const { data, error } = await supabase
+      .from('sales_order_invoice_requests')
+      .select(`
+        *,
+        order:sales_orders (
+          id,
+          created_at,
+          status,
+          payment_type,
+          total_amount,
+          amount_paid,
+          customer_id,
+          customers (name, email, phone),
+          customer_branches (name, route_id)
+        ),
+        items:sales_order_invoice_request_items (
+          id,
+          quantity,
+          order_item:sales_order_items (
+            id,
+            product_id,
+            unit_price,
+            subtotal,
+            discount_percent,
+            products (name, code)
+          )
+        )
+      `)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async updateMultipleInvoiceRequestsStatus(requestIds: string[], status: 'PENDING' | 'INVOICED' | 'CANCELLED') {
+    if (!requestIds.length) return [];
+    const { data, error } = await supabase
+      .from('sales_order_invoice_requests')
+      .update({ status })
+      .in('id', requestIds)
+      .select();
+    if (error) throw error;
+    return data || [];
+  },
   
   async deleteInvoiceRequest(requestId: string) {
     const { error } = await supabase.from('sales_order_invoice_requests').delete().eq('id', requestId);

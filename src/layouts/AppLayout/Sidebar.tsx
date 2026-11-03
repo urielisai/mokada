@@ -8,6 +8,7 @@ import {
   Building2,
   CarFront,
   ClipboardCheck,
+  FileText,
   Handshake,
   LayoutDashboard,
   ListTree,
@@ -128,7 +129,12 @@ export const Sidebar = ({ isOpen, isDesktopOpen, onClose, onDesktopToggle }: Sid
         items: [
           { path: '/orders', label: isAdmin ? 'Pedidos' : 'Mis Pedidos', icon: ShoppingCart },
           ...(!isAdmin ? [{ path: '/orders/paid', label: 'Pedidos pagados', icon: ClipboardCheck }] : []),
-          ...(isAdmin ? [{ path: '/orders/warranties', label: 'Pedidos en garantía', icon: ShieldCheck }] : []),
+          ...(isAdmin
+            ? [
+                { path: '/orders/warranties', label: 'Pedidos en garantía', icon: ShieldCheck },
+                { path: '/orders/invoicing', label: 'Solicitudes de factura', icon: FileText },
+              ]
+            : []),
         ],
       });
     }
