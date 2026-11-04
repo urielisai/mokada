@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PaymentEvidenceModal } from '../components/PaymentEvidenceModal';
 import { AddProductToOrderModal } from '../components/AddProductToOrderModal';
+import { calculateItemTaxBreakdown, calculateOrderItemsTaxSummary } from '../utils/orderTax';
 import toast from 'react-hot-toast';
 
 const statusConfig = {
@@ -272,9 +273,25 @@ export const MyOrdersPage = () => {
                           </div>
 
                           <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
-                            <span className="text-ink font-medium">
-                              {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.subtotal)}
-                            </span>
+                            {(() => {
+                              const itemTax = calculateItemTaxBreakdown(
+                                Number(item.quantity) || 0,
+                                Number(item.unit_price) || 0,
+                                Number(item.subtotal) || 0
+                              );
+                              const fmt = (val: number) =>
+                                new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
+                              return (
+                                <div className="text-right">
+                                  <span className="text-ink font-medium block">
+                                    {fmt(itemTax.lineTotalWithIva)}
+                                  </span>
+                                  <span className="text-[11px] text-gray-500 block">
+                                    P. Unit: {fmt(itemTax.unitPriceWithoutIva)} + IVA: {fmt(itemTax.unitIva)} ({fmt(itemTax.unitPriceWithIva)} c/u)
+                                  </span>
+                                </div>
+                              );
+                            })()}
                             {isEditable && (
                               <button
                                 onClick={() => handleRemoveItem(item.id)}
@@ -292,16 +309,34 @@ export const MyOrdersPage = () => {
                 </div>
 
                 {/* Totales */}
-                <div className="border-t border-gray-100 pt-4 space-y-2">
-                  <div className="flex justify-between text-[14px] text-gray-600">
-                    <span>Subtotal</span>
-                    <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.total_amount)}</span>
-                  </div>
-                  <div className="flex justify-between text-[16px] font-bold text-ink pt-2 border-t border-gray-100">
-                    <span>Total General</span>
-                    <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(selectedOrder.total_amount)}</span>
-                  </div>
-                </div>
+                {(() => {
+                  const taxSummary = calculateOrderItemsTaxSummary(
+                    (selectedOrder.sales_order_items || []).map((item: any) => ({
+                      quantity: Number(item.quantity) || 0,
+                      unitPrice: Number(item.unit_price) || 0,
+                      subtotal: Number(item.subtotal) || 0,
+                    })),
+                    Number(selectedOrder.total_amount) || 0
+                  );
+                  const fmt = (val: number) =>
+                    new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
+                  return (
+                    <div className="border-t border-gray-100 pt-4 space-y-2">
+                      <div className="flex justify-between text-[14px] text-gray-600">
+                        <span>Subtotal (sin IVA)</span>
+                        <span>{fmt(taxSummary.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-[14px] text-gray-600">
+                        <span>IVA (16%)</span>
+                        <span>{fmt(taxSummary.iva)}</span>
+                      </div>
+                      <div className="flex justify-between text-[16px] font-bold text-ink pt-2 border-t border-gray-100">
+                        <span>Monto Total</span>
+                        <span>{fmt(taxSummary.total)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Sección de Pagos */}
                 <div className="border-t border-gray-100 pt-6">

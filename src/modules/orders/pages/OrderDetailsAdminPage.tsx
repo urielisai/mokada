@@ -8,6 +8,7 @@ import { es } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { generateReceiptPdf, generateConsolidatedReceiptPdf } from '../utils/generateReceiptPdf';
 import { generateWarehouseOrderPdf } from '../utils/generateWarehouseOrderPdf';
+import { calculateItemTaxBreakdown, calculateOrderItemsTaxSummary } from '../utils/orderTax';
 import { supabase } from '../../../lib/supabase/client';
 import { useWarehouses } from '../../inventory/hooks/useInventory';
 import { Modal } from '../../../components/ui/Modal';
@@ -399,6 +400,16 @@ export const OrderDetailsAdminPage = () => {
   const isShippedOrDelivered = order.status === 'SHIPPED' || order.status === 'DELIVERED' || order.status === 'CANCELLED';
   const isAdminUser = currentUserProfile?.user_type === 'ADMIN';
   const showStock = !isShippedOrDelivered && !order.inventory_posted_at;
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(amount || 0));
+  const orderTaxSummary = calculateOrderItemsTaxSummary(
+    (order.sales_order_items || []).map((item: any) => ({
+      quantity: Number(item.quantity) || 0,
+      unitPrice: Number(item.unit_price) || 0,
+      subtotal: Number(item.subtotal) || 0,
+    })),
+    Number(order.total_amount) || 0
+  );
   const keyCodes = new Map<string, string>((order.sales_order_items || []).map((item: any) => [item.product_id, item.products?.code]));
   const transfersNeeded = showStock
     ? [...stockStatus.values()].filter(row => row.status === 'TRANSFER' && row.purchase_product_id)
@@ -717,14 +728,28 @@ export const OrderDetailsAdminPage = () => {
                   </div>
                   
                   <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
-                    <div className="text-right">
-                      <p className="text-[14px] font-medium text-ink">
-                        {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.subtotal)}
-                      </p>
-                      <p className="text-[11px] text-gray-500">
-                        {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.unit_price)} c/u
-                      </p>
-                    </div>
+                    {(() => {
+                      const itemTax = calculateItemTaxBreakdown(
+                        Number(item.quantity) || 0,
+                        Number(item.unit_price) || 0,
+                        Number(item.subtotal) || 0
+                      );
+                      return (
+                        <div className="text-right">
+                          <p className="text-[14px] font-semibold text-ink">
+                            {formatCurrency(itemTax.lineTotalWithIva)}
+                          </p>
+                          <p className="text-[11px] text-gray-500">
+                            P. Unit: {formatCurrency(itemTax.unitPriceWithoutIva)} + IVA: {formatCurrency(itemTax.unitIva)} ({formatCurrency(itemTax.unitPriceWithIva)} c/u)
+                          </p>
+                          {itemTax.quantity > 1 && (
+                            <p className="text-[11px] text-gray-400">
+                              Subtotal: {formatCurrency(itemTax.lineSubtotalWithoutIva)} + IVA: {formatCurrency(itemTax.lineIva)}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {!isShippedOrDelivered && (
                       <button
                         onClick={() => handleRemoveItem(item.id)}
@@ -741,12 +766,16 @@ export const OrderDetailsAdminPage = () => {
             
             <div className="pt-4 space-y-2 max-w-xs ml-auto">
               <div className="flex justify-between text-sm text-gray-600">
-                <span>Subtotal</span>
-                <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}</span>
+                <span>Subtotal (sin IVA)</span>
+                <span>{formatCurrency(orderTaxSummary.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>IVA (16%)</span>
+                <span>{formatCurrency(orderTaxSummary.iva)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold text-ink pt-2 border-t border-gray-100">
-                <span>Total General</span>
-                <span>{new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(order.total_amount)}</span>
+                <span>Monto Total</span>
+                <span>{formatCurrency(orderTaxSummary.total)}</span>
               </div>
             </div>
           </div>

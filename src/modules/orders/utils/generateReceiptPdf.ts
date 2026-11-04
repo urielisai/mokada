@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { calculateOrderItemsTaxSummary } from './orderTax';
 
 interface ReceiptItem {
   name: string;
@@ -84,18 +85,46 @@ export const generateReceiptPdf = (data: ReceiptData) => {
   doc.text(data.paymentMethod, 40, 64);
 
   // Items Table
+  const taxSummary = calculateOrderItemsTaxSummary(data.items, data.totalOrderAmount);
+
   autoTable(doc, {
     startY: 70,
-    head: [['Producto', 'Cant.', 'Precio Unit.', 'Subtotal']],
-    body: data.items.map(item => [
-      item.name,
-      item.quantity.toString(),
-      `$${item.unitPrice.toFixed(2)}`,
-      `$${item.subtotal.toFixed(2)}`
-    ]),
+    head: [['Producto', 'Cant.', 'P. Unit. (s/IVA)', 'IVA Unit.', 'Subtotal (s/IVA)', 'IVA (16%)', 'Total']],
+    body: data.items.map((item, idx) => {
+      const itemTax = taxSummary.items[idx];
+      return [
+        item.name,
+        item.quantity.toString(),
+        `$${itemTax.unitPriceWithoutIva.toFixed(2)}`,
+        `$${itemTax.unitIva.toFixed(2)}`,
+        `$${itemTax.lineSubtotalWithoutIva.toFixed(2)}`,
+        `$${itemTax.lineIva.toFixed(2)}`,
+        `$${itemTax.lineTotalWithIva.toFixed(2)}`,
+      ];
+    }),
+    foot: [
+      [
+        'Totales del Pedido',
+        '',
+        '',
+        '',
+        `$${taxSummary.subtotal.toFixed(2)}`,
+        `$${taxSummary.iva.toFixed(2)}`,
+        `$${taxSummary.total.toFixed(2)}`,
+      ],
+    ],
     theme: 'grid',
-    headStyles: { fillColor: [0, 102, 204] },
-    styles: { fontSize: 9 },
+    headStyles: { fillColor: [0, 102, 204], fontSize: 8 },
+    footStyles: { fillColor: [240, 242, 245], textColor: [20, 20, 22], fontStyle: 'bold', fontSize: 8.5 },
+    styles: { fontSize: 8.5 },
+    columnStyles: {
+      1: { halign: 'center' },
+      2: { halign: 'right' },
+      3: { halign: 'right' },
+      4: { halign: 'right' },
+      5: { halign: 'right' },
+      6: { halign: 'right', fontStyle: 'bold' },
+    },
   });
 
   const finalY = (doc as any).lastAutoTable.finalY + 10;
@@ -108,12 +137,22 @@ export const generateReceiptPdf = (data: ReceiptData) => {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   
-  const labelX = 130;
-  const valueX = 190;
+  const labelX = 120;
+  const valueX = 195;
   let currentY = finalY + 8;
 
-  doc.text('Total del Pedido:', labelX, currentY);
-  doc.text(`$${data.totalOrderAmount.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  doc.text('Subtotal (sin IVA):', labelX, currentY);
+  doc.text(`$${taxSummary.subtotal.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
+
+  doc.text('IVA (16%):', labelX, currentY);
+  doc.text(`$${taxSummary.iva.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Monto Total del Pedido:', labelX, currentY);
+  doc.text(`$${taxSummary.total.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
   currentY += 6;
 
   doc.text('Total Pagado Anteriormente:', labelX, currentY);
@@ -182,18 +221,46 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
   doc.setFont('helvetica', 'bold');
   doc.text('Artículos del Pedido', 14, 67);
 
+  const taxSummary = calculateOrderItemsTaxSummary(data.items, data.totalOrderAmount);
+
   autoTable(doc, {
     startY: 70,
-    head: [['Producto', 'Cant.', 'Precio Unit.', 'Subtotal']],
-    body: data.items.map(item => [
-      item.name,
-      item.quantity.toString(),
-      `$${item.unitPrice.toFixed(2)}`,
-      `$${item.subtotal.toFixed(2)}`
-    ]),
+    head: [['Producto', 'Cant.', 'P. Unit. (s/IVA)', 'IVA Unit.', 'Subtotal (s/IVA)', 'IVA (16%)', 'Total']],
+    body: data.items.map((item, idx) => {
+      const itemTax = taxSummary.items[idx];
+      return [
+        item.name,
+        item.quantity.toString(),
+        `$${itemTax.unitPriceWithoutIva.toFixed(2)}`,
+        `$${itemTax.unitIva.toFixed(2)}`,
+        `$${itemTax.lineSubtotalWithoutIva.toFixed(2)}`,
+        `$${itemTax.lineIva.toFixed(2)}`,
+        `$${itemTax.lineTotalWithIva.toFixed(2)}`,
+      ];
+    }),
+    foot: [
+      [
+        'Totales del Pedido',
+        '',
+        '',
+        '',
+        `$${taxSummary.subtotal.toFixed(2)}`,
+        `$${taxSummary.iva.toFixed(2)}`,
+        `$${taxSummary.total.toFixed(2)}`,
+      ],
+    ],
     theme: 'grid',
-    headStyles: { fillColor: [0, 102, 204] },
-    styles: { fontSize: 9 },
+    headStyles: { fillColor: [0, 102, 204], fontSize: 8 },
+    footStyles: { fillColor: [240, 242, 245], textColor: [20, 20, 22], fontStyle: 'bold', fontSize: 8.5 },
+    styles: { fontSize: 8.5 },
+    columnStyles: {
+      1: { halign: 'center' },
+      2: { halign: 'right' },
+      3: { halign: 'right' },
+      4: { halign: 'right' },
+      5: { halign: 'right' },
+      6: { halign: 'right', fontStyle: 'bold' },
+    },
   });
 
   const afterItemsY = (doc as any).lastAutoTable.finalY + 10;
@@ -228,12 +295,22 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
 
-  const labelX = 130;
-  const valueX = 190;
+  const labelX = 120;
+  const valueX = 195;
   let currentY = finalY + 8;
 
-  doc.text('Total del Pedido:', labelX, currentY);
-  doc.text(`$${data.totalOrderAmount.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  doc.text('Subtotal (sin IVA):', labelX, currentY);
+  doc.text(`$${taxSummary.subtotal.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
+
+  doc.text('IVA (16%):', labelX, currentY);
+  doc.text(`$${taxSummary.iva.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  currentY += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Monto Total del Pedido:', labelX, currentY);
+  doc.text(`$${taxSummary.total.toFixed(2)}`, valueX, currentY, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
   currentY += 6;
 
   doc.setFont('helvetica', 'bold');

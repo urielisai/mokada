@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { calculateOrderItemsTaxSummary } from './orderTax';
 
 export interface WarehouseOrderItem {
   code: string;
@@ -43,6 +44,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
     data.totalAmount != null
       ? Number(data.totalAmount)
       : data.items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
+  const taxSummary = calculateOrderItemsTaxSummary(data.items, computedTotal);
 
   // Header Left: Brand & Document Title
   doc.setFont('helvetica', 'bold');
@@ -164,10 +166,10 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
 
   rightY += 5.5;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(0, 102, 204);
   doc.text(
-    `A surtir: ${totalSkus} código(s)  |  ${totalUnits} pieza(s)  |  Total: ${formatCurrency(computedTotal)}`,
+    `A surtir: ${totalSkus} código(s)  |  ${totalUnits} pieza(s)  |  Total: ${formatCurrency(taxSummary.total)}`,
     colRightX,
     rightY
   );
@@ -200,32 +202,52 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(20, 20, 22);
-  doc.text('Productos a Surtir', margin, currentY + 2);
+  doc.text('Productos a Surtir (Precios desglosados con IVA 16%)', margin, currentY + 2);
 
   // Items Table
   autoTable(doc, {
     startY: currentY + 5,
     margin: { left: margin, right: margin, bottom: 45 },
-    head: [['#', 'Código / SKU', 'Descripción del Producto', 'Cant.', 'Precio Unit.', 'Subtotal', 'Surtido', 'Observaciones']],
-    body: data.items.map((item, idx) => [
-      (idx + 1).toString(),
-      item.code || 'S/C',
-      item.name || 'Producto sin nombre',
-      item.quantity.toString(),
-      formatCurrency(item.unitPrice),
-      formatCurrency(item.subtotal),
-      '[     ]',
-      '',
-    ]),
+    head: [
+      [
+        '#',
+        'Código / SKU',
+        'Descripción del Producto',
+        'Cant.',
+        'P. Unit.\n(s/IVA)',
+        'IVA Unit.\n(16%)',
+        'Subtotal\n(s/IVA)',
+        'IVA\n(16%)',
+        'Total\n(c/IVA)',
+        'Surtido',
+      ],
+    ],
+    body: data.items.map((item, idx) => {
+      const itemTax = taxSummary.items[idx];
+      return [
+        (idx + 1).toString(),
+        item.code || 'S/C',
+        item.name || 'Producto sin nombre',
+        item.quantity.toString(),
+        formatCurrency(itemTax.unitPriceWithoutIva),
+        formatCurrency(itemTax.unitIva),
+        formatCurrency(itemTax.lineSubtotalWithoutIva),
+        formatCurrency(itemTax.lineIva),
+        formatCurrency(itemTax.lineTotalWithIva),
+        '[   ]',
+      ];
+    }),
     foot: [
       [
         '',
         `Códigos: ${totalSkus}`,
-        'TOTAL DEL PEDIDO',
+        'TOTALES DEL PEDIDO',
         `${totalUnits} pzas`,
         '',
-        formatCurrency(computedTotal),
         '',
+        formatCurrency(taxSummary.subtotal),
+        formatCurrency(taxSummary.iva),
+        formatCurrency(taxSummary.total),
         '',
       ],
     ],
@@ -234,39 +256,42 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
       fillColor: [29, 29, 31],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 8.5,
+      fontSize: 7.5,
       halign: 'left',
+      valign: 'middle',
     },
     footStyles: {
       fillColor: [240, 242, 245],
       textColor: [20, 20, 22],
       fontStyle: 'bold',
-      fontSize: 9,
+      fontSize: 8,
     },
     styles: {
-      fontSize: 8.5,
-      cellPadding: 2.8,
+      fontSize: 8,
+      cellPadding: 2.2,
       valign: 'middle',
       textColor: [25, 25, 28],
       lineColor: [210, 212, 216],
       lineWidth: 0.25,
     },
     columnStyles: {
-      0: { cellWidth: 8, halign: 'center' },
-      1: { cellWidth: 28, fontStyle: 'bold' },
+      0: { cellWidth: 7, halign: 'center' },
+      1: { cellWidth: 23, fontStyle: 'bold' },
       2: { cellWidth: 'auto' },
-      3: { cellWidth: 15, halign: 'center', fontStyle: 'bold', fontSize: 10 },
-      4: { cellWidth: 23, halign: 'right' },
-      5: { cellWidth: 24, halign: 'right', fontStyle: 'bold' },
-      6: { cellWidth: 16, halign: 'center', fontStyle: 'bold' },
-      7: { cellWidth: 26 },
+      3: { cellWidth: 12, halign: 'center', fontStyle: 'bold', fontSize: 9 },
+      4: { cellWidth: 19, halign: 'right' },
+      5: { cellWidth: 17, halign: 'right' },
+      6: { cellWidth: 20, halign: 'right' },
+      7: { cellWidth: 17, halign: 'right' },
+      8: { cellWidth: 20, halign: 'right', fontStyle: 'bold' },
+      9: { cellWidth: 13, halign: 'center', fontStyle: 'bold' },
     },
     didParseCell: (hookData) => {
       if (hookData.section === 'head') {
-        if ([0, 3, 6].includes(hookData.column.index)) {
+        if ([0, 3, 9].includes(hookData.column.index)) {
           hookData.cell.styles.halign = 'center';
         }
-        if ([4, 5].includes(hookData.column.index)) {
+        if ([4, 5, 6, 7, 8].includes(hookData.column.index)) {
           hookData.cell.styles.halign = 'right';
         }
       }
@@ -276,19 +301,59 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
         }
         if (hookData.column.index === 3) {
           hookData.cell.styles.halign = 'center';
-          hookData.cell.styles.fontSize = 9.5;
         }
-        if (hookData.column.index === 5) {
+        if ([6, 7].includes(hookData.column.index)) {
           hookData.cell.styles.halign = 'right';
-          hookData.cell.styles.fontSize = 10;
+        }
+        if (hookData.column.index === 8) {
+          hookData.cell.styles.halign = 'right';
+          hookData.cell.styles.fontSize = 8.5;
           hookData.cell.styles.textColor = [0, 102, 204];
         }
       }
     },
   });
 
-  const tableEndY = (doc as any).lastAutoTable.finalY || currentY + 30;
-  let signY = tableEndY + 22;
+  let afterTableY = ((doc as any).lastAutoTable.finalY || currentY + 30) + 5;
+
+  // Financial Breakdown Box (Subtotal sin IVA, IVA 16%, Monto Total)
+  const summaryBoxWidth = 76;
+  const summaryBoxHeight = 23;
+  const summaryBoxX = pageWidth - margin - summaryBoxWidth;
+
+  if (afterTableY + summaryBoxHeight + 28 > pageHeight - 15) {
+    doc.addPage();
+    afterTableY = 20;
+  }
+
+  doc.setFillColor(248, 249, 250);
+  doc.setDrawColor(220, 222, 226);
+  doc.roundedRect(summaryBoxX, afterTableY, summaryBoxWidth, summaryBoxHeight, 2, 2, 'FD');
+
+  const labelColX = summaryBoxX + 4;
+  const valueColX = summaryBoxX + summaryBoxWidth - 4;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(70, 70, 75);
+  doc.text('Subtotal (sin IVA):', labelColX, afterTableY + 6);
+  doc.text(formatCurrency(taxSummary.subtotal), valueColX, afterTableY + 6, { align: 'right' });
+
+  doc.text('IVA (16%):', labelColX, afterTableY + 11.5);
+  doc.text(formatCurrency(taxSummary.iva), valueColX, afterTableY + 11.5, { align: 'right' });
+
+  doc.setDrawColor(210, 212, 216);
+  doc.setLineWidth(0.3);
+  doc.line(labelColX, afterTableY + 14, valueColX, afterTableY + 14);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(20, 20, 22);
+  doc.text('Monto Total:', labelColX, afterTableY + 19.5);
+  doc.setTextColor(0, 102, 204);
+  doc.text(formatCurrency(taxSummary.total), valueColX, afterTableY + 19.5, { align: 'right' });
+
+  let signY = afterTableY + summaryBoxHeight + 18;
 
   // If signatures don't fit on current page, add a new page
   if (signY + 18 > pageHeight - 15) {
