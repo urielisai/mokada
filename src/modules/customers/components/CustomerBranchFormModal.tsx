@@ -60,6 +60,7 @@ const toInitialForm = (
   branch: CustomerBranch | null,
   fixedCustomer: CustomerSummary | null | undefined,
   defaultRouteId: string | null | undefined,
+  routeOptions: CustomerRouteOption[] = [],
 ): BranchFormValues => ({
   id: branch?.id,
   customer_id: branch?.customer_id || fixedCustomer?.id || '',
@@ -77,7 +78,10 @@ const toInitialForm = (
   location_references: branch?.location_references || '',
   latitude: branch?.latitude ?? '',
   longitude: branch?.longitude ?? '',
-  route_id: branch?.route_id || defaultRouteId || '',
+  route_id:
+    branch?.route_id ||
+    defaultRouteId ||
+    (routeOptions.length === 1 ? routeOptions[0].id : ''),
   image_path: branch?.image_path || null,
   is_main: branch?.is_main || false,
   is_active: branch?.is_active ?? true,
@@ -99,7 +103,9 @@ export const CustomerBranchFormModal = ({
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(
     customersService.getBranchImageUrl(branch?.image_path || null),
   );
-  const [form, setForm] = useState<BranchFormValues>(() => toInitialForm(branch, fixedCustomer, defaultRouteId));
+  const [form, setForm] = useState<BranchFormValues>(() =>
+    toInitialForm(branch, fixedCustomer, defaultRouteId, routeOptions),
+  );
   const [locationError, setLocationError] = useState('');
   const [imageError, setImageError] = useState('');
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
@@ -143,6 +149,16 @@ export const CustomerBranchFormModal = ({
     if (!fixedCustomer || branch || form.phone_primary.trim()) return;
     setForm((current) => ({ ...current, phone_primary: fixedCustomer.phone }));
   }, [branch, fixedCustomer, form.phone_primary]);
+
+  useEffect(() => {
+    const resolvedRouteId =
+      defaultRouteId || (routeOptions.length === 1 ? routeOptions[0].id : '');
+    if (!branch && resolvedRouteId && form.route_id !== resolvedRouteId) {
+      setForm((current) => ({ ...current, route_id: resolvedRouteId }));
+    } else if (branch && !form.route_id && resolvedRouteId) {
+      setForm((current) => ({ ...current, route_id: resolvedRouteId }));
+    }
+  }, [branch, defaultRouteId, form.route_id, routeOptions]);
 
   useEffect(() => {
     const postalCode = onlyDigits(form.postal_code || '', 5);
@@ -488,13 +504,14 @@ export const CustomerBranchFormModal = ({
             />
             <div className="sm:col-span-2">
               <SearchSelect
-                label="Ruta asignada"
+                label="Ruta asignada *"
                 options={routeSearchOptions}
                 value={form.route_id || ''}
-                placeholder="Buscar ruta por código o nombre"
-                emptyMessage="No hay rutas con ese texto"
+                placeholder="Selecciona una ruta asignada"
+                emptyMessage="No hay rutas disponibles"
+                required
+                disabled={routeSearchOptions.length === 1}
                 onChange={(value) => setForm((current) => ({ ...current, route_id: value }))}
-                onClear={() => setForm((current) => ({ ...current, route_id: '' }))}
               />
             </div>
           </div>

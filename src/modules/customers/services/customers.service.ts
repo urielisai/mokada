@@ -327,6 +327,7 @@ const validateBranchPayload = (payload: BranchFormValues) => {
   if (!payload.customer_id?.trim()) throw new Error('Selecciona un cliente para la sucursal.');
   if (!payload.name.trim()) throw new Error('El nombre de la sucursal es obligatorio.');
   if (!payload.phone_primary.trim()) throw new Error('El teléfono principal de la sucursal es obligatorio.');
+  if (!payload.route_id?.trim()) throw new Error('La ruta asignada de la sucursal es obligatoria.');
   if (postalCode && !/^\d{5}$/.test(postalCode)) throw new Error('El código postal debe tener 5 dígitos.');
   if (latitude !== null && (latitude < -90 || latitude > 90)) throw new Error('La latitud debe estar entre -90 y 90.');
   if (longitude !== null && (longitude < -180 || longitude > 180)) {
@@ -512,6 +513,199 @@ const assignBranchRoute = async (branchId: string, routeId: string | null) => {
   return data as CustomerBranchOption;
 };
 
+export interface CustomerWithoutBranchesRecord extends CustomerSummary {
+  orders_count: number;
+  fiscal_profiles: CustomerFiscalProfile[];
+}
+
+export interface CleanupCustomersResult {
+  deletedCount: number;
+  skippedWithOrdersCount: number;
+  deletedIds: string[];
+  skippedCustomers: Array<{ id: string; name: string; orders_count: number }>;
+}
+
+const escapeCsvField = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+  const text = String(value);
+  if (/[",\r\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+};
+
+const getCustomersWithoutBranches = async (): Promise<CustomerWithoutBranchesRecord[]> => {
+  const { data: summaries, error: summariesError } = await (supabase as any)
+    .from('customer_summaries')
+    .select('*')
+    .eq('branch_count', 0)
+    .order('created_at', { ascending: false });
+
+  if (summariesError) throw summariesError;
+
+  const list = (summaries || []) as CustomerSummary[];
+  if (!list.length) return [];
+
+  const customerIds = list.map((c) => c.id);
+
+  // Verificar directamente contra customer_branches que no tengan ninguna sucursal
+  const { data: existingBranches, error: branchesError } = await (supabase as any)
+    .from('customer_branches')
+    .select('customer_id')
+    .in('customer_id', customerIds);
+
+  if (branchesError) throw branchesError;
+
+  const idsWithBranch = new Set(((existingBranches || []) as Array<{ customer_id: string }>).map((b) => b.customer_id));
+  const strictlyWithoutBranches = list.filter((c) => !idsWithBranch.has(c.id));
+
+  if (!strictlyWithoutBranches.length) return [];
+
+  const targetIds = strictlyWithoutBranches.map((c) => c.id);
+
+  const [{ data: fiscalRows, error: fiscalError }, { data: orderRows, error: ordersError }] = await Promise.all([
+    (supabase as any).from('customer_fiscal_profiles').select('*').in('customer_id', targetIds),
+    (supabase as any).from('sales_orders').select('id, customer_id').in('customer_id', targetIds),
+  ]);
+
+  if (fiscalError) throw fiscalError;
+  if (ordersError) throw ordersError;
+
+  const fiscalByCustomer = new Map<string, CustomerFiscalProfile[]>();
+  for (const row of (fiscalRows || []) as CustomerFiscalProfile[]) {
+    const arr = fiscalByCustomer.get(row.customer_id) || [];
+    arr.push(row);
+    fiscalByCustomer.set(row.customer_id, arr);
+  }
+
+  const orderCountByCustomer = new Map<string, number>();
+  for (const row of (orderRows || []) as Array<{ id: string; customer_id: string }>) {
+    orderCountByCustomer.set(row.customer_id, (orderCountByCustomer.get(row.customer_id) || 0) + 1);
+  }
+
+  return strictlyWithoutBranches.map((customer) => ({
+    ...customer,
+    orders_count: orderCountByCustomer.get(customer.id) || 0,
+    fiscal_profiles: fiscalByCustomer.get(customer.id) || [],
+  }));
+};
+
+const exportCustomersWithoutBranchesCsv = (customers: CustomerWithoutBranchesRecord[]): string => {
+  const headers = [
+    'id',
+    'auth_user_id',
+    'name',
+    'email',
+    'phone',
+    'requires_invoice',
+    'is_active',
+    'branch_count',
+    'active_branch_count',
+    'fiscal_profile_count',
+    'active_fiscal_profile_count',
+    'default_fiscal_rfc',
+    'default_fiscal_legal_name',
+    'orders_count',
+    'created_by',
+    'created_at',
+    'updated_at',
+    'fiscal_profiles_json',
+  ];
+
+  const rows = customers.map((c) =>
+    [
+      c.id,
+      c.auth_user_id,
+      c.name,
+      c.email,
+      c.phone,
+      c.requires_invoice ? 'SI' : 'NO',
+      c.is_active ? 'ACTIVO' : 'INACTIVO',
+      c.branch_count,
+      c.active_branch_count,
+      c.fiscal_profile_count,
+      c.active_fiscal_profile_count,
+      c.default_fiscal_rfc || '',
+      c.default_fiscal_legal_name || '',
+      c.orders_count,
+      c.created_by || '',
+      c.created_at,
+      c.updated_at,
+      c.fiscal_profiles.length ? JSON.stringify(c.fiscal_profiles) : '',
+    ]
+      .map(escapeCsvField)
+      .join(','),
+  );
+
+  const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const now = new Date();
+  const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+  const filename = `respaldo_clientes_sin_sucursal_${stamp}.csv`;
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  return filename;
+};
+
+const deleteCustomersWithoutBranches = async (): Promise<CleanupCustomersResult> => {
+  const currentList = await getCustomersWithoutBranches();
+  if (!currentList.length) {
+    return {
+      deletedCount: 0,
+      skippedWithOrdersCount: 0,
+      deletedIds: [],
+      skippedCustomers: [],
+    };
+  }
+
+  const deletable = currentList.filter((c) => c.orders_count === 0);
+  const skipped = currentList
+    .filter((c) => c.orders_count > 0)
+    .map((c) => ({ id: c.id, name: c.name, orders_count: c.orders_count }));
+
+  if (!deletable.length) {
+    return {
+      deletedCount: 0,
+      skippedWithOrdersCount: skipped.length,
+      deletedIds: [],
+      skippedCustomers: skipped,
+    };
+  }
+
+  const deletableIds = deletable.map((c) => c.id);
+
+  // Intentar primero vía Edge Function (para limpiar también auth.users y user_profiles si está desplegada)
+  // y si no soporta la acción, eliminar directamente en public.customers (permitido por RLS customers_delete_staff).
+  try {
+    await invokeCustomers<{ deletedIds: string[] }>(
+      { action: 'cleanup_without_branches', ids: deletableIds },
+      'No se pudo ejecutar la limpieza en la función.',
+    );
+  } catch {
+    const { error: deleteError } = await (supabase as any)
+      .from('customers')
+      .delete()
+      .in('id', deletableIds);
+
+    if (deleteError) throw deleteError;
+  }
+
+  return {
+    deletedCount: deletableIds.length,
+    skippedWithOrdersCount: skipped.length,
+    deletedIds: deletableIds,
+    skippedCustomers: skipped,
+  };
+};
+
 export const fiscalPersonTypeLabels: Record<FiscalPersonType, string> = {
   INDIVIDUAL: 'Persona física',
   LEGAL_ENTITY: 'Persona moral',
@@ -520,11 +714,14 @@ export const fiscalPersonTypeLabels: Record<FiscalPersonType, string> = {
 export const customersService = {
   assignBranchRoute,
   createCustomer,
+  deleteCustomersWithoutBranches,
+  exportCustomersWithoutBranchesCsv,
   getBranchImageUrl,
   getBranchOptions,
   getBranches,
   getCustomer,
   getCustomers,
+  getCustomersWithoutBranches,
   getFiscalProfiles,
   getRoutes,
   saveBranch,

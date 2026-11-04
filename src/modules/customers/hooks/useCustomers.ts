@@ -152,3 +152,22 @@ export const useAssignBranchRoute = () => {
     },
   });
 };
+
+export const useCustomersWithoutBranches = (enabled = true) => {
+  return useQuery({
+    queryKey: [...customerKeys.all, 'without-branches'],
+    queryFn: customersService.getCustomersWithoutBranches,
+    enabled,
+  });
+};
+
+export const useDeleteCustomersWithoutBranches = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: customersService.deleteCustomersWithoutBranches,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: customerKeys.all });
+    },
+  });
+};

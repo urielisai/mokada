@@ -30,6 +30,7 @@ import { createBrandedQrDataUrl } from '../../../utils/qr';
 import { cfdiUseOptions, fiscalRegimeOptions } from '../../../utils/fiscalCatalogs';
 import { CustomerBranchFormModal } from '../components/CustomerBranchFormModal';
 import { SearchSelect } from '../../../components/ui/SearchSelect';
+import { useRouteScope } from '../../route-operations/hooks/useRouteScope';
 import {
   useCustomer,
   useCustomerBranches,
@@ -120,6 +121,39 @@ export const CustomerFormPage = () => {
   const { data: fiscalProfiles = [], isLoading: isFiscalLoading } = useCustomerFiscalProfiles(id || null);
   const { data: branches = [], isLoading: isBranchesLoading } = useCustomerBranches(id || null);
   const { data: routeOptions = [] } = useCustomerRoutes();
+  const { isAdmin, routeOptions: scopedRoutes, selectedRouteId } = useRouteScope();
+
+  const availableRoutes = useMemo<CustomerRouteOption[]>(() => {
+    if (routeOptions.length > 0) return routeOptions;
+    return scopedRoutes.map((route) => ({
+      id: route.id,
+      code: route.code || 'RUTA',
+      name: route.name,
+      is_active: route.is_active ?? true,
+    }));
+  }, [routeOptions, scopedRoutes]);
+
+  const defaultBranchRouteId = useMemo(() => {
+    if (availableRoutes.length === 1) return availableRoutes[0].id;
+    if (selectedRouteId && availableRoutes.some((route) => route.id === selectedRouteId)) {
+      return selectedRouteId;
+    }
+    if (!isAdmin && availableRoutes.length > 0) {
+      return availableRoutes[0].id;
+    }
+    return '';
+  }, [availableRoutes, isAdmin, selectedRouteId]);
+
+  const branchModalRouteOptions = useMemo<CustomerRouteOption[]>(() => {
+    if (availableRoutes.length <= 1) return availableRoutes;
+    // En el registro de una nueva sucursal (o para vendedores), si hay ruta activa en el selector global
+    // o única ruta asignada, solo permitir la ruta actual sin opción de las demás.
+    const isCreatingBranch = branchDialog?.mode === 'create';
+    if ((isCreatingBranch || !isAdmin) && defaultBranchRouteId) {
+      return availableRoutes.filter((route) => route.id === defaultBranchRouteId);
+    }
+    return availableRoutes;
+  }, [availableRoutes, branchDialog?.mode, defaultBranchRouteId, isAdmin]);
 
   const saveCustomer = useSaveCustomer();
   const saveFiscalProfile = useSaveFiscalProfile();
@@ -500,7 +534,8 @@ export const CustomerFormPage = () => {
         <CustomerBranchFormModal
           fixedCustomer={customer}
           branch={branchDialog.mode === 'edit' ? branchDialog.branch : null}
-          routeOptions={routeOptions}
+          defaultRouteId={defaultBranchRouteId}
+          routeOptions={branchModalRouteOptions}
           isPending={saveBranch.isPending || uploadBranchImage.isPending || updateBranchImage.isPending}
           errorMessage={branchError}
           onClose={() => setBranchDialog(null)}

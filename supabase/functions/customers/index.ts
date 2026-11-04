@@ -17,7 +17,8 @@ type CustomerPayload = {
 
 type CustomerRequest =
   | { action: 'create'; payload: CustomerPayload }
-  | { action: 'update'; id: string; payload: CustomerPayload };
+  | { action: 'update'; id: string; payload: CustomerPayload }
+  | { action: 'cleanup_without_branches'; ids: string[] };
 
 const jsonResponse = (body: Record<string, unknown>, status = 200) => {
   return new Response(JSON.stringify(body), {
@@ -286,6 +287,67 @@ Deno.serve(async (req) => {
       if (profileSyncError) throw profileSyncError;
 
       return jsonResponse({ data: { customer } });
+    }
+
+    if (body.action === 'cleanup_without_branches') {
+      if (requesterProfile?.user_type !== 'ADMIN') {
+        return jsonResponse({ error: 'Solo los administradores pueden ejecutar la limpieza de clientes.' }, 403);
+      }
+
+      const requestedIds = Array.isArray(body.ids) ? body.ids.filter(Boolean) : [];
+      if (!requestedIds.length) {
+        return jsonResponse({ data: { deletedIds: [] } });
+      }
+
+      const { data: branches, error: branchesError } = await adminClient
+        .from('customer_branches')
+        .select('customer_id')
+        .in('customer_id', requestedIds);
+
+      if (branchesError) throw branchesError;
+
+      const withBranchSet = new Set((branches || []).map((b: { customer_id: string }) => b.customer_id));
+
+      const { data: orders, error: ordersError } = await adminClient
+        .from('sales_orders')
+        .select('customer_id')
+        .in('customer_id', requestedIds);
+
+      if (ordersError) throw ordersError;
+
+      const withOrderSet = new Set((orders || []).map((o: { customer_id: string }) => o.customer_id));
+      const safeToDeleteIds = requestedIds.filter((id) => !withBranchSet.has(id) && !withOrderSet.has(id));
+
+      if (!safeToDeleteIds.length) {
+        return jsonResponse({ data: { deletedIds: [] } });
+      }
+
+      const { data: customersToDelete, error: fetchError } = await adminClient
+        .from('customers')
+        .select('id, auth_user_id')
+        .in('id', safeToDeleteIds);
+
+      if (fetchError) throw fetchError;
+
+      const { error: deleteError } = await adminClient
+        .from('customers')
+        .delete()
+        .in('id', safeToDeleteIds);
+
+      if (deleteError) throw deleteError;
+
+      for (const customerRow of customersToDelete || []) {
+        if (customerRow.auth_user_id) {
+          await adminClient
+            .from('user_profiles')
+            .delete()
+            .eq('auth_user_id', customerRow.auth_user_id)
+            .eq('user_type', 'CUSTOMER');
+          await adminClient.auth.admin.deleteUser(customerRow.auth_user_id).catch(() => null);
+        }
+      }
+
+      return jsonResponse({ data: { deletedIds: safeToDeleteIds } });
     }
 
     return badRequest('Accion no soportada.');

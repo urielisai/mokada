@@ -71,7 +71,7 @@ export const Header = ({ onMenuClick, isScrolled = false }: HeaderProps) => {
             aria-label="Filtrar por ruta"
             className="h-8 max-w-[140px] sm:max-w-[200px] rounded-full border border-transparent bg-black/[0.05] pl-3 sm:pl-3.5 text-[12px] sm:text-[13px] font-medium text-ink outline-none hover:bg-black/[0.08] focus:border-accent/50 focus:bg-white focus:ring-4 focus:ring-accent/15"
           >
-            <option value="">{isAdmin ? 'Todas las rutas' : 'Todas mis rutas'}</option>
+            {isAdmin && <option value="">Todas las rutas</option>}
             {routeOptions.map(r => (
               <option key={r.id} value={r.id}>{r.name}</option>
             ))}

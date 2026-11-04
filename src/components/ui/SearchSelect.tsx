@@ -84,7 +84,7 @@ export const SearchSelect = ({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen((current) => !current)}
-        className="flex h-10 w-full min-w-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-left text-sm outline-none transition-colors hover:border-accent/60 focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+        className="flex h-10 w-full min-w-0 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-left text-sm outline-none transition-colors hover:border-accent/60 focus:border-accent focus:ring-2 focus:ring-accent/15 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-ink"
       >
         <span className={`min-w-0 flex-1 truncate ${selectedOption ? 'text-ink' : 'text-muted'}`}>
           {selectedOption ? selectedOption.label : placeholder}

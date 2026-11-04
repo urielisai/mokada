@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase/client';
 import { useAuth } from '../../auth/context/useAuth';
@@ -8,6 +8,7 @@ export interface ScopedRouteOption {
   id: string;
   code: string | null;
   name: string;
+  is_active?: boolean;
 }
 
 /**
@@ -19,7 +20,7 @@ export interface ScopedRouteOption {
 const getScopedRoutes = async (profileId: string, isAdmin: boolean) => {
   let query = (supabase as any)
     .from('routes')
-    .select('id, code, name')
+    .select('id, code, name, is_active')
     .eq('is_active', true);
 
   if (!isAdmin) query = query.eq('agent_id', profileId);
@@ -44,9 +45,19 @@ export const useRouteScope = () => {
   });
 
   // Ignore a persisted selection that doesn't belong to this user's routes.
-  const selectedRouteId = routeOptions.some((route) => route.id === globalSelectedRouteId)
+  // For non-admin agents, always default to their single route or first assigned route.
+  const hasValidSelection = routeOptions.some((route) => route.id === globalSelectedRouteId);
+  const selectedRouteId = hasValidSelection
     ? globalSelectedRouteId
-    : '';
+    : !isAdmin && routeOptions.length > 0
+      ? routeOptions[0].id
+      : '';
+
+  useEffect(() => {
+    if (!isAdmin && routeOptions.length > 0 && !hasValidSelection) {
+      setGlobalSelectedRouteId(routeOptions[0].id);
+    }
+  }, [hasValidSelection, isAdmin, routeOptions, setGlobalSelectedRouteId]);
 
   // null = no restriction (admin with "Todas las rutas").
   const allowedRouteIds = useMemo<string[] | null>(() => {
@@ -56,14 +67,14 @@ export const useRouteScope = () => {
   }, [isAdmin, routeOptions, selectedRouteId]);
 
   // Agents also keep records without a route (e.g. a customer they created
-  // before assigning a branch route) when no specific route is selected.
+  // before assigning a branch route).
   const matchesRoute = useCallback(
     (routeId: string | null | undefined) => {
       if (!allowedRouteIds) return true;
-      if (!routeId) return !isAdmin && !selectedRouteId;
+      if (!routeId) return !isAdmin;
       return allowedRouteIds.includes(routeId);
     },
-    [allowedRouteIds, isAdmin, selectedRouteId],
+    [allowedRouteIds, isAdmin],
   );
 
   return {
