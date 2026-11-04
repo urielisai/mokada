@@ -1,17 +1,21 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { calculateOrderItemsTaxSummary } from './orderTax';
+import { getMokadaLogoDataUrl } from './pdfLogo';
 
-interface ReceiptItem {
+export interface ReceiptItem {
+  code?: string;
   name: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
 }
 
-interface ReceiptData {
+export interface ReceiptData {
   orderId: string;
   customerName: string;
+  branchName?: string;
+  routeName?: string;
   agentName: string;
   paymentMethod: string;
   amountPaidNow: number;
@@ -32,6 +36,8 @@ export interface ConsolidatedReceiptPayment {
 export interface ConsolidatedReceiptData {
   orderId: string;
   customerName: string;
+  branchName?: string;
+  routeName?: string;
   agentName: string;
   date: string;
   totalOrderAmount: number;
@@ -41,14 +47,21 @@ export interface ConsolidatedReceiptData {
   payments: ConsolidatedReceiptPayment[];
 }
 
-export const generateReceiptPdf = (data: ReceiptData) => {
+export const generateReceiptPdf = async (data: ReceiptData) => {
+  const logoDataUrl = await getMokadaLogoDataUrl();
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Header
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.text('MOKADA', pageWidth / 2, 20, { align: 'center' });
+  if (logoDataUrl) {
+    const logoWidth = 38;
+    const logoHeight = 12.7;
+    doc.addImage(logoDataUrl, 'PNG', (pageWidth - logoWidth) / 2, 10, logoWidth, logoHeight);
+  } else {
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MOKADA', pageWidth / 2, 20, { align: 'center' });
+  }
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
@@ -58,41 +71,69 @@ export const generateReceiptPdf = (data: ReceiptData) => {
   doc.line(14, 32, pageWidth - 14, 32);
 
   // Info
+  let infoY = 40;
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Fecha:', 14, 40);
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.date, 40, 40);
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Pedido #:', 14, 46);
+  doc.text('Fecha:', 14, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.orderId.substring(0, 8).toUpperCase(), 40, 46);
+  doc.text(data.date, 42, infoY);
+  infoY += 6;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Cliente:', 14, 52);
+  doc.text('Pedido #:', 14, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.customerName, 40, 52);
+  doc.text(data.orderId.substring(0, 8).toUpperCase(), 42, infoY);
+  infoY += 6;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Agente:', 14, 58);
+  doc.text('Cliente:', 14, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.agentName, 40, 58);
+  doc.text(
+    data.branchName ? `${data.customerName} (${data.branchName})` : data.customerName,
+    42,
+    infoY
+  );
+  infoY += 6;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Método:', 14, 64);
+  doc.text('Ruta:', 14, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.paymentMethod, 40, 64);
+  doc.text(data.routeName || 'Sin ruta asignada', 42, infoY);
+  infoY += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Agente:', 14, infoY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.agentName, 42, infoY);
+  infoY += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Método:', 14, infoY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.paymentMethod, 42, infoY);
 
   // Items Table
   const taxSummary = calculateOrderItemsTaxSummary(data.items, data.totalOrderAmount);
 
   autoTable(doc, {
-    startY: 70,
-    head: [['Producto', 'Cant.', 'P. Unit. (s/IVA)', 'IVA Unit.', 'Subtotal (s/IVA)', 'IVA (16%)', 'Total']],
+    startY: infoY + 6,
+    head: [
+      [
+        'Clave',
+        'Producto',
+        'Cant.',
+        'P. Unit. (s/IVA)',
+        'IVA Unit.',
+        'Subtotal (s/IVA)',
+        'IVA (16%)',
+        'Total',
+      ],
+    ],
     body: data.items.map((item, idx) => {
       const itemTax = taxSummary.items[idx];
       return [
+        item.code || 'S/C',
         item.name,
         item.quantity.toString(),
         `$${itemTax.unitPriceWithoutIva.toFixed(2)}`,
@@ -104,6 +145,7 @@ export const generateReceiptPdf = (data: ReceiptData) => {
     }),
     foot: [
       [
+        `Claves: ${data.items.length}`,
         'Totales del Pedido',
         '',
         '',
@@ -115,15 +157,21 @@ export const generateReceiptPdf = (data: ReceiptData) => {
     ],
     theme: 'grid',
     headStyles: { fillColor: [0, 102, 204], fontSize: 8 },
-    footStyles: { fillColor: [240, 242, 245], textColor: [20, 20, 22], fontStyle: 'bold', fontSize: 8.5 },
-    styles: { fontSize: 8.5 },
+    footStyles: {
+      fillColor: [240, 242, 245],
+      textColor: [20, 20, 22],
+      fontStyle: 'bold',
+      fontSize: 8.5,
+    },
+    styles: { fontSize: 8 },
     columnStyles: {
-      1: { halign: 'center' },
-      2: { halign: 'right' },
+      0: { cellWidth: 24, fontStyle: 'bold' },
+      2: { halign: 'center' },
       3: { halign: 'right' },
       4: { halign: 'right' },
       5: { halign: 'right' },
-      6: { halign: 'right', fontStyle: 'bold' },
+      6: { halign: 'right' },
+      7: { halign: 'right', fontStyle: 'bold' },
     },
   });
 
@@ -133,10 +181,10 @@ export const generateReceiptPdf = (data: ReceiptData) => {
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('Resumen del Pedido', 14, finalY);
-  
+
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  
+
   const labelX = 120;
   const valueX = 195;
   let currentY = finalY + 8;
@@ -168,24 +216,59 @@ export const generateReceiptPdf = (data: ReceiptData) => {
   doc.text('Saldo Pendiente:', labelX, currentY);
   doc.text(`$${data.remainingBalance.toFixed(2)}`, valueX, currentY, { align: 'right' });
 
+  // Contact Section
+  const contactBoxY = currentY + 8;
+  doc.setFillColor(239, 246, 255);
+  doc.setDrawColor(191, 219, 254);
+  doc.roundedRect(14, contactBoxY, pageWidth - 28, 16, 2, 2, 'FD');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 64, 175);
+  doc.text('Contacto y Aclaraciones', 18, contactBoxY + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(55, 65, 81);
+  doc.text(
+    'Para cualquier duda o aclaración sobre su pedido o pago, llámenos al teléfono: ',
+    18,
+    contactBoxY + 12
+  );
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 102, 204);
+  doc.text('7711599491', 136, contactBoxY + 12);
+
   // Footer
+  doc.setTextColor(80, 80, 85);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'italic');
-  doc.text('Este documento es un comprobante de pago. Gracias por su preferencia.', pageWidth / 2, Math.max(currentY + 20, 280), { align: 'center' });
+  doc.text(
+    'Este documento es un comprobante de pago. Gracias por su preferencia. • Aclaraciones: 7711599491',
+    pageWidth / 2,
+    Math.max(contactBoxY + 26, 280),
+    { align: 'center' }
+  );
 
   // Open PDF in new tab
   const blobUrl = doc.output('bloburl');
   window.open(blobUrl, '_blank');
 };
 
-export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) => {
+export const generateConsolidatedReceiptPdf = async (data: ConsolidatedReceiptData) => {
+  const logoDataUrl = await getMokadaLogoDataUrl();
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
 
   // Header
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.text('MOKADA', pageWidth / 2, 20, { align: 'center' });
+  if (logoDataUrl) {
+    const logoWidth = 38;
+    const logoHeight = 12.7;
+    doc.addImage(logoDataUrl, 'PNG', (pageWidth - logoWidth) / 2, 10, logoWidth, logoHeight);
+  } else {
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MOKADA', pageWidth / 2, 20, { align: 'center' });
+  }
 
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
@@ -195,40 +278,68 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
   doc.line(14, 32, pageWidth - 14, 32);
 
   // Info
+  let infoY = 40;
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Fecha de emisión:', 14, 40);
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.date, 50, 40);
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Pedido #:', 14, 46);
+  doc.text('Fecha de emisión:', 14, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.orderId.substring(0, 8).toUpperCase(), 50, 46);
+  doc.text(data.date, 50, infoY);
+  infoY += 6;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Cliente:', 14, 52);
+  doc.text('Pedido #:', 14, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.customerName, 50, 52);
+  doc.text(data.orderId.substring(0, 8).toUpperCase(), 50, infoY);
+  infoY += 6;
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Agente:', 14, 58);
+  doc.text('Cliente:', 14, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.agentName, 50, 58);
+  doc.text(
+    data.branchName ? `${data.customerName} (${data.branchName})` : data.customerName,
+    50,
+    infoY
+  );
+  infoY += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Ruta:', 14, infoY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.routeName || 'Sin ruta asignada', 50, infoY);
+  infoY += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Agente:', 14, infoY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.agentName, 50, infoY);
 
   // Items Table
+  const itemsTitleY = infoY + 9;
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('Artículos del Pedido', 14, 67);
+  doc.text('Artículos del Pedido', 14, itemsTitleY);
 
   const taxSummary = calculateOrderItemsTaxSummary(data.items, data.totalOrderAmount);
 
   autoTable(doc, {
-    startY: 70,
-    head: [['Producto', 'Cant.', 'P. Unit. (s/IVA)', 'IVA Unit.', 'Subtotal (s/IVA)', 'IVA (16%)', 'Total']],
+    startY: itemsTitleY + 3,
+    head: [
+      [
+        'Clave',
+        'Producto',
+        'Cant.',
+        'P. Unit. (s/IVA)',
+        'IVA Unit.',
+        'Subtotal (s/IVA)',
+        'IVA (16%)',
+        'Total',
+      ],
+    ],
     body: data.items.map((item, idx) => {
       const itemTax = taxSummary.items[idx];
       return [
+        item.code || 'S/C',
         item.name,
         item.quantity.toString(),
         `$${itemTax.unitPriceWithoutIva.toFixed(2)}`,
@@ -240,6 +351,7 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
     }),
     foot: [
       [
+        `Claves: ${data.items.length}`,
         'Totales del Pedido',
         '',
         '',
@@ -251,15 +363,21 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
     ],
     theme: 'grid',
     headStyles: { fillColor: [0, 102, 204], fontSize: 8 },
-    footStyles: { fillColor: [240, 242, 245], textColor: [20, 20, 22], fontStyle: 'bold', fontSize: 8.5 },
-    styles: { fontSize: 8.5 },
+    footStyles: {
+      fillColor: [240, 242, 245],
+      textColor: [20, 20, 22],
+      fontStyle: 'bold',
+      fontSize: 8.5,
+    },
+    styles: { fontSize: 8 },
     columnStyles: {
-      1: { halign: 'center' },
-      2: { halign: 'right' },
+      0: { cellWidth: 24, fontStyle: 'bold' },
+      2: { halign: 'center' },
       3: { halign: 'right' },
       4: { halign: 'right' },
       5: { halign: 'right' },
-      6: { halign: 'right', fontStyle: 'bold' },
+      6: { halign: 'right' },
+      7: { halign: 'right', fontStyle: 'bold' },
     },
   });
 
@@ -278,7 +396,7 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
       payment.date,
       payment.method,
       payment.status,
-      `$${payment.amount.toFixed(2)}`
+      `$${payment.amount.toFixed(2)}`,
     ]),
     theme: 'grid',
     headStyles: { fillColor: [0, 102, 204] },
@@ -322,10 +440,38 @@ export const generateConsolidatedReceiptPdf = (data: ConsolidatedReceiptData) =>
   doc.text('Saldo Pendiente:', labelX, currentY);
   doc.text(`$${data.remainingBalance.toFixed(2)}`, valueX, currentY, { align: 'right' });
 
+  // Contact Section
+  const contactBoxY = currentY + 8;
+  doc.setFillColor(239, 246, 255);
+  doc.setDrawColor(191, 219, 254);
+  doc.roundedRect(14, contactBoxY, pageWidth - 28, 16, 2, 2, 'FD');
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 64, 175);
+  doc.text('Contacto y Aclaraciones', 18, contactBoxY + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(55, 65, 81);
+  doc.text(
+    'Para cualquier duda o aclaración sobre su pedido o pagos, llámenos al teléfono: ',
+    18,
+    contactBoxY + 12
+  );
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 102, 204);
+  doc.text('7711599491', 138, contactBoxY + 12);
+
   // Footer
+  doc.setTextColor(80, 80, 85);
   doc.setFontSize(9);
   doc.setFont('helvetica', 'italic');
-  doc.text('Este documento es un comprobante de los pagos registrados del pedido. Gracias por su preferencia.', pageWidth / 2, Math.max(currentY + 20, 280), { align: 'center' });
+  doc.text(
+    'Este documento es un comprobante de los pagos registrados del pedido. • Aclaraciones: 7711599491',
+    pageWidth / 2,
+    Math.max(contactBoxY + 26, 280),
+    { align: 'center' }
+  );
 
   // Open PDF in new tab
   const blobUrl = doc.output('bloburl');

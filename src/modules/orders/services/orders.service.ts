@@ -118,11 +118,47 @@ export const ordersService = {
       .from('sales_orders')
       .select(`
         *,
-        customers (name, email, phone),
-        customer_branches (name, street, municipality, state, phone_primary),
+        customers (
+          name,
+          email,
+          phone,
+          customer_branches (
+            name,
+            is_main,
+            route_id,
+            routes (
+              id,
+              code,
+              name,
+              agent:user_profiles!routes_agent_id_fkey (first_name, last_name)
+            )
+          )
+        ),
+        customer_branches (
+          name,
+          street,
+          municipality,
+          state,
+          phone_primary,
+          route_id,
+          routes (
+            id,
+            code,
+            name,
+            agent:user_profiles!routes_agent_id_fkey (first_name, last_name)
+          )
+        ),
         sales_order_items (
           *,
-          products (name, code)
+          products (
+            name,
+            code,
+            item_type,
+            sale_links:product_sale_links!product_sale_links_purchase_product_id_fkey (
+              is_default,
+              sale:products!product_sale_links_sale_product_id_fkey (code)
+            )
+          )
         ),
         sales_order_payments (*)
       `)

@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { calculateOrderItemsTaxSummary } from './orderTax';
+import { getMokadaLogoDataUrl } from './pdfLogo';
 
 export interface WarehouseOrderItem {
   code: string;
@@ -17,6 +18,8 @@ export interface WarehouseOrderPdfData {
   statusLabel: string;
   paymentTypeLabel?: string;
   warehouseName?: string;
+  routeName?: string;
+  routeAgentName?: string;
   estimatedDeliveryDate?: string;
   customerName: string;
   customerPhone?: string;
@@ -31,7 +34,8 @@ export interface WarehouseOrderPdfData {
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(amount || 0));
 
-export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
+export const generateWarehouseOrderPdf = async (data: WarehouseOrderPdfData) => {
+  const logoDataUrl = await getMokadaLogoDataUrl();
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -46,36 +50,41 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
       : data.items.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
   const taxSummary = calculateOrderItemsTaxSummary(data.items, computedTotal);
 
-  // Header Left: Brand & Document Title
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.setTextColor(20, 20, 22);
-  doc.text('MOKADA', margin, 18);
+  // Header Left: Brand Logo & Document Title
+  if (logoDataUrl) {
+    doc.addImage(logoDataUrl, 'PNG', margin, 10, 34, 11.4);
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(20, 20, 22);
+    doc.text('MOKADA', margin, 18);
+  }
 
-  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
   doc.setTextColor(60, 60, 67);
-  doc.text('ORDEN DE SURTIDO — ALMACÉN', margin, 25);
+  doc.text('ORDEN DE SURTIDO — ALMACÉN', margin, 26.5);
 
   if (data.isWarrantyReplacement) {
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(180, 83, 9);
-    doc.text('REPOSICIÓN POR GARANTÍA', margin, 30.5);
+    doc.text('REPOSICIÓN POR GARANTÍA', margin, 31.5);
   }
 
   // Header Right: Folio & Dates
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(15);
   doc.setTextColor(20, 20, 22);
-  doc.text(`PEDIDO #${folio}`, pageWidth - margin, 18, { align: 'right' });
+  doc.text(`PEDIDO #${folio}`, pageWidth - margin, 16, { align: 'right' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 85);
-  doc.text(`Fecha de pedido: ${data.orderDate}`, pageWidth - margin, 24, { align: 'right' });
+  doc.text(`Fecha de pedido: ${data.orderDate}`, pageWidth - margin, 22, { align: 'right' });
   doc.text(
     `Estado: ${data.statusLabel}${data.paymentTypeLabel ? `  •  Pago: ${data.paymentTypeLabel}` : ''}`,
     pageWidth - margin,
-    29,
+    27,
     { align: 'right' }
   );
 
@@ -84,7 +93,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setLineWidth(0.5);
   doc.line(margin, 34, pageWidth - margin, 34);
 
-  // Info Box (Customer / Shipping on Left, Warehouse / Logistics on Right)
+  // Info Box (Customer / Shipping on Left, Route / Warehouse / Logistics on Right)
   const infoStartY = 38;
   const colLeftX = margin + 4;
   const colRightX = pageWidth / 2 + 4;
@@ -92,7 +101,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
 
   const addressText = data.shippingAddress || 'No especificada';
   const addressLines = doc.splitTextToSize(addressText, colMaxWidth);
-  const infoBoxHeight = Math.max(36, 25 + addressLines.length * 4.5);
+  const infoBoxHeight = Math.max(42, 26 + addressLines.length * 4.5);
 
   doc.setFillColor(248, 249, 250);
   doc.setDrawColor(225, 227, 230);
@@ -137,17 +146,33 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setTextColor(60, 60, 65);
   doc.text(addressLines, colLeftX, leftY);
 
-  // Right Column: Warehouse & Picking Summary
+  // Right Column: Route, Warehouse & Picking Summary
   let rightY = infoStartY + 6;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(110, 110, 115);
-  doc.text('DATOS DE SURTIDO Y RESUMEN', colRightX, rightY);
+  doc.text('DATOS DE RUTA Y SURTIDO', colRightX, rightY);
 
   rightY += 5;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(20, 20, 22);
+  doc.text('Ruta:', colRightX, rightY);
+  doc.setFont('helvetica', 'normal');
+  const routeDisplay = [
+    data.routeName || 'Sin ruta asignada',
+    data.routeAgentName ? `(${data.routeAgentName})` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  doc.text(
+    doc.splitTextToSize(routeDisplay, colMaxWidth - 33)[0] || 'Sin ruta asignada',
+    colRightX + 33,
+    rightY
+  );
+
+  rightY += 5;
+  doc.setFont('helvetica', 'bold');
   doc.text('Almacén de salida:', colRightX, rightY);
   doc.setFont('helvetica', 'normal');
   doc.text(data.warehouseName || 'Por asignar', colRightX + 33, rightY);
@@ -169,7 +194,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
   doc.setFontSize(8.5);
   doc.setTextColor(0, 102, 204);
   doc.text(
-    `A surtir: ${totalSkus} código(s)  |  ${totalUnits} pieza(s)  |  Total: ${formatCurrency(taxSummary.total)}`,
+    `A surtir: ${totalSkus} clave(s)  |  ${totalUnits} pieza(s)  |  Total: ${formatCurrency(taxSummary.total)}`,
     colRightX,
     rightY
   );
@@ -211,7 +236,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
     head: [
       [
         '#',
-        'Código / SKU',
+        'Clave',
         'Descripción del Producto',
         'Cant.',
         'P. Unit.\n(s/IVA)',
@@ -240,7 +265,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
     foot: [
       [
         '',
-        `Códigos: ${totalSkus}`,
+        `Claves: ${totalSkus}`,
         'TOTALES DEL PEDIDO',
         `${totalUnits} pzas`,
         '',
@@ -316,16 +341,42 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
 
   let afterTableY = ((doc as any).lastAutoTable.finalY || currentY + 30) + 5;
 
-  // Financial Breakdown Box (Subtotal sin IVA, IVA 16%, Monto Total)
+  // Contact & Clarifications Box (left side) + Financial Breakdown Box (right side)
   const summaryBoxWidth = 76;
   const summaryBoxHeight = 23;
   const summaryBoxX = pageWidth - margin - summaryBoxWidth;
+  const contactBoxWidth = summaryBoxX - margin - 6;
 
   if (afterTableY + summaryBoxHeight + 28 > pageHeight - 15) {
     doc.addPage();
     afterTableY = 20;
   }
 
+  // Contact Box (Left)
+  doc.setFillColor(239, 246, 255);
+  doc.setDrawColor(191, 219, 254);
+  doc.roundedRect(margin, afterTableY, contactBoxWidth, summaryBoxHeight, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(30, 64, 175);
+  doc.text('CONTACTO Y ACLARACIONES', margin + 4, afterTableY + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(55, 65, 81);
+  doc.text(
+    'Para cualquier duda o aclaración sobre su pedido, llámenos al:',
+    margin + 4,
+    afterTableY + 12
+  );
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(0, 102, 204);
+  doc.text('Tel. 7711599491', margin + 4, afterTableY + 18.5);
+
+  // Financial Summary Box (Right)
   doc.setFillColor(248, 249, 250);
   doc.setDrawColor(220, 222, 226);
   doc.roundedRect(summaryBoxX, afterTableY, summaryBoxWidth, summaryBoxHeight, 2, 2, 'FD');
@@ -355,37 +406,34 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
 
   let signY = afterTableY + summaryBoxHeight + 18;
 
-  // If signatures don't fit on current page, add a new page
+  // If signature doesn't fit on current page, add a new page
   if (signY + 18 > pageHeight - 15) {
     doc.addPage();
     signY = 35;
   }
 
-  // Signature Lines for Warehouse Control
-  const sigWidth = 52;
-  const sig1X = margin;
-  const sig2X = pageWidth / 2 - sigWidth / 2;
-  const sig3X = pageWidth - margin - sigWidth;
+  // Only Customer Signature Line for Delivery Receipt
+  const sigWidth = 80;
+  const sigX = (pageWidth - sigWidth) / 2;
 
   doc.setDrawColor(160, 160, 165);
   doc.setLineWidth(0.4);
-  doc.line(sig1X, signY, sig1X + sigWidth, signY);
-  doc.line(sig2X, signY, sig2X + sigWidth, signY);
-  doc.line(sig3X, signY, sig3X + sigWidth, signY);
+  doc.line(sigX, signY, sigX + sigWidth, signY);
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(60, 60, 65);
-  doc.text('Surtido por (Almacén)', sig1X + sigWidth / 2, signY + 5, { align: 'center' });
-  doc.text('Revisado / Empacado por', sig2X + sigWidth / 2, signY + 5, { align: 'center' });
-  doc.text('Entregado a Ruta / Chofer', sig3X + sigWidth / 2, signY + 5, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setTextColor(40, 40, 45);
+  doc.text('Firma de recibido del Cliente', pageWidth / 2, signY + 5, { align: 'center' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  doc.setTextColor(120, 120, 125);
-  doc.text('Nombre y firma', sig1X + sigWidth / 2, signY + 9, { align: 'center' });
-  doc.text('Nombre y firma', sig2X + sigWidth / 2, signY + 9, { align: 'center' });
-  doc.text('Nombre, fecha y firma', sig3X + sigWidth / 2, signY + 9, { align: 'center' });
+  doc.setTextColor(110, 110, 115);
+  doc.text(
+    data.customerName ? `${data.customerName} — Nombre, fecha y firma de recibido` : 'Nombre, fecha y firma de recibido',
+    pageWidth / 2,
+    signY + 9.5,
+    { align: 'center' }
+  );
 
   // Page Footer on all pages
   const totalPages = doc.getNumberOfPages();
@@ -395,7 +443,7 @@ export const generateWarehouseOrderPdf = (data: WarehouseOrderPdfData) => {
     doc.setFontSize(8);
     doc.setTextColor(130, 130, 135);
     doc.text(
-      `Orden de surtido interna para almacén • Pedido #${folio}`,
+      `Orden de surtido • Pedido #${folio}${data.routeName ? ` • ${data.routeName}` : ''} • Aclaraciones: 7711599491`,
       margin,
       pageHeight - 10
     );

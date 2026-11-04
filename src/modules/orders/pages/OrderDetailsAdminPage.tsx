@@ -288,6 +288,46 @@ export const OrderDetailsAdminPage = () => {
     return 'Tarjeta';
   };
 
+  const getOrderRouteInfo = (orderData: any) => {
+    const directBranch = Array.isArray(orderData?.customer_branches)
+      ? orderData.customer_branches[0]
+      : orderData?.customer_branches;
+    const customerBranches = Array.isArray(orderData?.customers?.customer_branches)
+      ? orderData.customers.customer_branches
+      : [];
+    const fallbackBranch =
+      customerBranches.find((b: any) => b.is_main && b.routes) ||
+      customerBranches.find((b: any) => b.routes) ||
+      customerBranches[0];
+    const branch = directBranch || fallbackBranch;
+    const routeObj = Array.isArray(branch?.routes) ? branch.routes[0] : branch?.routes;
+    const routeLabel = routeObj
+      ? [routeObj.code, routeObj.name].filter(Boolean).join(' - ')
+      : undefined;
+    const agentObj = Array.isArray(routeObj?.agent) ? routeObj.agent[0] : routeObj?.agent;
+    const routeAgentName = agentObj
+      ? `${agentObj.first_name || ''} ${agentObj.last_name || ''}`.trim() || undefined
+      : undefined;
+
+    return {
+      branch,
+      branchName: branch?.name || undefined,
+      routeLabel,
+      routeAgentName,
+    };
+  };
+
+  const getItemSaleKey = (item: any): string => {
+    const product = item?.products;
+    if (!product) return 'S/C';
+    if (product.item_type === 'PURCHASE' && Array.isArray(product.sale_links) && product.sale_links.length > 0) {
+      const defaultLink = product.sale_links.find((l: any) => l.is_default) || product.sale_links[0];
+      const saleObj = Array.isArray(defaultLink?.sale) ? defaultLink.sale[0] : defaultLink?.sale;
+      if (saleObj?.code) return saleObj.code;
+    }
+    return product.code || 'S/C';
+  };
+
   const handleDownloadReceipt = (payment: any) => {
     const sortedApproved = [...(order.sales_order_payments || [])]
       .filter((p: any) => p.status === 'APPROVED')
@@ -300,11 +340,14 @@ export const OrderDetailsAdminPage = () => {
     }
 
     const currentAmount = Number(payment.amount) || 0;
+    const { branchName, routeLabel, routeAgentName } = getOrderRouteInfo(order);
 
-    generateReceiptPdf({
+    void generateReceiptPdf({
       orderId: order.id,
       customerName: order.customers?.name || 'Cliente',
-      agentName: currentUserProfile?.name || 'Agente Mokada',
+      branchName,
+      routeName: routeLabel,
+      agentName: routeAgentName || currentUserProfile?.name || 'Agente Mokada',
       paymentMethod: getPaymentMethodLabel(payment),
       amountPaidNow: currentAmount,
       totalOrderAmount: order.total_amount,
@@ -312,6 +355,7 @@ export const OrderDetailsAdminPage = () => {
       remainingBalance: Math.max(order.total_amount - (previouslyPaid + currentAmount), 0),
       date: format(new Date(payment.created_at), "dd/MM/yyyy HH:mm"),
       items: order.sales_order_items.map((item: any) => ({
+        code: getItemSaleKey(item),
         name: item.products?.name,
         quantity: item.quantity,
         unitPrice: item.unit_price,
@@ -326,16 +370,20 @@ export const OrderDetailsAdminPage = () => {
     );
 
     const totalPaid = Number(order.amount_paid) || 0;
+    const { branchName, routeLabel, routeAgentName } = getOrderRouteInfo(order);
 
-    generateConsolidatedReceiptPdf({
+    void generateConsolidatedReceiptPdf({
       orderId: order.id,
       customerName: order.customers?.name || 'Cliente',
-      agentName: currentUserProfile?.name || 'Agente Mokada',
+      branchName,
+      routeName: routeLabel,
+      agentName: routeAgentName || currentUserProfile?.name || 'Agente Mokada',
       date: format(new Date(), "dd/MM/yyyy HH:mm"),
       totalOrderAmount: order.total_amount,
       totalPaid,
       remainingBalance: Math.max(order.total_amount - totalPaid, 0),
       items: (order.sales_order_items || []).map((item: any) => ({
+        code: getItemSaleKey(item),
         name: item.products?.name,
         quantity: item.quantity,
         unitPrice: item.unit_price,
@@ -355,32 +403,34 @@ export const OrderDetailsAdminPage = () => {
     const selectedWarehouse = warehouses?.find(w => w.id === (warehouseId || order.warehouse_id));
     const currentStatusKey = (status || order.status) as keyof typeof statusConfig;
     const statusLabel = statusConfig[currentStatusKey]?.label || order.status;
-    const branch = Array.isArray(order.customer_branches) ? order.customer_branches[0] : order.customer_branches;
+    const { branch, branchName, routeLabel, routeAgentName } = getOrderRouteInfo(order);
     const effectiveEstimatedDate = estimatedDate || order.estimated_delivery_date;
     const paymentTypeLabel =
       order.payment_type === 'CREDITO'
         ? `Crédito (${order.credit_term_days || 15} días)`
         : 'Contado';
 
-    generateWarehouseOrderPdf({
+    void generateWarehouseOrderPdf({
       orderId: order.id,
       orderDate: format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es }),
       printedAt: format(new Date(), "dd/MM/yyyy HH:mm", { locale: es }),
       statusLabel,
       paymentTypeLabel,
       warehouseName: selectedWarehouse?.name || 'Por asignar',
+      routeName: routeLabel,
+      routeAgentName,
       estimatedDeliveryDate: effectiveEstimatedDate
         ? format(new Date(`${effectiveEstimatedDate}T00:00:00`), "d 'de' MMMM, yyyy", { locale: es })
         : undefined,
       customerName: order.customers?.name || 'Cliente',
       customerPhone: order.customers?.phone || branch?.phone_primary || undefined,
-      branchName: branch?.name || undefined,
+      branchName,
       shippingAddress: order.shipping_address || undefined,
       comments: adminComments || order.admin_comments || undefined,
       isWarrantyReplacement: !!order.warranty_return_id,
       totalAmount: Number(order.total_amount) || 0,
       items: (order.sales_order_items || []).map((item: any) => ({
-        code: item.products?.code || 'S/C',
+        code: getItemSaleKey(item),
         name: item.products?.name || 'Producto',
         quantity: Number(item.quantity) || 0,
         unitPrice: Number(item.unit_price) || 0,
@@ -616,20 +666,31 @@ export const OrderDetailsAdminPage = () => {
           {currentUserProfile?.user_type === 'ADMIN' && order.requires_invoice && (
             <OrderInvoiceRequests order={order} />
           )}
-          <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between gap-4">
-            <div>
-              <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Cliente</h3>
-              <p className="font-medium text-ink">{order.customers?.name}</p>
-              <p className="text-sm text-gray-600">{order.customers?.email}</p>
-              {order.customers?.phone && <p className="text-sm text-gray-600">{order.customers?.phone}</p>}
-            </div>
-            {order.shipping_address && (
-              <div>
-                <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Dirección de envío</h3>
-                <p className="text-sm text-gray-600 max-w-xs">{order.shipping_address}</p>
+          {(() => {
+            const { branchName, routeLabel, routeAgentName } = getOrderRouteInfo(order);
+            return (
+              <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between gap-4">
+                <div>
+                  <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Cliente</h3>
+                  <p className="font-medium text-ink">{order.customers?.name}</p>
+                  {branchName && <p className="text-sm text-gray-600">Sucursal: {branchName}</p>}
+                  <p className="text-sm text-gray-600">{order.customers?.email}</p>
+                  {order.customers?.phone && <p className="text-sm text-gray-600">{order.customers?.phone}</p>}
+                </div>
+                <div>
+                  <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Ruta asignada</h3>
+                  <p className="text-sm font-medium text-ink">{routeLabel || 'Sin ruta asignada'}</p>
+                  {routeAgentName && <p className="text-xs text-gray-500 mt-0.5">Vendedor: {routeAgentName}</p>}
+                </div>
+                {order.shipping_address && (
+                  <div>
+                    <h3 className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Dirección de envío</h3>
+                    <p className="text-sm text-gray-600 max-w-xs">{order.shipping_address}</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
 
           <div className="bg-white border border-gray-200/60 rounded-2xl p-4 sm:p-6 shadow-sm">
             <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
@@ -713,7 +774,7 @@ export const OrderDetailsAdminPage = () => {
                     
                     <div>
                       <p className="text-[14px] font-medium text-ink">{item.products?.name}</p>
-                      <p className="text-[12px] text-muted">{item.products?.code}</p>
+                      <p className="text-[12px] text-muted">Clave: {getItemSaleKey(item)}</p>
                       {showStock && (() => {
                         const stock = stockStatus.get(item.product_id);
                         if (!stock || stock.status === 'OK') return null;
