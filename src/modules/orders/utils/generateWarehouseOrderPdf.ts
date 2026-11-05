@@ -347,7 +347,7 @@ export const generateWarehouseOrderPdf = async (data: WarehouseOrderPdfData) => 
   const summaryBoxX = pageWidth - margin - summaryBoxWidth;
   const contactBoxWidth = summaryBoxX - margin - 6;
 
-  if (afterTableY + summaryBoxHeight + 28 > pageHeight - 15) {
+  if (afterTableY + summaryBoxHeight + 10 > pageHeight - 15) {
     doc.addPage();
     afterTableY = 20;
   }
@@ -360,21 +360,22 @@ export const generateWarehouseOrderPdf = async (data: WarehouseOrderPdfData) => 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(30, 64, 175);
-  doc.text('CONTACTO Y ACLARACIONES', margin + 4, afterTableY + 6);
+  doc.text('CONTACTO Y ACLARACIONES', margin + 4, afterTableY + 5.5);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(55, 65, 81);
   doc.text(
-    'Para cualquier duda o aclaración sobre su pedido, llámenos al:',
+    'Para cualquier duda o aclaración sobre su pedido:',
     margin + 4,
-    afterTableY + 12
+    afterTableY + 10.5
   );
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
+  doc.setFontSize(8.5);
   doc.setTextColor(0, 102, 204);
-  doc.text('Tel. 7711599491', margin + 4, afterTableY + 18.5);
+  doc.text('Tel: 7711599491', margin + 4, afterTableY + 15.5);
+  doc.text('Correo: distribuidoramokada@gmail.com', margin + 4, afterTableY + 20);
 
   // Financial Summary Box (Right)
   doc.setFillColor(248, 249, 250);
@@ -404,7 +405,61 @@ export const generateWarehouseOrderPdf = async (data: WarehouseOrderPdfData) => 
   doc.setTextColor(0, 102, 204);
   doc.text(formatCurrency(taxSummary.total), valueColX, afterTableY + 19.5, { align: 'right' });
 
-  let signY = afterTableY + summaryBoxHeight + 18;
+  // Bank Accounts Section (No Invoice vs With Invoice)
+  let bankBoxY = afterTableY + summaryBoxHeight + 4;
+  const bankBoxHeight = 27;
+
+  if (bankBoxY + bankBoxHeight + 25 > pageHeight - 15) {
+    doc.addPage();
+    bankBoxY = 20;
+  }
+
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(margin, bankBoxY, pageWidth - margin * 2, bankBoxHeight, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(30, 41, 59);
+  doc.text('DATOS BANCARIOS PARA PAGO / TRANSFERENCIA', margin + 4, bankBoxY + 5);
+
+  const bankColLeftX = margin + 4;
+  const bankColRightX = pageWidth / 2 + 4;
+
+  // Vertical divider between the two bank accounts
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.3);
+  doc.line(pageWidth / 2, bankBoxY + 7, pageWidth / 2, bankBoxY + bankBoxHeight - 3);
+
+  // Account 1: Clientes que NO requieren factura
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(180, 83, 9);
+  doc.text('CLIENTES QUE NO REQUIEREN FACTURA', bankColLeftX, bankBoxY + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Banco: Azteca', bankColLeftX, bankBoxY + 14.5);
+  doc.text('A nombre de: Karla Piñon Juarez', bankColLeftX, bankBoxY + 19);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Cuenta CLABE: 127290021335928406', bankColLeftX, bankBoxY + 23.5);
+
+  // Account 2: Clientes que facturan
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(0, 102, 204);
+  doc.text('CLIENTES QUE FACTURAN', bankColRightX, bankBoxY + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Banco: Santander', bankColRightX, bankBoxY + 14.5);
+  doc.text('A nombre de: Monica Ariadna Piñon Juárez', bankColRightX, bankBoxY + 19);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Cuenta: 65-51013074-9  |  CLABE: 014311655101307499', bankColRightX, bankBoxY + 23.5);
+
+  let signY = bankBoxY + bankBoxHeight + 16;
 
   // If signature doesn't fit on current page, add a new page
   if (signY + 18 > pageHeight - 15) {
@@ -440,10 +495,10 @@ export const generateWarehouseOrderPdf = async (data: WarehouseOrderPdfData) => 
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setTextColor(130, 130, 135);
     doc.text(
-      `Orden de surtido • Pedido #${folio}${data.routeName ? ` • ${data.routeName}` : ''} • Aclaraciones: 7711599491`,
+      `Pedido #${folio}${data.routeName ? ` • ${data.routeName}` : ''} • Tel: 7711599491 • distribuidoramokada@gmail.com`,
       margin,
       pageHeight - 10
     );

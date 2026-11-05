@@ -47,6 +47,105 @@ export interface ConsolidatedReceiptData {
   payments: ConsolidatedReceiptPayment[];
 }
 
+const renderContactAndBankSection = (doc: jsPDF, startY: number, footerPrefix: string) => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 14;
+
+  let currentBoxY = startY;
+  const totalSectionHeight = 16 + 4 + 27;
+
+  if (currentBoxY + totalSectionHeight + 18 > pageHeight - 10) {
+    doc.addPage();
+    currentBoxY = 20;
+  }
+
+  // Contact Section
+  doc.setFillColor(239, 246, 255);
+  doc.setDrawColor(191, 219, 254);
+  doc.roundedRect(margin, currentBoxY, pageWidth - margin * 2, 16, 2, 2, 'FD');
+
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 64, 175);
+  doc.text('Contacto y Aclaraciones', margin + 4, currentBoxY + 5.5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(55, 65, 81);
+  doc.text(
+    'Para cualquier duda o aclaración comuníquese al:',
+    margin + 4,
+    currentBoxY + 11.5
+  );
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 102, 204);
+  doc.text(
+    'Tel: 7711599491   •   Correo: distribuidoramokada@gmail.com',
+    margin + 78,
+    currentBoxY + 11.5
+  );
+
+  // Bank Accounts Section
+  const bankBoxY = currentBoxY + 20;
+  const bankBoxHeight = 27;
+
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(margin, bankBoxY, pageWidth - margin * 2, bankBoxHeight, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(30, 41, 59);
+  doc.text('DATOS BANCARIOS PARA PAGO / TRANSFERENCIA', margin + 4, bankBoxY + 5);
+
+  const bankColLeftX = margin + 4;
+  const bankColRightX = pageWidth / 2 + 4;
+
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.3);
+  doc.line(pageWidth / 2, bankBoxY + 7, pageWidth / 2, bankBoxY + bankBoxHeight - 3);
+
+  // Account 1: Clientes que NO requieren factura
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(180, 83, 9);
+  doc.text('CLIENTES QUE NO REQUIEREN FACTURA', bankColLeftX, bankBoxY + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Banco: Azteca', bankColLeftX, bankBoxY + 14.5);
+  doc.text('A nombre de: Karla Piñon Juarez', bankColLeftX, bankBoxY + 19);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Cuenta CLABE: 127290021335928406', bankColLeftX, bankBoxY + 23.5);
+
+  // Account 2: Clientes que facturan
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(0, 102, 204);
+  doc.text('CLIENTES QUE FACTURAN', bankColRightX, bankBoxY + 10);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Banco: Santander', bankColRightX, bankBoxY + 14.5);
+  doc.text('A nombre de: Monica Ariadna Piñon Juárez', bankColRightX, bankBoxY + 19);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Cuenta: 65-51013074-9  |  CLABE: 014311655101307499', bankColRightX, bankBoxY + 23.5);
+
+  // Footer
+  doc.setTextColor(80, 80, 85);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.text(
+    `${footerPrefix} • Tel: 7711599491 • distribuidoramokada@gmail.com`,
+    pageWidth / 2,
+    Math.max(bankBoxY + bankBoxHeight + 12, 282),
+    { align: 'center' }
+  );
+};
+
 export const generateReceiptPdf = async (data: ReceiptData) => {
   const logoDataUrl = await getMokadaLogoDataUrl();
   const doc = new jsPDF();
@@ -216,37 +315,10 @@ export const generateReceiptPdf = async (data: ReceiptData) => {
   doc.text('Saldo Pendiente:', labelX, currentY);
   doc.text(`$${data.remainingBalance.toFixed(2)}`, valueX, currentY, { align: 'right' });
 
-  // Contact Section
-  const contactBoxY = currentY + 8;
-  doc.setFillColor(239, 246, 255);
-  doc.setDrawColor(191, 219, 254);
-  doc.roundedRect(14, contactBoxY, pageWidth - 28, 16, 2, 2, 'FD');
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 64, 175);
-  doc.text('Contacto y Aclaraciones', 18, contactBoxY + 6);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(55, 65, 81);
-  doc.text(
-    'Para cualquier duda o aclaración sobre su pedido o pago, llámenos al teléfono: ',
-    18,
-    contactBoxY + 12
-  );
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 102, 204);
-  doc.text('7711599491', 136, contactBoxY + 12);
-
-  // Footer
-  doc.setTextColor(80, 80, 85);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'italic');
-  doc.text(
-    'Este documento es un comprobante de pago. Gracias por su preferencia. • Aclaraciones: 7711599491',
-    pageWidth / 2,
-    Math.max(contactBoxY + 26, 280),
-    { align: 'center' }
+  renderContactAndBankSection(
+    doc,
+    currentY + 8,
+    'Este documento es un comprobante de pago. Gracias por su preferencia.'
   );
 
   // Open PDF in new tab
@@ -440,37 +512,10 @@ export const generateConsolidatedReceiptPdf = async (data: ConsolidatedReceiptDa
   doc.text('Saldo Pendiente:', labelX, currentY);
   doc.text(`$${data.remainingBalance.toFixed(2)}`, valueX, currentY, { align: 'right' });
 
-  // Contact Section
-  const contactBoxY = currentY + 8;
-  doc.setFillColor(239, 246, 255);
-  doc.setDrawColor(191, 219, 254);
-  doc.roundedRect(14, contactBoxY, pageWidth - 28, 16, 2, 2, 'FD');
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 64, 175);
-  doc.text('Contacto y Aclaraciones', 18, contactBoxY + 6);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(55, 65, 81);
-  doc.text(
-    'Para cualquier duda o aclaración sobre su pedido o pagos, llámenos al teléfono: ',
-    18,
-    contactBoxY + 12
-  );
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 102, 204);
-  doc.text('7711599491', 138, contactBoxY + 12);
-
-  // Footer
-  doc.setTextColor(80, 80, 85);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'italic');
-  doc.text(
-    'Este documento es un comprobante de los pagos registrados del pedido. • Aclaraciones: 7711599491',
-    pageWidth / 2,
-    Math.max(contactBoxY + 26, 280),
-    { align: 'center' }
+  renderContactAndBankSection(
+    doc,
+    currentY + 8,
+    'Este documento es un comprobante de los pagos registrados del pedido.'
   );
 
   // Open PDF in new tab
