@@ -84,27 +84,34 @@ export const MovementFormModal = ({ isOpen, onClose }: Props) => {
               return (
                 <div>
                   {!field.value ? (
-                    <SearchSelect
-                      label="Producto *"
-                      options={products
-                        // Entries only go to the purchase warehouse, which only holds purchase codes.
-                        // Exits list whatever has stock there, so leftover sale keys in the
-                        // purchase warehouse can still be moved out.
-                        .filter((p: any) => {
-                          if (incoming) return p.item_type === 'PURCHASE';
-                          if (!warehouseId) return true;
-                          return stock?.some(row => row.product_id === p.id && row.warehouse_id === warehouseId && Number(row.quantity) > 0) ?? false;
-                        })
-                        .map((p: any) => ({
-                        value: p.id,
-                        label: `[${p.code}] ${p.name}`,
-                        keywords: p.code
-                      }))}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Busca y selecciona un producto..."
-                      disabled={loadingProducts}
-                    />
+                    <div>
+                      <SearchSelect
+                        label="Producto *"
+                        options={products
+                          // Entries only go to the purchase warehouse, which only holds purchase codes.
+                          // Exits list whatever has stock there, so leftover sale keys in the
+                          // purchase warehouse can still be moved out.
+                          .filter((p: any) => {
+                            if (incoming) return p.item_type === 'PURCHASE';
+                            if (!warehouseId) return true;
+                            return stock?.some(row => row.product_id === p.id && row.warehouse_id === warehouseId && Number(row.quantity) > 0) ?? false;
+                          })
+                          .map((p: any) => ({
+                          value: p.id,
+                          label: `[${p.code}] ${p.name}`,
+                          keywords: `${p.code} ${p.name}`
+                        }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Busca por código o nombre..."
+                        disabled={loadingProducts}
+                      />
+                      {incoming && (
+                        <p className="text-[11px] text-muted mt-1.5">
+                          En las entradas al almacén principal solo aparecen productos registrados como <strong>Código de compra</strong>. Si registraste el producto como Clave de venta, cámbialo a Código de compra en Catálogo → Productos.
+                        </p>
+                      )}
+                    </div>
                   ) : (
                     <div className="p-4 bg-gray-50 border border-gray-200/60 rounded-xl relative group">
                       <label className="block text-[13px] font-medium text-ink mb-3">Producto Seleccionado</label>

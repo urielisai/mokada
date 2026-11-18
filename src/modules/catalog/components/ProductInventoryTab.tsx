@@ -2,11 +2,10 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 
 interface Props {
   warehouses: any[];
-  itemType: 'SALE' | 'PURCHASE';
+  itemType?: 'SALE' | 'PURCHASE';
 }
 
-// Purchase codes only live in purchase warehouses and sale keys in sales warehouses.
-export const ProductInventoryTab = ({ warehouses, itemType }: Props) => {
+export const ProductInventoryTab = ({ warehouses }: Props) => {
   const { control, register } = useFormContext();
   const { fields } = useFieldArray({
     control,
@@ -18,7 +17,9 @@ export const ProductInventoryTab = ({ warehouses, itemType }: Props) => {
     <div className="space-y-6">
       <div>
         <h3 className="text-[16px] font-semibold text-ink mb-1">Topes de Inventario</h3>
-        <p className="text-[14px] text-muted mb-6">Define el stock mínimo y máximo permitido por almacén para las alertas de reabastecimiento. La cantidad inicial se carga vía Movimientos de Inventario.</p>
+        <p className="text-[14px] text-muted mb-6">
+          Define el stock mínimo y máximo permitido por almacén para las alertas de reabastecimiento (el almacén de compras se aplica al Código de compra y el de ventas a la Clave de venta). La cantidad inicial se carga vía Movimientos de Inventario.
+        </p>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200/60 shadow-sm">
@@ -33,12 +34,19 @@ export const ProductInventoryTab = ({ warehouses, itemType }: Props) => {
           <tbody className="bg-white divide-y divide-gray-200/60">
             {fields.map((field: any, index) => {
               const warehouse = warehouses.find(w => w.id === field.warehouse_id);
-              if (warehouse && (warehouse.warehouse_role === 'PURCHASE') !== (itemType === 'PURCHASE')) return null;
               const whName = warehouse?.name || 'Almacén';
+              const isPurchaseWh = warehouse?.warehouse_role === 'PURCHASE';
               return (
                 <tr key={field._local_id} className="hover:bg-canvas/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-[14px] font-medium text-ink">
-                    {whName}
+                    <div className="flex items-center gap-2">
+                      <span>{whName}</span>
+                      {warehouse && (
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${isPurchaseWh ? 'bg-amber-50 text-amber-800' : 'bg-blue-50 text-blue-800'}`}>
+                          {isPurchaseWh ? 'Código de compra' : 'Clave de venta'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input type="hidden" {...register(`inventory.${index}.warehouse_id`)} />

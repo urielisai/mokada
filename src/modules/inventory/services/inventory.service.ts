@@ -24,7 +24,14 @@ async function readPages<T>(request: () => any): Promise<T[]> {
 
 export const inventoryService = {
   async getInventoryProducts() {
-    return readPages<{id: string; code: string; name: string; image_url: string | null; item_type: string}>(() => supabase.from('products').select('id, code, name, image_url, item_type').eq('status', 'ACTIVE').order('id'));
+    return readPages<{id: string; code: string; name: string; image_url: string | null; item_type: string}>(() =>
+      supabase
+        .from('products')
+        .select('id, code, name, image_url, item_type')
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: false })
+        .order('id')
+    );
   },
   async getStock() {
     const [stock, costs, prices, warehouses] = await Promise.all([

@@ -1,11 +1,12 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { catalogService } from '../services/catalog.service';
-import { catalogKeys } from '../../../utils/queryKeys';
+import { catalogKeys, inventoryKeys } from '../../../utils/queryKeys';
 
 export const useProducts = (filters: any) => {
   return useQuery({
     queryKey: catalogKeys.products(filters),
     queryFn: () => catalogService.getProducts(filters),
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -15,6 +16,7 @@ export const useInfiniteProducts = (filters: any) => {
     queryFn: ({ pageParam = 1 }) => catalogService.getProducts({ ...filters, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.nextPage,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -53,7 +55,10 @@ export const useSaveProductFull = () => {
   return useMutation({
     mutationFn: catalogService.saveProductFull,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: catalogKeys.products({}) });
+      queryClient.invalidateQueries({ queryKey: catalogKeys.all });
+      queryClient.invalidateQueries({ queryKey: inventoryKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['inventory-products'] });
+      queryClient.invalidateQueries({ queryKey: ['products-opposite-tab-check'] });
     }
   });
 };

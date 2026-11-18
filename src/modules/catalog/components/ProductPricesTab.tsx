@@ -1,11 +1,18 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { formatCurrency } from '../../../utils/formatters';
 
-interface Props {
-  priceLists: any[];
+interface CostRow {
+  warehouse_id: string;
+  warehouse_name: string;
+  average_cost: number | null;
 }
 
-export const ProductPricesTab = ({ priceLists }: Props) => {
+interface Props {
+  priceLists: any[];
+  costs?: CostRow[];
+}
+
+export const ProductPricesTab = ({ priceLists, costs = [] }: Props) => {
   const { control, register, watch, formState: { errors } } = useFormContext();
   const { fields } = useFieldArray({
     control,
@@ -17,61 +24,80 @@ export const ProductPricesTab = ({ priceLists }: Props) => {
   const publicPrice = enteredPrices.find((price: {price_list_id: string}) => price.price_list_id === publicList?.id)?.amount;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h3 className="text-[16px] font-semibold text-ink mb-1">Precios de venta</h3>
         <p className="text-[14px] text-muted mb-6">Captura el precio público y el de mayoreo. Los descuentos se calculan desde el público. El costo de compra se registra al recibir inventario y el precio interno al traspasar.</p>
-      </div>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200/60 shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200/60">
-          <thead className="bg-canvas">
-            <tr>
-              <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted uppercase tracking-wider">Lista de Precio</th>
-              <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted uppercase tracking-wider w-48">Monto ($)</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200/60">
-            {fields.map((field: any, index) => {
-              const list = priceLists.find(pl => pl.id === field.price_list_id);
-              const listName = list?.name || 'Lista';
-              const derived = list?.pricing_mode === 'PUBLIC_DISCOUNT';
-              const discountAmount = publicPrice > 0 ? Math.round(Number(publicPrice) * (1 - Number(list?.discount_percentage || 0) / 100) * 100) / 100 : null;
-              return (
-                <tr key={field._local_id} className="hover:bg-canvas/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-[14px] font-medium text-ink">
-                    {listName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input type="hidden" {...register(`prices.${index}.price_list_id`)} />
-                    {derived ? <div className="text-[14px] text-ink">
-                      {discountAmount == null ? 'Captura el precio público' : formatCurrency(discountAmount)}
-                      <span className="block text-[11px] text-muted">Automático: −{list?.discount_percentage}%</span>
-                    </div> : <input
-                      type="number" 
-                      step="0.01"
-                      min="0.01"
-                      {...register(`prices.${index}.amount`, {
-                        setValueAs: value => value === '' ? null : Number(value),
-                        validate: value => value == null || (Number.isFinite(value) && value > 0) || 'Captura un precio mayor que cero'
-                      })}
-                      className="w-full px-3 py-1.5 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition"
-                      placeholder="Sin precio"
-                    />}
-                    {(errors.prices as any)?.[index]?.amount && <p className="text-xs text-red-600 mt-1">El precio debe ser mayor que cero.</p>}
+        <div className="overflow-x-auto rounded-xl border border-gray-200/60 shadow-sm">
+          <table className="min-w-full divide-y divide-gray-200/60">
+            <thead className="bg-canvas">
+              <tr>
+                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted uppercase tracking-wider">Lista de Precio</th>
+                <th className="px-6 py-3 text-left text-[12px] font-semibold text-muted uppercase tracking-wider w-48">Monto ($)</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200/60">
+              {fields.map((field: any, index) => {
+                const list = priceLists.find(pl => pl.id === field.price_list_id);
+                const listName = list?.name || 'Lista';
+                const derived = list?.pricing_mode === 'PUBLIC_DISCOUNT';
+                const discountAmount = publicPrice > 0 ? Math.round(Number(publicPrice) * (1 - Number(list?.discount_percentage || 0) / 100) * 100) / 100 : null;
+                return (
+                  <tr key={field._local_id} className="hover:bg-canvas/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-[14px] font-medium text-ink">
+                      {listName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input type="hidden" {...register(`prices.${index}.price_list_id`)} />
+                      {derived ? <div className="text-[14px] text-ink">
+                        {discountAmount == null ? 'Captura el precio público' : formatCurrency(discountAmount)}
+                        <span className="block text-[11px] text-muted">Automático: −{list?.discount_percentage}%</span>
+                      </div> : <input
+                        type="number" 
+                        step="0.01"
+                        min="0.01"
+                        {...register(`prices.${index}.amount`, {
+                          setValueAs: value => value === '' ? null : Number(value),
+                          validate: value => value == null || (Number.isFinite(value) && value > 0) || 'Captura un precio mayor que cero'
+                        })}
+                        className="w-full px-3 py-1.5 bg-white border border-gray-200/60 rounded-lg focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition"
+                        placeholder="Sin precio"
+                      />}
+                      {(errors.prices as any)?.[index]?.amount && <p className="text-xs text-red-600 mt-1">El precio debe ser mayor que cero.</p>}
+                    </td>
+                  </tr>
+                );
+              })}
+              {fields.length === 0 && (
+                <tr>
+                  <td colSpan={2} className="px-6 py-8 text-center text-muted text-[14px]">
+                    No hay listas de precio configuradas.
                   </td>
                 </tr>
-              );
-            })}
-            {fields.length === 0 && (
-              <tr>
-                <td colSpan={2} className="px-6 py-8 text-center text-muted text-[14px]">
-                  No hay listas de precio configuradas.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-[16px] font-semibold text-ink mb-1">Costo promedio</h3>
+        <p className="text-[14px] text-muted mb-4">Costo promedio actual por almacén (se actualiza desde Movimientos de Inventario o Existencias).</p>
+        <div className="flex flex-wrap gap-3">
+          {costs.length === 0 ? (
+            <span className="text-[14px] text-muted">Sin existencias o costos registrados aún.</span>
+          ) : (
+            costs.map((c) => (
+              <div key={c.warehouse_id} className="rounded-xl border border-gray-200/60 bg-canvas/40 px-4 py-3 shadow-sm min-w-[160px]">
+                <div className="text-[12px] text-muted">{c.warehouse_name}</div>
+                <div className="text-[16px] font-semibold text-ink mt-0.5">
+                  {c.average_cost == null ? 'Sin costo' : formatCurrency(Number(c.average_cost))}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

@@ -66,9 +66,17 @@ export const AsyncSelect = ({
       if (isOpen) {
         handleSearch(query);
       }
-    }, 300); // Debounce
+    }, 150); // Fast 150ms debounce for responsive typing
     return () => clearTimeout(timeoutId);
   }, [query, isOpen, handleSearch]);
+
+  const visibleOptions = query.trim()
+    ? options.filter((opt) => {
+        const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        const haystack = `${opt.label} ${opt.description || ''}`.toLowerCase();
+        return tokens.every((t) => haystack.includes(t));
+      })
+    : options;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -151,10 +159,10 @@ export const AsyncSelect = ({
             {isLoading && <Loader2 className="h-4 w-4 shrink-0 text-accent animate-spin" />}
           </label>
           <div className="max-h-64 overflow-y-auto py-1">
-            {!isLoading && options.length === 0 ? (
+            {!isLoading && visibleOptions.length === 0 ? (
               <div className="px-3 py-4 text-center text-[13px] text-muted">{emptyMessage}</div>
             ) : (
-              options.map((option) => {
+              visibleOptions.map((option) => {
                 const isSelected = option.value === value;
 
                 return (

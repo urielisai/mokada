@@ -27,13 +27,13 @@ export const StockPage = () => {
       return false;
     }
     
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.product_name?.toLowerCase().includes(query) ||
-      item.product_code?.toLowerCase().includes(query) ||
-      item.warehouse_name?.toLowerCase().includes(query)
-    );
+    if (!searchQuery.trim()) return true;
+    const tokens = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const haystack = [item.product_code, item.product_name, item.warehouse_name]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return tokens.every((token) => haystack.includes(token));
   });
 
   const groupedData = useMemo(() => {

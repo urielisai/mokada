@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInfiniteProducts } from '../hooks/useCatalog';
+import { useQuery } from '@tanstack/react-query';
 import { catalogService } from '../services/catalog.service';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
-import { Search, Plus, PackageSearch, ShoppingCart, Loader2 } from 'lucide-react';
+import { Search, Plus, PackageSearch, ShoppingCart, Loader2, X } from 'lucide-react';
 import { useAuth } from '../../auth/context/useAuth';
 import { useCartStore } from '../store/useCartStore';
 import { CartDrawer } from '../components/CartDrawer';
@@ -13,22 +14,50 @@ import { AsyncSelect } from '../../../components/ui/AsyncSelect';
 
 export const ProductsPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAdmin } = useAuth();
   const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 500);
+  const debouncedSearch = useDebounce(search, 150);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { addItem, getItemCount } = useCartStore();
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   // Agents and customers only ever get sale keys; admins can switch to purchase codes.
-  const [itemType, setItemType] = useState<'SALE' | 'PURCHASE'>('SALE');
+  const [itemType, setItemType] = useState<'SALE' | 'PURCHASE'>(() =>
+    searchParams.get('type') === 'PURCHASE' ? 'PURCHASE' : 'SALE'
+  );
   const isPurchaseView = isAdmin && itemType === 'PURCHASE';
+  const oppositeItemType = itemType === 'SALE' ? 'PURCHASE' : 'SALE';
   const currency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
-  const { 
+  const handleSelectItemType = (nextType: 'SALE' | 'PURCHASE') => {
+    setItemType(nextType);
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextType === 'PURCHASE') {
+      nextParams.set('type', 'PURCHASE');
+    } else {
+      nextParams.delete('type');
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
 
+  const { data: oppositeSearchData } = useQuery({
+    queryKey: ['products-opposite-tab-check', debouncedSearch, oppositeItemType],
+    queryFn: () =>
+      catalogService.getProducts({
+        page: 1,
+        pageSize: 5,
+        search: debouncedSearch,
+        itemType: oppositeItemType,
+      }),
+    enabled: Boolean(isAdmin && debouncedSearch.trim()),
+  });
+  const oppositeMatchCount = Number(oppositeSearchData?.count || 0);
+
+  const { 
     data, 
     isLoading, 
+    isFetching,
     isError,
     isFetchNextPageError,
     fetchNextPage, 
@@ -43,7 +72,39 @@ export const ProductsPage = () => {
     withCosts: isAdmin
   });
 
-  const products = data?.pages.flatMap((page) => page.data) || [];
+  const rawProducts = data?.pages.flatMap((page) => page.data) || [];
+
+  // Instant client-side filtering & ranking while typing so matches narrow down immediately on every keystroke
+  const products = useMemo(() => {
+    const trimmed = search.replace(/[,(){}"]/g, ' ').trim().toLowerCase();
+    if (!trimmed) return rawProducts;
+
+    const tokens = trimmed.split(/\s+/).filter(Boolean);
+    const matching = rawProducts.filter((item: any) => {
+      if (!item) return false;
+      const haystack = [
+        item.code,
+        item.name,
+        item.barcode,
+        item.brand,
+        item.category,
+        ...(Array.isArray(item.linked_codes) ? item.linked_codes : []),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return tokens.every((token) => haystack.includes(token));
+    });
+
+    return matching.sort((a: any, b: any) => {
+      const aCode = (a.code || '').toLowerCase();
+      const bCode = (b.code || '').toLowerCase();
+      const aScore = aCode === trimmed ? 0 : aCode.startsWith(trimmed) ? 1 : 2;
+      const bScore = bCode === trimmed ? 0 : bCode.startsWith(trimmed) ? 1 : 2;
+      if (aScore !== bScore) return aScore - bScore;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }, [rawProducts, search]);
 
   const [bottomRef, isIntersecting] = useIntersectionObserver({ threshold: 0.1, rootMargin: '200px' });
 
@@ -67,7 +128,7 @@ export const ProductsPage = () => {
                   type="button"
                   role="tab"
                   aria-selected={itemType === value}
-                  onClick={() => setItemType(value)}
+                  onClick={() => handleSelectItemType(value)}
                   className={`h-8 px-3 whitespace-nowrap text-center text-[13px] font-semibold rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40 ${
                     itemType === value ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'
                   }`}
@@ -85,7 +146,7 @@ export const ProductsPage = () => {
             <input 
               type="text" 
               placeholder={isAdmin ? 'Buscar por clave, código o nombre...' : 'Buscar por clave o nombre...'}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition shadow-sm"
+              className="w-full pl-10 pr-9 py-2 bg-white border border-gray-200/60 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent text-[14px] transition shadow-sm"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -95,6 +156,18 @@ export const ProductsPage = () => {
                 }
               }}
             />
+            {(isFetching && !isFetchingNextPage) || search !== debouncedSearch ? (
+              <Loader2 className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-accent animate-spin" />
+            ) : search ? (
+              <button
+                type="button"
+                aria-label="Limpiar búsqueda"
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-ink rounded-md"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            ) : null}
           </div>
           
           <div className="w-[calc(50%-0.375rem)] min-w-0 sm:w-48">
@@ -156,7 +229,23 @@ export const ProductsPage = () => {
         </div>
       </div>
 
-      {isLoading ? (
+      {isAdmin && debouncedSearch.trim() && oppositeMatchCount > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-sm text-blue-900">
+          <span>
+            Se {oppositeMatchCount === 1 ? 'encontró 1 producto' : `encontraron ${oppositeMatchCount} productos`} con esta búsqueda en{' '}
+            <strong>{oppositeItemType === 'PURCHASE' ? 'Códigos de compra' : 'Claves de venta'}</strong>.
+          </span>
+          <button
+            type="button"
+            onClick={() => handleSelectItemType(oppositeItemType)}
+            className="self-start sm:self-auto shrink-0 rounded-xl bg-accent px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm hover:bg-accent-hover transition-colors"
+          >
+            Ver en {oppositeItemType === 'PURCHASE' ? 'Códigos de compra' : 'Claves de venta'}
+          </button>
+        </div>
+      )}
+
+      {isLoading || (products.length === 0 && (isFetching || search !== debouncedSearch)) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="bg-white border border-gray-200/60 rounded-[24px] overflow-hidden shadow-sm flex flex-col">

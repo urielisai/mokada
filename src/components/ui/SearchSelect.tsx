@@ -38,17 +38,35 @@ export const SearchSelect = ({
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return options.slice(0, 30);
+    if (!normalizedQuery) return options.slice(0, 50);
 
-    return options
-      .filter((option) =>
-        [option.label, option.description, option.keywords]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
-          .includes(normalizedQuery),
-      )
-      .slice(0, 30);
+    const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
+
+    const matched = options.filter((option) => {
+      const haystack = [option.label, option.description, option.keywords]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return tokens.every((token) => haystack.includes(token));
+    });
+
+    return matched
+      .sort((a, b) => {
+        const aCode = (a.keywords || '').split(/\s+/)[0]?.toLowerCase() || '';
+        const bCode = (b.keywords || '').split(/\s+/)[0]?.toLowerCase() || '';
+        const aLabel = a.label.toLowerCase();
+        const bLabel = b.label.toLowerCase();
+
+        const getScore = (code: string, lbl: string) => {
+          if (code === normalizedQuery || lbl === normalizedQuery) return 0;
+          if (code.startsWith(normalizedQuery) || lbl.startsWith(normalizedQuery) || lbl.startsWith(`[${normalizedQuery}`)) return 1;
+          if (lbl.includes(normalizedQuery)) return 2;
+          return 3;
+        };
+
+        return getScore(aCode, aLabel) - getScore(bCode, bLabel);
+      })
+      .slice(0, 50);
   }, [options, query]);
 
   useEffect(() => {

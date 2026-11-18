@@ -45,10 +45,18 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
       if (isOpen) {
         searchProducts(searchTerm);
       }
-    }, 300);
+    }, 150);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, isOpen]);
+
+  const visibleProducts = searchTerm.trim()
+    ? products.filter((p) => {
+        const tokens = searchTerm.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        const haystack = `${p.code || ''} ${p.name || ''} ${p.barcode || ''}`.toLowerCase();
+        return tokens.every((t) => haystack.includes(t));
+      })
+    : products;
 
   const handleAddProduct = async (product: any) => {
     try {
@@ -80,20 +88,23 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Buscar por código, nombre o código de barras..."
+            placeholder="Buscar por clave, nombre o código de barras..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent transition bg-gray-50/50"
+            className="w-full pl-10 pr-9 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-accent/15 focus:border-accent transition bg-gray-50/50"
           />
+          {isLoading && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-accent" />
+          )}
         </div>
 
         <div className="min-h-[300px] max-h-[500px] overflow-y-auto pr-2">
-          {isLoading ? (
+          {isLoading && visibleProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[300px] text-gray-500">
               <Loader2 className="w-8 h-8 animate-spin mb-4 text-accent" />
               <p>Buscando productos...</p>
             </div>
-          ) : products.length === 0 ? (
+          ) : visibleProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[300px] text-gray-500">
               <AlertCircle className="w-12 h-12 text-gray-300 mb-4" />
               <p className="text-lg font-medium text-gray-600">No se encontraron productos</p>
@@ -101,7 +112,7 @@ export const AddProductToOrderModal = ({ isOpen, onClose, orderId, onProductAdde
             </div>
           ) : (
             <div className="space-y-2">
-              {products.map((product) => {
+              {visibleProducts.map((product) => {
                 const price = Number(product.public_price) || 0;
 
                 return (
