@@ -348,12 +348,15 @@ const getRoutes = async () => {
 
 const getCustomers = async ({ search = '' }: { search?: string }) => {
   let query = (supabase as any).from('customer_summaries').select('*').order('created_at', { ascending: false });
-  const normalizedSearch = search.trim();
+  const normalizedSearch = search.replace(/[,(){}"]/g, ' ').trim();
 
   if (normalizedSearch) {
-    query = query.or(
-      `name.ilike.%${normalizedSearch}%,email.ilike.%${normalizedSearch}%,phone.ilike.%${normalizedSearch}%`,
-    );
+    const tokens = normalizedSearch.split(/\s+/).filter(Boolean);
+    for (const token of tokens) {
+      query = query.or(
+        `name.ilike.%${token}%,email.ilike.%${token}%,phone.ilike.%${token}%,default_fiscal_rfc.ilike.%${token}%,main_branch_name.ilike.%${token}%`,
+      );
+    }
   }
 
   const { data, error } = await query;

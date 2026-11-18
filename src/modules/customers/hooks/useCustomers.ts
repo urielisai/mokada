@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { customerKeys } from '../../../utils/queryKeys';
 import {
   customersService,
@@ -14,6 +14,7 @@ export const useCustomers = (filters: { search?: string }) => {
   return useQuery({
     queryKey: customerKeys.list(filters),
     queryFn: () => customersService.getCustomers(filters),
+    placeholderData: keepPreviousData,
   });
 };
 

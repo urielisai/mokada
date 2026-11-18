@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Download, Pencil, Phone, Plus, ReceiptText, Search, ToggleLeft, ToggleRight, Trash2, Users } from 'lucide-react';
+import { Building2, Download, Loader2, Pencil, Phone, Plus, ReceiptText, Search, ToggleLeft, ToggleRight, Trash2, Users, X } from 'lucide-react';
 import { AlertModal } from '../../../components/ui/AlertModal';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { EmptyState } from '../../../components/ui/EmptyState';
@@ -9,6 +9,7 @@ import { LoadingState } from '../../../components/ui/LoadingState';
 import { Modal } from '../../../components/ui/Modal';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { IconButton } from '../../../components/ui/IconButton';
+import { useDebounce } from '../../../hooks/useDebounce';
 import {
   useCustomers,
   useCustomersWithoutBranches,
@@ -25,6 +26,7 @@ import { useRouteScope } from '../../route-operations/hooks/useRouteScope';
 export const CustomersPage = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 150);
   const { isAdmin, matchesRoute } = useRouteScope();
   const [customerToToggle, setCustomerToToggle] = useState<CustomerSummary | null>(null);
   const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
@@ -35,7 +37,7 @@ export const CustomersPage = () => {
     message: '',
     type: 'error',
   });
-  const { data: customers = [], isLoading, isError, error, refetch } = useCustomers({ search });
+  const { data: customers = [], isLoading, isFetching, isError, error, refetch } = useCustomers({ search: debouncedSearch });
   const {
     data: customersWithoutBranches = [],
     isLoading: isLoadingWithoutBranches,
@@ -44,7 +46,37 @@ export const CustomersPage = () => {
   const deleteWithoutBranches = useDeleteCustomersWithoutBranches();
   const saveCustomer = useSaveCustomer();
 
-  const filteredCustomers = customers.filter((customer) => matchesRoute(customer.main_branch_route_id));
+  const filteredCustomers = useMemo(() => {
+    const byRoute = customers.filter((customer) => matchesRoute(customer.main_branch_route_id));
+    const trimmed = search.replace(/[,(){}"]/g, ' ').trim().toLowerCase();
+    if (!trimmed) return byRoute;
+
+    const tokens = trimmed.split(/\s+/).filter(Boolean);
+    return byRoute
+      .filter((customer) => {
+        const haystack = [
+          customer.name,
+          customer.email,
+          customer.phone,
+          customer.default_fiscal_rfc,
+          customer.default_fiscal_legal_name,
+          customer.main_branch_name,
+          customer.main_branch_route_name,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return tokens.every((token) => haystack.includes(token));
+      })
+      .sort((a, b) => {
+        const aName = (a.name || '').toLowerCase();
+        const bName = (b.name || '').toLowerCase();
+        const aScore = aName.startsWith(trimmed) ? 0 : 1;
+        const bScore = bName.startsWith(trimmed) ? 0 : 1;
+        if (aScore !== bScore) return aScore - bScore;
+        return aName.localeCompare(bName);
+      });
+  }, [customers, matchesRoute, search]);
 
   const handleOpenCleanupModal = () => {
     setHasBackedUpCsv(false);
@@ -126,7 +158,7 @@ export const CustomersPage = () => {
     );
   };
 
-  if (isLoading) return <LoadingState message="Cargando clientes..." />;
+  if (isLoading && !customers.length && !search) return <LoadingState message="Cargando clientes..." />;
 
   if (isError) {
     const message = error instanceof Error ? error.message : 'No se pudieron cargar los clientes.';
@@ -171,8 +203,20 @@ export const CustomersPage = () => {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="min-w-0 flex-1 bg-transparent text-sm outline-none"
-            placeholder="Buscar por nombre, correo o teléfono"
+            placeholder="Buscar por nombre, correo, teléfono, RFC o sucursal"
           />
+          {isFetching || search !== debouncedSearch ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-accent" />
+          ) : search ? (
+            <button
+              type="button"
+              aria-label="Limpiar búsqueda"
+              onClick={() => setSearch('')}
+              className="rounded-md p-0.5 text-gray-400 hover:text-ink"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
         </label>
       </div>
 
