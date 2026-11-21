@@ -167,11 +167,11 @@ export const CustomersPage = () => {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">Clientes</h2>
-          <p className="text-[14px] text-muted sm:text-[15px]">
-            Cuentas de cliente, información fiscal y sucursales.
+          <h2 className="text-[22px] font-bold tracking-tight text-ink sm:text-[28px]">Clientes</h2>
+          <p className="text-[13px] text-muted sm:text-[15px]">
+            Refaccionarias registradas, ruta asignada e información fiscal.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -179,7 +179,7 @@ export const CustomersPage = () => {
             <button
               type="button"
               onClick={handleOpenCleanupModal}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3.5 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3.5 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-100 sm:h-10 sm:flex-initial"
             >
               <Trash2 className="h-4 w-4 text-amber-700" />
               Limpiar sin sucursal ({customersWithoutBranches.length})
@@ -188,7 +188,7 @@ export const CustomersPage = () => {
           <button
             type="button"
             onClick={() => navigate('/customers/new')}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition-colors hover:bg-accent-hover sm:h-10 sm:flex-initial"
           >
             <Plus className="h-4 w-4" />
             Nuevo cliente
@@ -245,7 +245,7 @@ export const CustomersPage = () => {
                   <th className="px-4 py-3.5 font-semibold">Cliente</th>
                   <th className="px-4 py-3.5 font-semibold">Contacto</th>
                   <th className="px-4 py-3.5 font-semibold">Fiscal</th>
-                  <th className="px-4 py-3.5 font-semibold">Sucursales</th>
+                  <th className="px-4 py-3.5 font-semibold">Ruta / Refaccionaria</th>
                   <th className="px-4 py-3.5 font-semibold">Estado</th>
                   <th className="px-4 py-3.5 text-right font-semibold">Acciones</th>
                 </tr>
@@ -274,9 +274,11 @@ export const CustomersPage = () => {
                       </p>
                     </td>
                     <td className="px-4 py-3.5 text-ink-2">
-                      <p>{customer.active_branch_count} activas</p>
+                      <p className="max-w-[180px] truncate font-medium text-ink">
+                        {customer.main_branch_route_name || 'Sin ruta'}
+                      </p>
                       <p className="mt-0.5 max-w-[180px] truncate text-[12px] text-muted">
-                        {customer.main_branch_route_name || customer.main_branch_name || '-'}
+                        {customer.main_branch_name || '-'}
                       </p>
                     </td>
                     <td className="px-4 py-3.5">
@@ -506,15 +508,17 @@ const CustomerCard = ({
       <div className="mt-3 grid gap-1 text-[12px] text-ink-2">
         <span className="inline-flex min-w-0 items-center gap-2">
           <Phone className="h-3.5 w-3.5 shrink-0 text-muted" />
-          <span className="truncate">{customer.phone}</span>
+          <span className="truncate">{customer.phone || 'Sin teléfono'}</span>
+        </span>
+        <span className="inline-flex min-w-0 items-center gap-2">
+          <Building2 className="h-3.5 w-3.5 shrink-0 text-muted" />
+          <span className="truncate">
+            {customer.main_branch_route_name || customer.main_branch_name || 'Sin ruta asignada'}
+          </span>
         </span>
         <span className="inline-flex min-w-0 items-center gap-2">
           <ReceiptText className="h-3.5 w-3.5 shrink-0 text-muted" />
           <span>{customer.active_fiscal_profile_count} fiscales activos</span>
-        </span>
-        <span className="inline-flex min-w-0 items-center gap-2">
-          <Building2 className="h-3.5 w-3.5 shrink-0 text-muted" />
-          <span className="truncate">{customer.active_branch_count} sucursales activas</span>
         </span>
       </div>
     </button>

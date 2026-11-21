@@ -7,13 +7,12 @@ import {
   Copy,
   Download,
   ExternalLink,
-  Image as ImageIcon,
+  LocateFixed,
   MapPin,
   Pencil,
   Plus,
   QrCode,
   ReceiptText,
-  Route,
   Save,
   ToggleLeft,
   ToggleRight,
@@ -28,7 +27,7 @@ import { IconButton } from '../../../components/ui/IconButton';
 import mokadaLogo from '../../../assets/logo.svg';
 import { createBrandedQrDataUrl } from '../../../utils/qr';
 import { cfdiUseOptions, fiscalRegimeOptions } from '../../../utils/fiscalCatalogs';
-import { CustomerBranchFormModal } from '../components/CustomerBranchFormModal';
+import { EditableBranchImage } from '../components/CustomerBranchFormModal';
 import { SearchSelect } from '../../../components/ui/SearchSelect';
 import { useRouteScope } from '../../route-operations/hooks/useRouteScope';
 import {
@@ -39,9 +38,7 @@ import {
   useSaveBranch,
   useSaveCustomer,
   useSaveFiscalProfile,
-  useToggleBranch,
   useToggleFiscalProfile,
-  useUpdateBranchImage,
   useUploadBranchImage,
 } from '../hooks/useCustomers';
 import {
@@ -57,12 +54,9 @@ import {
   type FiscalPersonType,
 } from '../services/customers.service';
 
-type TabId = 'general' | 'fiscal' | 'branches';
+type TabId = 'general' | 'fiscal';
 type FiscalDialogState = { mode: 'create' } | { mode: 'edit'; profile: CustomerFiscalProfile };
-type BranchDialogState = { mode: 'create' } | { mode: 'edit'; branch: CustomerBranch };
-type ConfirmAction =
-  | { type: 'fiscal'; profile: CustomerFiscalProfile }
-  | { type: 'branch'; branch: CustomerBranch };
+type ConfirmAction = { type: 'fiscal'; profile: CustomerFiscalProfile };
 
 interface CredentialNotice {
   email: string;
@@ -91,6 +85,44 @@ const emptyCustomerForm: CustomerFormValues = {
   password: '12345678',
 };
 
+const createEmptyGeneralBranchForm = (routeId = ''): BranchFormValues => ({
+  customer_id: '',
+  name: '',
+  manager_name: '',
+  phone_primary: '',
+  phone_secondary: '',
+  street: '',
+  exterior_number: '',
+  interior_number: '',
+  neighborhood: '',
+  postal_code: '',
+  municipality: '',
+  state: '',
+  location_references: '',
+  latitude: '',
+  longitude: '',
+  route_id: routeId,
+  image_path: null,
+  is_main: true,
+  is_active: true,
+});
+
+const normalizeBranchCoord = (value?: string | number | null) => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const buildBranchEmbedMapUrl = (latitude: number, longitude: number) => {
+  const delta = 0.006;
+  const left = longitude - delta;
+  const right = longitude + delta;
+  const top = latitude + delta;
+  const bottom = latitude - delta;
+
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${latitude}%2C${longitude}`;
+};
+
 export const CustomerFormPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -105,10 +137,8 @@ export const CustomerFormPage = () => {
   );
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
   const [fiscalDialog, setFiscalDialog] = useState<FiscalDialogState | null>(null);
-  const [branchDialog, setBranchDialog] = useState<BranchDialogState | null>(null);
   const [qrBranch, setQrBranch] = useState<CustomerBranch | null>(null);
   const [fiscalError, setFiscalError] = useState('');
-  const [branchError, setBranchError] = useState('');
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [alertModal, setAlertModal] = useState<{ isOpen: boolean; title: string; message: string; type: 'error' | 'success' | 'info' }>({
     isOpen: false,
@@ -119,7 +149,7 @@ export const CustomerFormPage = () => {
 
   const { data: customer, isLoading: isCustomerLoading, isError, error } = useCustomer(id || null);
   const { data: fiscalProfiles = [], isLoading: isFiscalLoading } = useCustomerFiscalProfiles(id || null);
-  const { data: branches = [], isLoading: isBranchesLoading } = useCustomerBranches(id || null);
+  const { data: branches = [] } = useCustomerBranches(id || null);
   const { data: routeOptions = [] } = useCustomerRoutes();
   const { isAdmin, routeOptions: scopedRoutes, selectedRouteId } = useRouteScope();
 
@@ -134,10 +164,10 @@ export const CustomerFormPage = () => {
   }, [routeOptions, scopedRoutes]);
 
   const defaultBranchRouteId = useMemo(() => {
-    if (availableRoutes.length === 1) return availableRoutes[0].id;
     if (selectedRouteId && availableRoutes.some((route) => route.id === selectedRouteId)) {
       return selectedRouteId;
     }
+    if (availableRoutes.length === 1) return availableRoutes[0].id;
     if (!isAdmin && availableRoutes.length > 0) {
       return availableRoutes[0].id;
     }
@@ -145,23 +175,201 @@ export const CustomerFormPage = () => {
   }, [availableRoutes, isAdmin, selectedRouteId]);
 
   const branchModalRouteOptions = useMemo<CustomerRouteOption[]>(() => {
-    if (availableRoutes.length <= 1) return availableRoutes;
-    // En el registro de una nueva sucursal (o para vendedores), si hay ruta activa en el selector global
-    // o única ruta asignada, solo permitir la ruta actual sin opción de las demás.
-    const isCreatingBranch = branchDialog?.mode === 'create';
-    if ((isCreatingBranch || !isAdmin) && defaultBranchRouteId) {
+    // Un administrador puede elegir cualquier ruta activa.
+    // Un vendedor solo puede dar de alta en la ruta que tiene activa en la sesión.
+    if (isAdmin) return availableRoutes;
+    if (defaultBranchRouteId) {
       return availableRoutes.filter((route) => route.id === defaultBranchRouteId);
     }
-    return availableRoutes;
-  }, [availableRoutes, branchDialog?.mode, defaultBranchRouteId, isAdmin]);
+    return availableRoutes.slice(0, 1);
+  }, [availableRoutes, defaultBranchRouteId, isAdmin]);
+
+  const [generalBranchForm, setGeneralBranchForm] = useState<BranchFormValues>(() =>
+    createEmptyGeneralBranchForm(''),
+  );
+  const [branchNameManuallyEdited, setBranchNameManuallyEdited] = useState(false);
+  const [branchPhoneManuallyEdited, setBranchPhoneManuallyEdited] = useState(false);
+  const [generalBranchImageFile, setGeneralBranchImageFile] = useState<File | null>(null);
+  const [generalBranchExistingImageUrl, setGeneralBranchExistingImageUrl] = useState<string | null>(null);
+  const [generalBranchImagePreviewUrl, setGeneralBranchImagePreviewUrl] = useState('');
+  const [generalBranchLocationError, setGeneralBranchLocationError] = useState('');
+  const [isGeneralBranchLocating, setIsGeneralBranchLocating] = useState(false);
+  const [isGeneralPostalLoading, setIsGeneralPostalLoading] = useState(false);
+  const [generalPostalError, setGeneralPostalError] = useState('');
+  const [generalPostalNeighborhoods, setGeneralPostalNeighborhoods] = useState<string[]>([]);
+
+  const generalBranchRouteSearchOptions = useMemo(
+    () =>
+      branchModalRouteOptions.map((routeOption) => ({
+        value: routeOption.id,
+        label: `${routeOption.code} - ${routeOption.name}`,
+        description: routeOption.is_active ? 'Ruta activa' : 'Ruta inactiva',
+        keywords: `${routeOption.code} ${routeOption.name}`,
+      })),
+    [branchModalRouteOptions],
+  );
+
+  // Mantener sincronizada la ruta activa de la sesión para vendedores (y default inicial para admin)
+  useEffect(() => {
+    if (!isAdmin && defaultBranchRouteId && generalBranchForm.route_id !== defaultBranchRouteId) {
+      setGeneralBranchForm((current) => ({ ...current, route_id: defaultBranchRouteId }));
+    } else if (isAdmin && !generalBranchForm.route_id && defaultBranchRouteId) {
+      setGeneralBranchForm((current) => ({ ...current, route_id: defaultBranchRouteId }));
+    }
+  }, [defaultBranchRouteId, generalBranchForm.route_id, isAdmin]);
+
+  // En modo edición, poblar los datos de la sucursal principal en la sección General
+  useEffect(() => {
+    if (!isEditing || !branches.length) return;
+    const mainBranch = branches.find((b) => b.is_main) || branches[0];
+    if (!mainBranch) return;
+
+    setGeneralBranchForm({
+      id: mainBranch.id,
+      customer_id: mainBranch.customer_id,
+      name: mainBranch.name || '',
+      manager_name: mainBranch.manager_name || '',
+      phone_primary: mainBranch.phone_primary || '',
+      phone_secondary: mainBranch.phone_secondary || '',
+      street: mainBranch.street || '',
+      exterior_number: mainBranch.exterior_number || '',
+      interior_number: mainBranch.interior_number || '',
+      neighborhood: mainBranch.neighborhood || '',
+      postal_code: mainBranch.postal_code || '',
+      municipality: mainBranch.municipality || '',
+      state: mainBranch.state || '',
+      location_references: mainBranch.location_references || '',
+      latitude: mainBranch.latitude ?? '',
+      longitude: mainBranch.longitude ?? '',
+      route_id: (!isAdmin && defaultBranchRouteId) ? defaultBranchRouteId : (mainBranch.route_id || defaultBranchRouteId || ''),
+      image_path: mainBranch.image_path || null,
+      is_main: mainBranch.is_main ?? true,
+      is_active: mainBranch.is_active ?? true,
+    });
+    setGeneralBranchExistingImageUrl(customersService.getBranchImageUrl(mainBranch.image_path || null));
+    setBranchNameManuallyEdited(true);
+    setBranchPhoneManuallyEdited(true);
+  }, [branches, defaultBranchRouteId, isAdmin, isEditing]);
+
+  // Autocompletado de código postal SEPOMEX para la sucursal en General
+  useEffect(() => {
+    const postalCode = (generalBranchForm.postal_code || '').replace(/\D/g, '').slice(0, 5);
+    if (postalCode.length !== 5) {
+      setGeneralPostalNeighborhoods([]);
+      setGeneralPostalError('');
+      setIsGeneralPostalLoading(false);
+      return;
+    }
+
+    const abortController = new AbortController();
+    const lookupPostal = async () => {
+      setIsGeneralPostalLoading(true);
+      setGeneralPostalError('');
+      try {
+        const params = new URLSearchParams({ zip_code: postalCode, per_page: '200' });
+        const response = await fetch(`${sepomexApiUrl}?${params.toString()}`, { signal: abortController.signal });
+        const data = (await response.json()) as SepomexResponse;
+        const zipCodes = data.zip_codes || [];
+        if (!response.ok || !zipCodes.length) {
+          throw new Error(data.message || 'No se encontró información para este código postal.');
+        }
+        const firstZip = zipCodes[0];
+        const neighborhoods = Array.from(
+          new Set(zipCodes.map((z) => z.d_asenta).filter((n): n is string => Boolean(n))),
+        );
+        setGeneralPostalNeighborhoods(neighborhoods);
+        setGeneralBranchForm((current) => ({
+          ...current,
+          neighborhood:
+            current.neighborhood && (!neighborhoods.length || neighborhoods.includes(current.neighborhood))
+              ? current.neighborhood
+              : neighborhoods[0] || current.neighborhood,
+          municipality: firstZip?.d_mnpio || current.municipality,
+          state: firstZip?.d_estado || current.state,
+        }));
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        setGeneralPostalNeighborhoods([]);
+        setGeneralPostalError(err instanceof Error ? err.message : 'No se pudo consultar el código postal.');
+      } finally {
+        if (!abortController.signal.aborted) setIsGeneralPostalLoading(false);
+      }
+    };
+    void lookupPostal();
+    return () => abortController.abort();
+  }, [generalBranchForm.postal_code]);
+
+  const handleGeneralPostalCodeChange = (value: string) => {
+    const postalCode = value.replace(/\D/g, '').slice(0, 5);
+    setGeneralPostalNeighborhoods([]);
+    setGeneralPostalError('');
+    setGeneralBranchForm((current) => ({
+      ...current,
+      postal_code: postalCode,
+      neighborhood: postalCode === current.postal_code ? current.neighborhood : '',
+      municipality: postalCode === current.postal_code ? current.municipality : '',
+      state: postalCode === current.postal_code ? current.state : '',
+    }));
+  };
+
+  const useGeneralBranchCurrentLocation = () => {
+    setGeneralBranchLocationError('');
+    if (!navigator.geolocation) {
+      setGeneralBranchLocationError('Este navegador no permite tomar la ubicación actual.');
+      return;
+    }
+    setIsGeneralBranchLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const nextLat = Number(position.coords.latitude.toFixed(7));
+        const nextLng = Number(position.coords.longitude.toFixed(7));
+        setGeneralBranchForm((current) => ({
+          ...current,
+          latitude: nextLat,
+          longitude: nextLng,
+        }));
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${nextLat}&lon=${nextLng}&addressdetails=1`,
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data?.address || {};
+            const road = addr.road || addr.pedestrian || addr.footway || addr.residential || '';
+            const city = addr.city || addr.town || addr.village || addr.municipality || addr.county || '';
+            const neigh = addr.neighbourhood || addr.suburb || addr.quarter || '';
+            setGeneralBranchForm((current) => ({
+              ...current,
+              street: current.street || road,
+              exterior_number: current.exterior_number || addr.house_number || '',
+              neighborhood: current.neighborhood || neigh,
+              postal_code: current.postal_code || (addr.postcode || '').replace(/\D/g, '').slice(0, 5),
+              municipality: current.municipality || city,
+              state: current.state || addr.state || '',
+            }));
+          }
+        } catch {
+          // Dirección inversa opcional
+        }
+        setIsGeneralBranchLocating(false);
+      },
+      () => {
+        setGeneralBranchLocationError('No se pudo obtener la ubicación. Revisa permisos del navegador.');
+        setIsGeneralBranchLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+    );
+  };
 
   const saveCustomer = useSaveCustomer();
   const saveFiscalProfile = useSaveFiscalProfile();
   const toggleFiscalProfile = useToggleFiscalProfile();
   const saveBranch = useSaveBranch();
-  const toggleBranch = useToggleBranch();
   const uploadBranchImage = useUploadBranchImage();
-  const updateBranchImage = useUpdateBranchImage();
+  const currentMainBranch = useMemo(
+    () => branches.find((b) => b.is_main) || branches[0] || null,
+    [branches],
+  );
 
   useEffect(() => {
     if (!customer) return;
@@ -181,7 +389,6 @@ export const CustomerFormPage = () => {
       [
         { id: 'general' as const, label: 'General' },
         { id: 'fiscal' as const, label: 'Fiscal', disabled: !isEditing },
-        { id: 'branches' as const, label: 'Sucursales', disabled: !isEditing },
       ],
     [isEditing],
   );
@@ -192,11 +399,71 @@ export const CustomerFormPage = () => {
     setAlertModal((current) => ({ ...current, isOpen: false }));
 
     try {
+      const effectiveBranchName = (generalBranchForm.name || form.name).trim();
+      const effectiveBranchPhone = (generalBranchForm.phone_primary || form.phone).trim();
+      const effectiveManagerName = (generalBranchForm.manager_name || '').trim();
+      const effectiveRouteId = (!isAdmin && defaultBranchRouteId)
+        ? defaultBranchRouteId
+        : (generalBranchForm.route_id || defaultBranchRouteId || '').trim();
+
+      if (!form.name.trim()) {
+        throw new Error('El nombre del cliente es obligatorio.');
+      }
+      if (!form.email.trim()) {
+        throw new Error('El correo del cliente es obligatorio.');
+      }
+      if (!effectiveBranchName) {
+        throw new Error('El nombre de la sucursal es obligatorio.');
+      }
+      if (!effectiveManagerName) {
+        throw new Error('El nombre del encargado de la sucursal es obligatorio.');
+      }
+      if (!effectiveBranchPhone) {
+        throw new Error('El teléfono principal de la sucursal es obligatorio.');
+      }
+      if (!effectiveRouteId) {
+        throw new Error('La ruta asignada de la sucursal es obligatoria.');
+      }
+
+      const customerPayload: CustomerFormValues = {
+        ...form,
+        phone: form.phone.trim() || effectiveBranchPhone,
+        is_active: isEditing ? form.is_active : true,
+      };
+
       const passwordChanged = Boolean(id && form.password?.trim());
-      const result = await saveCustomer.mutateAsync({ id, payload: form });
+      const result = await saveCustomer.mutateAsync({ id, payload: customerPayload });
+      const targetCustomerId = result.customer.id;
+
+      const branchPayload: BranchFormValues = {
+        ...generalBranchForm,
+        customer_id: targetCustomerId,
+        name: effectiveBranchName,
+        manager_name: effectiveManagerName,
+        phone_primary: effectiveBranchPhone,
+        route_id: effectiveRouteId,
+        is_main: generalBranchForm.id ? generalBranchForm.is_main : true,
+        is_active: generalBranchForm.id ? generalBranchForm.is_active : true,
+      };
+
+      const savedBranch = await saveBranch.mutateAsync(branchPayload);
+
+      if (generalBranchImageFile) {
+        const imagePath = await uploadBranchImage.mutateAsync({
+          branchId: savedBranch.id,
+          file: generalBranchImageFile,
+        });
+        await saveBranch.mutateAsync({
+          ...branchPayload,
+          id: savedBranch.id,
+          image_path: imagePath,
+        });
+        setGeneralBranchImageFile(null);
+        setGeneralBranchExistingImageUrl(customersService.getBranchImageUrl(imagePath));
+      }
 
       if (!id) {
-        navigate(`/customers/${result.customer.id}`, {
+        navigate(`/customers/${targetCustomerId}`, {
           replace: true,
           state: result.temporary_password
             ? {
@@ -211,13 +478,13 @@ export const CustomerFormPage = () => {
       }
 
       setForm((current) => ({ ...current, password: '' }));
-      setSavedMessage(passwordChanged ? 'Cliente y contraseña actualizados.' : 'Cliente actualizado.');
+      setSavedMessage(passwordChanged ? 'Cliente, sucursal y contraseña actualizados.' : 'Cliente y sucursal actualizados.');
       setAlertModal({
         isOpen: true,
         title: 'Cliente actualizado',
         message: passwordChanged
-          ? 'Los datos y la contraseña de acceso del cliente se actualizaron correctamente.'
-          : 'Los cambios del cliente se guardaron correctamente.',
+          ? 'Los datos del cliente, su sucursal y la contraseña de acceso se actualizaron correctamente.'
+          : 'Los cambios del cliente y su sucursal se guardaron correctamente.',
         type: 'success',
       });
     } catch (error) {
@@ -249,40 +516,11 @@ export const CustomerFormPage = () => {
     }
   };
 
-  const handleSaveBranch = async (payload: BranchFormValues, imageFile: File | null) => {
-    setBranchError('');
-
-    try {
-      const savedBranch = await saveBranch.mutateAsync(payload);
-
-      if (imageFile) {
-        const imagePath = await uploadBranchImage.mutateAsync({ branchId: savedBranch.id, file: imageFile });
-        await saveBranch.mutateAsync({ ...payload, id: savedBranch.id, image_path: imagePath });
-      }
-
-      setBranchDialog(null);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'No se pudo guardar la sucursal.';
-      setBranchError(message);
-    }
-  };
-
-  const handleBranchImageUpload = async (branchId: string, file: File) => {
-    const imagePath = await uploadBranchImage.mutateAsync({ branchId, file });
-    await updateBranchImage.mutateAsync({ branchId, imagePath });
-    return imagePath;
-  };
-
   const handleConfirmAction = async () => {
     if (!confirmAction) return;
 
     try {
-      if (confirmAction.type === 'fiscal') {
-        await toggleFiscalProfile.mutateAsync(confirmAction.profile);
-      } else {
-        await toggleBranch.mutateAsync(confirmAction.branch);
-      }
-
+      await toggleFiscalProfile.mutateAsync(confirmAction.profile);
       setConfirmAction(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No se pudo actualizar el registro.';
@@ -316,29 +554,41 @@ export const CustomerFormPage = () => {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 pb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
+    <div className="mx-auto max-w-5xl space-y-4 pb-24 sm:space-y-6 sm:pb-12">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
           <BackLink />
           <div className="min-w-0">
-            <h2 className="text-[26px] font-bold tracking-tight text-ink sm:text-[28px]">
+            <h2 className="text-[22px] font-bold tracking-tight text-ink sm:text-[28px]">
               {isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
             </h2>
-            <p className="mt-1 text-[14px] text-muted sm:text-[15px]">
-              {isEditing ? 'Contacto, información fiscal y sucursales' : 'Crea el usuario cliente automáticamente'}
+            <p className="mt-0.5 text-[13px] text-muted sm:mt-1 sm:text-[15px]">
+              {isEditing ? 'Datos de la refaccionaria e información fiscal' : 'Registra la refaccionaria y crea su usuario automáticamente'}
             </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => void persistCustomer()}
-          disabled={saveCustomer.isPending}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
-        >
-          <Save className="h-4 w-4" />
-          {saveCustomer.isPending ? 'Guardando...' : 'Guardar Cliente'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {isEditing && currentMainBranch && (
+            <button
+              type="button"
+              onClick={() => setQrBranch(currentMainBranch)}
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-gray-50 sm:h-10 sm:flex-initial"
+            >
+              <QrCode className="h-4 w-4 text-accent" />
+              QR
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => void persistCustomer()}
+            disabled={saveCustomer.isPending || saveBranch.isPending || uploadBranchImage.isPending}
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300 sm:h-10 sm:flex-initial"
+          >
+            <Save className="h-4 w-4" />
+            {saveCustomer.isPending || saveBranch.isPending || uploadBranchImage.isPending ? 'Guardando...' : 'Guardar Cliente'}
+          </button>
+        </div>
       </div>
 
       {credentialNotice && (
@@ -365,14 +615,14 @@ export const CustomerFormPage = () => {
       {errorMessage && <Alert tone="danger" onClose={() => setErrorMessage('')}>{errorMessage}</Alert>}
       {savedMessage && <Alert tone="success" onClose={() => setSavedMessage('')}>{savedMessage}</Alert>}
 
-      <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-gray-200/50 p-1 sm:max-w-xl">
+      <div className="flex w-full gap-1 rounded-xl bg-gray-200/50 p-1 sm:max-w-md">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             disabled={tab.disabled}
             onClick={() => setActiveTab(tab.id)}
-            className={`h-9 min-w-[110px] flex-1 rounded-lg px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`h-10 flex-1 rounded-lg px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 ${
               activeTab === tab.id
                 ? 'bg-white text-ink shadow-sm'
                 : 'text-muted hover:text-ink'
@@ -387,66 +637,395 @@ export const CustomerFormPage = () => {
         <form
           id="customer-general-form"
           onSubmit={handleSaveCustomer}
-          className="rounded-2xl border border-gray-200/60 bg-white p-4 shadow-sm sm:p-6 md:p-8"
+          className="space-y-4 sm:space-y-6"
         >
-          <div className="mb-5 flex min-w-0 items-start gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-accent/8 text-accent">
-              <UserRound className="h-5 w-5" />
+          <div className="rounded-2xl border border-gray-200/60 bg-white p-3.5 shadow-sm sm:p-6 md:p-8">
+            <div className="mb-4 flex min-w-0 items-start gap-3 sm:mb-5">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-accent/8 text-accent sm:h-10 sm:w-10 sm:rounded-2xl">
+                <UserRound className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-semibold text-ink sm:text-base">Información general</h2>
+                <p className="mt-0.5 text-[13px] text-muted sm:mt-1 sm:text-sm">Datos de acceso y cuenta del cliente</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold text-ink">Información general</h2>
-              <p className="mt-1 text-sm text-muted">Nombre, correo, teléfono y estado del cliente</p>
+
+            <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4">
+              <TextInput
+                label="Nombre *"
+                value={form.name}
+                maxLength={120}
+                onChange={(value) => {
+                  setForm((current) => ({ ...current, name: value }));
+                  if (!branchNameManuallyEdited) {
+                    setGeneralBranchForm((current) => ({ ...current, name: value }));
+                  }
+                }}
+              />
+              <TextInput
+                label="Teléfono"
+                type="tel"
+                inputMode="tel"
+                value={form.phone}
+                required={false}
+                maxLength={20}
+                onChange={(value) => {
+                  setForm((current) => ({ ...current, phone: value }));
+                  if (!branchPhoneManuallyEdited) {
+                    setGeneralBranchForm((current) => ({ ...current, phone_primary: value }));
+                  }
+                }}
+              />
+              <TextInput
+                label="Correo *"
+                type="email"
+                inputMode="email"
+                value={form.email}
+                maxLength={160}
+                onChange={(value) => setForm((current) => ({ ...current, email: value }))}
+                className="sm:col-span-2"
+              />
+              <TextInput
+                label={isEditing ? 'Nueva contraseña de acceso' : 'Contraseña *'}
+                type="password"
+                value={form.password || ''}
+                required={!isEditing}
+                maxLength={64}
+                onChange={(value) => setForm((current) => ({ ...current, password: value }))}
+                className="sm:col-span-2"
+              />
+              {isEditing && <p className="-mt-2 text-xs text-muted sm:col-span-2">Déjala vacía para conservar la contraseña actual.</p>}
+            </div>
+
+            <div className={`mt-4 grid gap-2 sm:mt-5 ${isEditing ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
+              <CheckboxField
+                label="Requiere facturación"
+                checked={form.requires_invoice}
+                onChange={(checked) => setForm((current) => ({ ...current, requires_invoice: checked }))}
+              />
+              {isEditing && (
+                <CheckboxField
+                  label="Cliente activo"
+                  checked={form.is_active}
+                  onChange={(checked) => setForm((current) => ({ ...current, is_active: checked }))}
+                />
+              )}
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput
-              label="Nombre *"
-              value={form.name}
-              maxLength={120}
-              onChange={(value) => setForm((current) => ({ ...current, name: value }))}
-            />
-            <TextInput
-              label="Teléfono"
-              type="tel"
-              value={form.phone}
-              required={false}
-              maxLength={20}
-              onChange={(value) => setForm((current) => ({ ...current, phone: value }))}
-            />
-            <TextInput
-              label="Correo *"
-              type="email"
-              value={form.email}
-              maxLength={160}
-              onChange={(value) => setForm((current) => ({ ...current, email: value }))}
-              className="sm:col-span-2"
-            />
-            <TextInput
-              label={isEditing ? 'Nueva contraseña de acceso' : 'Contraseña *'}
-              type="password"
-              value={form.password || ''}
-              required={!isEditing}
-              maxLength={64}
-              onChange={(value) => setForm((current) => ({ ...current, password: value }))}
-              className="sm:col-span-2"
-            />
-            {isEditing && <p className="-mt-2 text-xs text-muted sm:col-span-2">Déjala vacía para conservar la contraseña actual.</p>}
+          {/* Datos de la sucursal principal (Refaccionaria) en la misma pestaña General */}
+          <div className="space-y-4 rounded-2xl border border-gray-200/60 bg-white p-3.5 shadow-sm sm:space-y-5 sm:p-6 md:p-8">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-accent/8 text-accent sm:h-10 sm:w-10 sm:rounded-2xl">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-semibold text-ink sm:text-base">Datos de la refaccionaria</h2>
+                <p className="mt-0.5 text-[13px] text-muted sm:mt-1 sm:text-sm">
+                  Encargado, ruta asignada, teléfonos, dirección y ubicación
+                </p>
+              </div>
+            </div>
+
+            {(() => {
+              const lat = normalizeBranchCoord(generalBranchForm.latitude);
+              const lng = normalizeBranchCoord(generalBranchForm.longitude);
+              const hasCoord = lat !== null && lng !== null;
+              const hasPostal = generalPostalNeighborhoods.length > 0;
+
+              return (
+                <>
+                  <div className="rounded-xl border border-gray-200 bg-canvas p-3">
+                    <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <h3 className="inline-flex items-center gap-2 text-[14px] font-semibold text-ink">
+                          <MapPin className="h-4 w-4 text-accent" />
+                          Ubicación GPS
+                        </h3>
+                        <p className="mt-0.5 text-[12px] text-muted">
+                          Toca el botón para guardar las coordenadas actuales y autocompletar la dirección.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={useGeneralBranchCurrentLocation}
+                        disabled={isGeneralBranchLocating}
+                        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-accent/30 bg-white px-3.5 text-[13px] font-semibold text-accent shadow-sm transition-colors hover:bg-accent/5 disabled:cursor-wait disabled:text-gray-400 sm:h-9 sm:w-auto sm:rounded-lg"
+                      >
+                        <LocateFixed className="h-4 w-4" />
+                        {isGeneralBranchLocating ? 'Tomando ubicación...' : 'Tomar ubicación actual'}
+                      </button>
+                    </div>
+
+                    {generalBranchLocationError && (
+                      <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
+                        {generalBranchLocationError}
+                      </div>
+                    )}
+
+                    {hasCoord ? (
+                      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                        <iframe
+                          title="Mapa de la sucursal"
+                          src={buildBranchEmbedMapUrl(lat, lng)}
+                          className="h-44 w-full border-0 sm:h-56"
+                          loading="lazy"
+                        />
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 px-3 py-2 text-[12px] text-muted">
+                          <span className="font-mono text-[11px] sm:text-[12px]">
+                            {lat.toFixed(6)}, {lng.toFixed(6)}
+                          </span>
+                          <a
+                            href={`https://www.google.com/maps?q=${lat},${lng}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 font-semibold text-accent hover:underline"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Abrir en Maps
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-gray-300 bg-white px-3 py-4 text-center text-[13px] text-muted">
+                        Aún no hay coordenadas registradas.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-[minmax(220px,0.36fr)_minmax(0,1fr)]">
+                    <div className="min-w-0">
+                      <EditableBranchImage
+                        value={generalBranchImageFile || generalBranchExistingImageUrl}
+                        isUploading={uploadBranchImage.isPending}
+                        onChange={(file) => setGeneralBranchImageFile(file)}
+                        onPreview={(url) => setGeneralBranchImagePreviewUrl(url)}
+                      />
+                    </div>
+
+                    <div className="grid min-w-0 gap-3.5 sm:grid-cols-2">
+                      <TextInput
+                        label="Nombre de la sucursal *"
+                        value={generalBranchForm.name}
+                        maxLength={90}
+                        onChange={(value) => {
+                          setBranchNameManuallyEdited(true);
+                          setGeneralBranchForm((current) => ({ ...current, name: value }));
+                        }}
+                      />
+                      <TextInput
+                        label="Nombre del encargado *"
+                        value={generalBranchForm.manager_name || ''}
+                        required
+                        maxLength={90}
+                        onChange={(value) =>
+                          setGeneralBranchForm((current) => ({ ...current, manager_name: value }))
+                        }
+                      />
+                      <TextInput
+                        label="Teléfono principal *"
+                        type="tel"
+                        inputMode="tel"
+                        value={generalBranchForm.phone_primary}
+                        maxLength={20}
+                        onChange={(value) => {
+                          setBranchPhoneManuallyEdited(true);
+                          setGeneralBranchForm((current) => ({ ...current, phone_primary: value }));
+                          if (!form.phone.trim()) {
+                            setForm((current) => ({ ...current, phone: value }));
+                          }
+                        }}
+                      />
+                      <TextInput
+                        label="Teléfono secundario"
+                        type="tel"
+                        inputMode="tel"
+                        value={generalBranchForm.phone_secondary || ''}
+                        required={false}
+                        maxLength={20}
+                        onChange={(value) =>
+                          setGeneralBranchForm((current) => ({ ...current, phone_secondary: value }))
+                        }
+                      />
+                      <div className="sm:col-span-2">
+                        <SearchSelect
+                          label="Ruta asignada *"
+                          options={generalBranchRouteSearchOptions}
+                          value={generalBranchForm.route_id || ''}
+                          placeholder="Selecciona una ruta asignada"
+                          emptyMessage="No hay rutas disponibles"
+                          required
+                          disabled={!isAdmin || generalBranchRouteSearchOptions.length <= 1}
+                          onChange={(value) =>
+                            setGeneralBranchForm((current) => ({ ...current, route_id: value }))
+                          }
+                        />
+                        {!isAdmin && (
+                          <p className="mt-1 text-[11px] text-muted">
+                            Ruta asignada automáticamente según la ruta activa en tu sesión.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+                    <TextInput
+                      label="Calle"
+                      value={generalBranchForm.street || ''}
+                      required={false}
+                      maxLength={120}
+                      className="col-span-2 sm:col-span-2"
+                      onChange={(value) =>
+                        setGeneralBranchForm((current) => ({ ...current, street: value }))
+                      }
+                    />
+                    <TextInput
+                      label="Núm. exterior"
+                      value={generalBranchForm.exterior_number || ''}
+                      required={false}
+                      maxLength={20}
+                      onChange={(value) =>
+                        setGeneralBranchForm((current) => ({ ...current, exterior_number: value }))
+                      }
+                    />
+                    <TextInput
+                      label="Núm. interior"
+                      value={generalBranchForm.interior_number || ''}
+                      required={false}
+                      maxLength={20}
+                      onChange={(value) =>
+                        setGeneralBranchForm((current) => ({ ...current, interior_number: value }))
+                      }
+                    />
+                    <div className="col-span-2 min-w-0 sm:col-span-1">
+                      <TextInput
+                        label="Código postal"
+                        value={generalBranchForm.postal_code || ''}
+                        inputMode="numeric"
+                        pattern="[0-9]{5}"
+                        maxLength={5}
+                        required={false}
+                        onChange={handleGeneralPostalCodeChange}
+                      />
+                      {isGeneralPostalLoading && (
+                        <p className="mt-1 text-[12px] text-muted">Consultando código postal...</p>
+                      )}
+                      {generalPostalError && (
+                        <p className="mt-1 text-[12px] text-red-600">{generalPostalError}</p>
+                      )}
+                    </div>
+                    <TextInput
+                      label="Estado"
+                      value={generalBranchForm.state || ''}
+                      required={false}
+                      maxLength={90}
+                      disabled={hasPostal}
+                      className="col-span-2 sm:col-span-1"
+                      onChange={(value) =>
+                        setGeneralBranchForm((current) => ({ ...current, state: value }))
+                      }
+                    />
+                    <TextInput
+                      label="Municipio o alcaldía"
+                      value={generalBranchForm.municipality || ''}
+                      required={false}
+                      maxLength={90}
+                      disabled={hasPostal}
+                      className="col-span-2 sm:col-span-1"
+                      onChange={(value) =>
+                        setGeneralBranchForm((current) => ({ ...current, municipality: value }))
+                      }
+                    />
+                    {hasPostal ? (
+                      <label className="col-span-2 block min-w-0 sm:col-span-1">
+                        <span className="mb-1.5 block text-[13px] font-medium text-ink">Colonia</span>
+                        <select
+                          value={generalBranchForm.neighborhood || ''}
+                          disabled={generalPostalNeighborhoods.length === 1}
+                          onChange={(e) =>
+                            setGeneralBranchForm((current) => ({
+                              ...current,
+                              neighborhood: e.target.value,
+                            }))
+                          }
+                          className="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 disabled:bg-gray-50 disabled:text-muted sm:h-10"
+                        >
+                          {generalPostalNeighborhoods.map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <TextInput
+                        label="Colonia"
+                        value={generalBranchForm.neighborhood || ''}
+                        required={false}
+                        maxLength={90}
+                        className="col-span-2 sm:col-span-1"
+                        onChange={(value) =>
+                          setGeneralBranchForm((current) => ({ ...current, neighborhood: value }))
+                        }
+                      />
+                    )}
+
+                    <label className="col-span-2 block min-w-0">
+                      <span className="mb-1.5 block text-[13px] font-medium text-ink">
+                        Referencias de ubicación
+                      </span>
+                      <textarea
+                        value={generalBranchForm.location_references || ''}
+                        maxLength={240}
+                        placeholder="Entre qué calles, color de fachada, referencias cercanas..."
+                        onChange={(event) =>
+                          setGeneralBranchForm((current) => ({
+                            ...current,
+                            location_references: event.target.value,
+                          }))
+                        }
+                        rows={3}
+                        className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15"
+                      />
+                    </label>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
-          <div className="mt-5 grid gap-2 sm:grid-cols-2">
-            <CheckboxField
-              label="Requiere facturación"
-              checked={form.requires_invoice}
-              onChange={(checked) => setForm((current) => ({ ...current, requires_invoice: checked }))}
-            />
-            <CheckboxField
-              label="Cliente activo"
-              checked={form.is_active}
-              onChange={(checked) => setForm((current) => ({ ...current, is_active: checked }))}
-            />
+          {/* Barra inferior fija en móvil para guardar fácilmente con el pulgar */}
+          <div className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-200 bg-white/95 p-3 backdrop-blur sm:hidden">
+            <button
+              type="submit"
+              disabled={saveCustomer.isPending || saveBranch.isPending || uploadBranchImage.isPending}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              <Save className="h-4 w-4" />
+              {saveCustomer.isPending || saveBranch.isPending || uploadBranchImage.isPending
+                ? 'Guardando...'
+                : 'Guardar Cliente'}
+            </button>
           </div>
         </form>
+      )}
+
+      {generalBranchImagePreviewUrl && (
+        <Modal
+          isOpen
+          onClose={() => setGeneralBranchImagePreviewUrl('')}
+          title="Foto de la sucursal"
+          size="lg"
+        >
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-canvas">
+            <img
+              src={generalBranchImagePreviewUrl}
+              alt="Foto de la sucursal"
+              className="max-h-[72vh] w-full object-contain"
+            />
+          </div>
+        </Modal>
       )}
 
       {activeTab === 'fiscal' && customer && (
@@ -483,42 +1062,6 @@ export const CustomerFormPage = () => {
         </RelatedSection>
       )}
 
-      {activeTab === 'branches' && customer && (
-        <RelatedSection
-          title="Sucursales"
-          description="Direcciones, rutas asignadas, imagen y QR"
-          icon={<Building2 className="h-5 w-5" />}
-          actionLabel="Agregar sucursal"
-          onAction={() => {
-            setBranchError('');
-            setBranchDialog({ mode: 'create' });
-          }}
-        >
-          {isBranchesLoading ? (
-            <LoadingBlock label="Cargando sucursales..." />
-          ) : !branches.length ? (
-            <InlineEmpty message="Este cliente aún no tiene sucursales." />
-          ) : (
-            <div className="grid gap-3">
-              {branches.map((branch) => (
-                <BranchCard
-                  key={branch.id}
-                  branch={branch}
-                  route={branch.routes || routeOptions.find((routeOption) => routeOption.id === branch.route_id) || null}
-                  isPending={toggleBranch.isPending}
-                  onEdit={() => {
-                    setBranchError('');
-                    setBranchDialog({ mode: 'edit', branch });
-                  }}
-                  onShowQr={() => setQrBranch(branch)}
-                  onToggle={() => setConfirmAction({ type: 'branch', branch })}
-                />
-              ))}
-            </div>
-          )}
-        </RelatedSection>
-      )}
-
       {fiscalDialog && customer && (
         <FiscalFormModal
           customer={customer}
@@ -527,20 +1070,6 @@ export const CustomerFormPage = () => {
           errorMessage={fiscalError}
           onClose={() => setFiscalDialog(null)}
           onSubmit={handleSaveFiscal}
-        />
-      )}
-
-      {branchDialog && customer && (
-        <CustomerBranchFormModal
-          fixedCustomer={customer}
-          branch={branchDialog.mode === 'edit' ? branchDialog.branch : null}
-          defaultRouteId={defaultBranchRouteId}
-          routeOptions={branchModalRouteOptions}
-          isPending={saveBranch.isPending || uploadBranchImage.isPending || updateBranchImage.isPending}
-          errorMessage={branchError}
-          onClose={() => setBranchDialog(null)}
-          onImageUpload={handleBranchImageUpload}
-          onSubmit={handleSaveBranch}
         />
       )}
 
@@ -557,38 +1086,18 @@ export const CustomerFormPage = () => {
         onClose={() => setConfirmAction(null)}
         onConfirm={() => void handleConfirmAction()}
         title={
-          confirmAction?.type === 'fiscal'
-            ? confirmAction.profile.is_active
-              ? 'Desactivar información fiscal'
-              : 'Activar información fiscal'
-            : confirmAction?.branch.is_active
-              ? 'Desactivar sucursal'
-              : 'Activar sucursal'
+          confirmAction?.profile.is_active
+            ? 'Desactivar información fiscal'
+            : 'Activar información fiscal'
         }
         message={
-          confirmAction?.type === 'fiscal'
-            ? confirmAction.profile.is_active
-              ? `La información fiscal ${confirmAction.profile.rfc} dejará de estar activa.`
-              : `La información fiscal ${confirmAction.profile.rfc} volverá a estar activa.`
-            : confirmAction?.branch.is_active
-              ? `La sucursal ${confirmAction.branch.name} dejará de estar activa.`
-              : `La sucursal ${confirmAction?.branch.name || ''} volverá a estar activa.`
+          confirmAction?.profile.is_active
+            ? `La información fiscal ${confirmAction.profile.rfc} dejará de estar activa.`
+            : `La información fiscal ${confirmAction?.profile.rfc || ''} volverá a estar activa.`
         }
-        confirmText={
-          confirmAction?.type === 'fiscal'
-            ? confirmAction.profile.is_active
-              ? 'Desactivar'
-              : 'Activar'
-            : confirmAction?.branch.is_active
-              ? 'Desactivar'
-              : 'Activar'
-        }
-        isDestructive={
-          confirmAction?.type === 'fiscal'
-            ? confirmAction.profile.is_active
-            : Boolean(confirmAction?.branch.is_active)
-        }
-        isPending={toggleFiscalProfile.isPending || toggleBranch.isPending}
+        confirmText={confirmAction?.profile.is_active ? 'Desactivar' : 'Activar'}
+        isDestructive={Boolean(confirmAction?.profile.is_active)}
+        isPending={toggleFiscalProfile.isPending}
       />
 
       <AlertModal
@@ -663,87 +1172,6 @@ const FiscalProfileCard = ({
       </div>
     </div>
   </article>
-  );
-};
-
-const BranchCard = ({
-  branch,
-  route,
-  isPending,
-  onEdit,
-  onShowQr,
-  onToggle,
-}: {
-  branch: CustomerBranch;
-  route: CustomerRouteOption | null;
-  isPending: boolean;
-  onEdit: () => void;
-  onShowQr: () => void;
-  onToggle: () => void;
-}) => {
-  const address = formatAddress(branch);
-  const imageUrl = customersService.getBranchImageUrl(branch.image_path);
-  const mapUrl =
-    branch.latitude !== null && branch.longitude !== null
-      ? `https://www.google.com/maps?q=${branch.latitude},${branch.longitude}`
-      : null;
-
-  return (
-    <article className="rounded-lg border border-gray-200/70 bg-white p-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 gap-3">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-canvas">
-            {imageUrl ? (
-              <img src={imageUrl} alt={branch.name} className="h-full w-full object-cover" />
-            ) : (
-              <ImageIcon className="h-6 w-6 text-muted" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h4 className="truncate text-sm font-semibold text-ink">{branch.name}</h4>
-              {branch.is_main && <SmallBadge label="Principal" />}
-              <StatusBadge status={branch.is_active ? 'ACTIVE' : 'INACTIVE'} />
-            </div>
-            <p className="mt-1 text-[12px] text-ink-2">{branch.manager_name || 'Sin encargado'}</p>
-            <p className="mt-1 text-[12px] text-muted">
-              {branch.phone_primary}
-              {branch.phone_secondary ? ` / ${branch.phone_secondary}` : ''}
-            </p>
-            <p className="mt-1 line-clamp-2 text-[12px] text-ink-2">{address || 'Dirección pendiente'}</p>
-            {route && (
-              <p className="mt-1 inline-flex max-w-full items-center gap-1.5 text-[12px] font-medium text-accent">
-                <Route className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">
-                  {route.code} - {route.name}
-                </span>
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex justify-end gap-2">
-          <IconButton
-            title={mapUrl ? 'Ver mapa' : 'Sin coordenadas'}
-            disabled={!mapUrl}
-            onClick={() => {
-              if (!mapUrl) return;
-              window.open(mapUrl, '_blank', 'noopener,noreferrer');
-            }}
-          >
-            <MapPin className="h-4 w-4" />
-          </IconButton>
-          <IconButton title="QR de sucursal" onClick={onShowQr}>
-            <QrCode className="h-4 w-4" />
-          </IconButton>
-          <IconButton title="Editar" onClick={onEdit}>
-            <Pencil className="h-4 w-4" />
-          </IconButton>
-          <IconButton title={branch.is_active ? 'Desactivar' : 'Activar'} onClick={onToggle} disabled={isPending}>
-            {branch.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
-          </IconButton>
-        </div>
-      </div>
-    </article>
   );
 };
 
@@ -1190,7 +1618,7 @@ const TextInput = ({
       inputMode={inputMode}
       disabled={disabled}
       onChange={(event) => onChange(event.target.value)}
-      className="h-10 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 disabled:bg-gray-50 disabled:text-muted"
+      className="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 disabled:bg-gray-50 disabled:text-muted sm:h-10"
     />
   </label>
 );
@@ -1204,7 +1632,7 @@ const CheckboxField = ({
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) => (
-  <label className="flex h-10 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3">
+  <label className="flex h-11 items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 sm:h-10">
     <input
       type="checkbox"
       checked={checked}
@@ -1294,17 +1722,3 @@ const InlineEmpty = ({ message }: { message: string }) => (
     {message}
   </div>
 );
-
-const formatAddress = (branch: CustomerBranch) => {
-  return [
-    branch.street,
-    branch.exterior_number ? `Ext. ${branch.exterior_number}` : null,
-    branch.interior_number ? `Int. ${branch.interior_number}` : null,
-    branch.neighborhood,
-    branch.postal_code ? `CP ${branch.postal_code}` : null,
-    branch.municipality,
-    branch.state,
-  ]
-    .filter(Boolean)
-    .join(', ');
-};

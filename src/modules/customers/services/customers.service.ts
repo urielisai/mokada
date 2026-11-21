@@ -326,6 +326,7 @@ const validateBranchPayload = (payload: BranchFormValues) => {
 
   if (!payload.customer_id?.trim()) throw new Error('Selecciona un cliente para la sucursal.');
   if (!payload.name.trim()) throw new Error('El nombre de la sucursal es obligatorio.');
+  if (!payload.manager_name?.trim()) throw new Error('El nombre del encargado de la sucursal es obligatorio.');
   if (!payload.phone_primary.trim()) throw new Error('El teléfono principal de la sucursal es obligatorio.');
   if (!payload.route_id?.trim()) throw new Error('La ruta asignada de la sucursal es obligatoria.');
   if (postalCode && !/^\d{5}$/.test(postalCode)) throw new Error('El código postal debe tener 5 dígitos.');

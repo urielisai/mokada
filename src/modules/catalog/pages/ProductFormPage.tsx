@@ -14,6 +14,27 @@ import { useBarcodeScanner } from '../../../utils/useBarcodeScanner';
 import { ImageUpload } from '../../../components/ui/ImageUpload';
 import { useAuth } from '../../auth/context/useAuth';
 
+interface ProductFormValues {
+  id: string | null;
+  code?: string;
+  sale_product_id: string | null;
+  purchase_product_id: string | null;
+  sale_code: string;
+  purchase_code: string;
+  barcode: string;
+  name: string;
+  description: string;
+  brand_id: string;
+  category_id: string;
+  unit_of_measure_id: string;
+  status: string;
+  item_type: 'SALE' | 'PURCHASE';
+  sale_links: { sale_product_id: string; code: string; name: string; is_default: boolean }[];
+  prices: { price_list_id: string; amount: number | null }[];
+  inventory: { warehouse_id: string; minimum_stock: number; maximum_stock: number | null }[];
+  fitments: { vehicle_model_id: string; year_from: number | null; year_to: number | null; engine: string; notes: string }[];
+}
+
 export const ProductFormPage = () => {
   const { isAdmin } = useAuth();
   const { id } = useParams();
@@ -41,25 +62,7 @@ export const ProductFormPage = () => {
   const { mutateAsync: saveProduct, isPending: isSaving } = useSaveProductFull();
   const { mutateAsync: uploadImage } = useUploadProductImage();
 
-  const methods = useForm<{
-    id: string | null;
-    sale_product_id: string | null;
-    purchase_product_id: string | null;
-    sale_code: string;
-    purchase_code: string;
-    barcode: string;
-    name: string;
-    description: string;
-    brand_id: string;
-    category_id: string;
-    unit_of_measure_id: string;
-    status: string;
-    item_type: 'SALE' | 'PURCHASE';
-    sale_links: { sale_product_id: string; code: string; name: string; is_default: boolean }[];
-    prices: { price_list_id: string; amount: number | null }[];
-    inventory: { warehouse_id: string; minimum_stock: number; maximum_stock: number | null }[];
-    fitments: { vehicle_model_id: string; year_from: number | null; year_to: number | null; engine: string; notes: string }[];
-  }>({
+  const methods = useForm<ProductFormValues>({
     defaultValues: {
       id: null,
       sale_product_id: null,

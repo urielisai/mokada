@@ -481,9 +481,9 @@ export const CustomerBranchFormModal = ({
               onChange={(value) => setForm((current) => ({ ...current, name: value }))}
             />
             <TextInput
-              label="Nombre del encargado"
+              label="Nombre del encargado *"
               value={form.manager_name || ''}
-              required={false}
+              required
               maxLength={90}
               onChange={(value) => setForm((current) => ({ ...current, manager_name: value }))}
             />
@@ -595,7 +595,7 @@ export const CustomerBranchFormModal = ({
   );
 };
 
-const EditableBranchImage = ({
+export const EditableBranchImage = ({
   value,
   isUploading,
   onChange,
@@ -666,7 +666,7 @@ const EditableBranchImage = ({
   };
 
   return (
-    <div className="group relative h-[220px] w-full overflow-hidden rounded-2xl border border-gray-200/70 bg-canvas sm:h-[240px]">
+    <div className="group relative h-[180px] w-full overflow-hidden rounded-2xl border border-gray-200/70 bg-canvas sm:h-[220px]">
       {imageUrl ? (
         <img src={imageUrl} alt="Foto de la sucursal" className="h-full w-full object-cover" />
       ) : (
